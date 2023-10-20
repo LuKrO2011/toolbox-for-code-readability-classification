@@ -8,6 +8,9 @@ packages = [{ include = "readability_preprocessing", from = "src" }]
 
 [tool.poetry.dependencies]
 python = "~3.11"
+pygments = "^2.16.1"
+pillow = "^10.1.0"
+numpy = "^1.26.1"
 
 
 [tool.poetry.group.dev.dependencies]
