@@ -1,0 +1,44 @@
+= Predicting Source Code Readability
+
+This Python program preprocesses Java source code snippets for predicting their readability.
+The model itself is not part of this repository.
+
+== Table of Contents
+
+* <<Installation>>
+
+[[Installation]]
+== Installation
+
+To set up the project and its dependencies, follow these steps:
+
+Clone this repository to your local machine:
+
+[source,bash]
+----
+git clone https://github.com/LuKrO2011/readability-preprocessing
+cd readability-preprocessing
+----
+
+Install Poetry if you haven't already:
+
+[source,bash]
+----
+pip install poetry
+----
+
+Create a virtual environment and install the project's dependencies using Poetry:
+
+[source,bash]
+----
+poetry install
+----
+
+Activate the virtual environment:
+
+[source,bash]
+----
+poetry shell
+----
+
+Now you're ready to use the source code readability prediction tool.
