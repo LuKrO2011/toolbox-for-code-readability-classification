@@ -45,11 +45,14 @@ def calculate_similarity_matrix(features: List[List[float]]) -> np.ndarray[[floa
     :param features: List of extracted features
     :return: The similarity matrix
     """
-    num_snippets = len(features)
-    similarity_matrix = np.zeros((num_snippets, num_snippets))
-    for i in range(num_snippets):
-        for j in range(num_snippets):
-            similarity_matrix[i, j] = calculate_similarity(features[i], features[j])
+    features_array = np.array(features)
+
+    # Normalize the feature vectors
+    normalized_features = features_array / np.linalg.norm(features_array, axis=1)[:, np.newaxis]
+
+    # Calculate the similarity matrix using a dot product
+    similarity_matrix = np.dot(normalized_features, normalized_features.T)
+
     return similarity_matrix
 
 
