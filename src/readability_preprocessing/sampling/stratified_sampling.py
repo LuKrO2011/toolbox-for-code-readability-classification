@@ -1,11 +1,9 @@
 import os
-import subprocess
 import random
+import subprocess
 from typing import List
 
 import numpy as np
-from typing_extensions import deprecated
-
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.metrics.pairwise import pairwise_distances
@@ -15,25 +13,6 @@ FEATURE_JAR_PATH = (
 )
 WORKING_DIR = os.path.join(os.path.dirname(__file__), "../../res")
 EXTRACT_METRICS_CMD = "it.unimol.readability.metric.runnable.ExtractMetrics"
-
-
-@deprecated("Actual snippets are not needed, only paths.")
-def load_snippets(data_dir: str) -> dict[str, str]:
-    """
-    Loads the code snippets from the folder (data_dir) and returns them as a dictionary.
-    The keys of the dictionary is the file path and the values are the code snippets.
-    :param data_dir: Path to the directory containing the code snippets.
-    :return: The code snippets as a dictionary.
-    """
-    code_snippets = {}
-
-    # Iterate through the files in the directory
-    for file in os.listdir(data_dir):
-        path = os.path.join(data_dir, file)
-        with open(path) as f:
-            code_snippets[path] = f.read()
-
-    return code_snippets
 
 
 def parse_feature_output(feature_string: str) -> dict[str, float]:
@@ -77,19 +56,6 @@ def extract_features(snippet_path: str) -> List[float]:
     features_array = list(features.values())
 
     return features_array
-
-
-@deprecated("Use matrix multiplication for efficiency instead.")
-def calculate_similarity(features1: List[float], features2: List[float]) -> float:
-    """
-    Calculate the similarity between two Java snippets based on their extracted features
-    :param features1: The extracted features of the first Java code snippet
-    :param features2: The extracted features of the second Java code snippet
-    :return: The similarity between the two Java code snippets
-    """
-    similarity = np.dot(features1, features2) / (
-        np.linalg.norm(features1) * np.linalg.norm(features2))
-    return similarity
 
 
 def normalize_features(features: List[List[float]], epsilon=1e-8) -> np.ndarray[
