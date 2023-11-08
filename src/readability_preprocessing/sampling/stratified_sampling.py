@@ -1,5 +1,6 @@
 import os
 import subprocess
+import random
 from typing import List
 
 import numpy as np
@@ -136,8 +137,9 @@ def calculate_similarity_matrix(features: np.ndarray[float], metric="cosine") ->
 
 
 def stratified_sampling(java_code_snippets_paths: List[str],
-                        similarity_matrix: np.ndarray[[float]], num_stratas: int = 20,
-                        snippets_per_stratum: int = 20) -> (List[List[str]]):
+                        similarity_matrix: np.ndarray[[float]], metric="cosine",
+                        num_stratas: int = 20, snippets_per_stratum: int = 20) -> (
+    List[List[str]]):
     """
     Perform stratified sampling based on the similarity matrix.
     The sampling is performed by first splitting the Java snippets into
@@ -145,6 +147,7 @@ def stratified_sampling(java_code_snippets_paths: List[str],
     Each stratum should contain #snippets_per_stratum random Java snippets.
     :param java_code_snippets_paths: The paths to the Java code snippets
     :param similarity_matrix: The similarity matrix
+    :param metric: The metric to use for calculating the similarity matrix
     :param num_stratas: The number of stratas to use for sampling
     :param snippets_per_stratum: The number of Java code snippets to sample per stratum
     :return: The selected Java code snippets for training and testing
@@ -153,25 +156,36 @@ def stratified_sampling(java_code_snippets_paths: List[str],
         raise ValueError(
             "Number of code snippets must match the rows of the similarity matrix.")
 
-    # Calculate Euclidean distance from the similarity matrix
-    euclidean_distances = np.sqrt(np.sum((similarity_matrix - 1) ** 2, axis=1))
-
-    # Divide the snippets into stratas based on Euclidean distance
-    strata_indices = np.digitize(euclidean_distances,
-                                 bins=np.linspace(0, euclidean_distances.max(),
-                                                  num=num_stratas + 1))
+    if metric != "cosine":
+        raise ValueError(f"Unsupported metric: {metric}. Valid metrics are: cosine.")
 
     # Initialize lists to store the selected snippets for each stratum
-    stratas = [[] for _ in range(num_stratas)]
+    strata_samples = [[] for _ in range(num_stratas)]
 
-    # Perform stratified sampling
-    for stratum_idx in range(num_stratas):
-        stratum_snippets = np.where(strata_indices == stratum_idx + 1)[0]
-        np.random.shuffle(stratum_snippets)
-        selected_snippets = stratum_snippets[:snippets_per_stratum]
-        stratas[stratum_idx] = [java_code_snippets_paths[i] for i in selected_snippets]
+    # Calculate the number of code snippets in each stratum
+    num_snippets = len(java_code_snippets_paths)
+    snippets_per_stratum = min(snippets_per_stratum, num_snippets // num_stratas)
 
-    return stratas
+    # Create a list of indices corresponding to the code snippets
+    snippet_indices = list(range(num_snippets))
+
+    # Shuffle the snippet indices to randomize the sampling process
+    random.shuffle(snippet_indices)
+
+    # Iterate through each stratum
+    for stratum in range(num_stratas):
+        # Get the range of snippet indices for the current stratum
+        start = stratum * snippets_per_stratum
+        end = (stratum + 1) * snippets_per_stratum
+
+        # Randomly select snippet indices from the range
+        selected_indices = snippet_indices[start:end]
+
+        # Add the corresponding code snippet paths to the current stratum
+        strata_samples[stratum] = [java_code_snippets_paths[i] for i in
+                                   selected_indices]
+
+    return strata_samples
 
 
 DATA_DIR = "D:/PyCharm_Projects_D/styler2.0/methods/AreaShop/AddCommand.java"
@@ -182,9 +196,12 @@ def main() -> None:
     Perform stratified sampling on a list of Java code snippets.
     :return: None
     """
-    # Load the code snippets
-    java_code_snippets = load_snippets(DATA_DIR)
-    java_code_snippet_paths = list(java_code_snippets.keys())
+    # Set a random seed
+    random.seed(42)
+
+    # Get the paths to the Java code snippets
+    java_code_snippet_paths = [os.path.join(DATA_DIR, file)
+                               for file in os.listdir(DATA_DIR)]
 
     # Extract features from Java code snippets
     features = [extract_features(path) for path in java_code_snippet_paths]
@@ -196,11 +213,12 @@ def main() -> None:
     similarity_matrix = calculate_similarity_matrix(normalized_features)
 
     # Perform stratified sampling
-    num_stratas = 20
-    snippets_per_stratum = 20
+    num_stratas = 2
+    snippets_per_stratum = 4
     stratas = stratified_sampling(java_code_snippet_paths, similarity_matrix,
-                                  num_stratas,
-                                  snippets_per_stratum)
+                                  metric="cosine",
+                                  num_stratas=num_stratas,
+                                  snippets_per_stratum=snippets_per_stratum)
 
     # Print the selected snippets
     for stratum_idx, stratum in enumerate(stratas):

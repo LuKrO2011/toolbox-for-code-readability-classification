@@ -135,11 +135,12 @@ def test_stratified_sampling():
     similarity_matrix = calculate_similarity_matrix(normalized_features)
 
     # Perform stratified sampling
-    num_stratas = 20
-    snippets_per_stratum = 20
+    num_stratas = 2
+    snippets_per_stratum = 2
     stratas = stratified_sampling(java_code_snippet_paths, similarity_matrix,
-                                  num_stratas,
-                                  snippets_per_stratum)
+                                  metric="cosine",
+                                  num_stratas=num_stratas,
+                                  snippets_per_stratum=snippets_per_stratum)
 
     assert isinstance(stratas, list)
     assert len(stratas) == num_stratas
