@@ -34,7 +34,7 @@ def _setup_logging(log_file: str = DEFAULT_LOG_FILE, overwrite: bool = False) ->
 
     # Define the log format
     formatter = logging.Formatter(
-        "%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s"
+        "%(asctime)s %(name)s %(levelname)s %(message)s"
     )
     file_handler.setFormatter(formatter)
     console_handler.setFormatter(formatter)
@@ -134,14 +134,18 @@ def _run_stratified_sampling(args: Any) -> None:
     num_stratas = args.num_stratas
     snippets_per_stratum = args.snippets_per_stratum
 
+    # Create the save directory, if it does not exist
+    if save_dir is not None:
+        if not os.path.isdir(save_dir):
+            os.makedirs(save_dir)
+
     # Get the paths to the Java code snippets
     stratas = sample(input_dir, output_dir=save_dir,
                      num_stratas=num_stratas,
                      snippets_per_stratum=snippets_per_stratum)
 
     # Log the results
-    logging.info(f"Number of stratas: {len(stratas)}")
-    logging.info(f"Number of snippets per stratum: {snippets_per_stratum}")
+    logging.info(f"The following Java code snippets were sampled:")
     for i, stratum in enumerate(stratas):
         for j, snippet_path in enumerate(stratum):
             logging.info(f"Stratum {i}, Snippet {j}: {snippet_path}")
@@ -151,6 +155,8 @@ def _run_stratified_sampling(args: Any) -> None:
         if not os.path.isdir(save_dir):
             os.makedirs(save_dir)
 
+    # Save the sampled Java code snippet paths
+    if save_dir is not None:
         store_as_txt(stratas, save_dir)
 
 

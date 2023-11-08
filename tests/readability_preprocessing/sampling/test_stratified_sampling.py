@@ -5,7 +5,7 @@ import numpy as np
 
 from src.readability_preprocessing.sampling.stratified_sampling import (
     extract_features, calculate_similarity_matrix,
-    stratified_sampling, normalize_features, parse_feature_output)
+    stratified_sampling, normalize_features, parse_feature_output, sample)
 
 RES_DIR = os.path.join(os.path.dirname(__file__), "../../res/")
 CODE_DIR = RES_DIR + "code_snippets/"
@@ -31,10 +31,12 @@ def test_extract_features():
     code_snippet = CODE_DIR + "AreaShop/AddCommand.java/execute.java"
     features = extract_features(code_snippet)
 
-    assert isinstance(features, list)
+    assert isinstance(features, dict)
     assert len(features) == 110
     for feature in features:
-        assert isinstance(feature, float)
+        assert isinstance(feature, str)
+        assert isinstance(features[feature], float)
+        assert features[feature] >= 0.0 or math.isnan(features[feature])
 
 
 def test_normalize_features():
@@ -122,25 +124,10 @@ def test_calculate_jaccard_similarity_matrix():
 def test_stratified_sampling():
     folder = "AreaShop/AddCommand.java"
     dir = os.path.join(CODE_DIR, folder)
-    java_code_snippet_paths = [os.path.join(dir, file)
-                               for file in os.listdir(dir)]
-
-    # Extract features from Java code snippets
-    features = [extract_features(path) for path in java_code_snippet_paths]
-
-    # Normalize the features and convert to a np array
-    normalized_features = normalize_features(features)
-
-    # Calculate the similarity matrix
-    similarity_matrix = calculate_similarity_matrix(normalized_features)
-
-    # Perform stratified sampling
     num_stratas = 2
     snippets_per_stratum = 2
-    stratas = stratified_sampling(java_code_snippet_paths, similarity_matrix,
-                                  metric="cosine",
-                                  num_stratas=num_stratas,
-                                  snippets_per_stratum=snippets_per_stratum)
+    stratas = sample(dir, num_stratas=num_stratas,
+                     snippets_per_stratum=snippets_per_stratum)
 
     assert isinstance(stratas, list)
     assert len(stratas) == num_stratas

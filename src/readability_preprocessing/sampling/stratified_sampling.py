@@ -1,7 +1,8 @@
+import logging
 import os
 import random
 import subprocess
-from typing import List
+from typing import List, Dict
 
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
@@ -13,6 +14,7 @@ FEATURE_JAR_PATH = (
 )
 WORKING_DIR = os.path.join(os.path.dirname(__file__), "../../res")
 EXTRACT_METRICS_CMD = "it.unimol.readability.metric.runnable.ExtractMetrics"
+CSV_NAME = "features.csv"
 
 
 def parse_feature_output(feature_string: str) -> dict[str, float]:
@@ -36,7 +38,7 @@ def parse_feature_output(feature_string: str) -> dict[str, float]:
     return feature_data
 
 
-def extract_features(snippet_path: str) -> List[float]:
+def extract_features(snippet_path: str) -> dict[str, float]:
     """
     Extract features from a Java code snippet using the Java JAR file
     :param snippet_path: Path to the Java code snippet
@@ -52,10 +54,7 @@ def extract_features(snippet_path: str) -> List[float]:
     # Parse the extracted features into a dictionary
     features = parse_feature_output(feature_string)
 
-    # Convert the dictionary to np array
-    features_array = list(features.values())
-
-    return features_array
+    return features
 
 
 def normalize_features(features: List[List[float]], epsilon=1e-8) -> np.ndarray[
@@ -169,7 +168,37 @@ def list_java_files(directory: str) -> List[str]:
 
     return java_files
 
-# TODO: Add intermediate saves
+
+# TODO: Move to other file?
+def append_features_to_csv(output_dir: str, features: dict[str, float]) -> None:
+    """
+    Append the extracted features to a CSV file.
+    :param output_dir: The directory where the CSV file should be stored
+    :param features: The extracted features
+    :return: None
+    """
+    # Get the path to the CSV file
+    csv_file_path = os.path.join(output_dir, CSV_NAME)
+
+    # Check if the CSV file already exists
+    csv_file_exists = os.path.isfile(csv_file_path)
+
+    # Append the features to the CSV file
+    with open(csv_file_path, "a") as csv_file:
+        # Write the header, if the CSV file does not exist
+        if not csv_file_exists:
+            csv_file.write("path,")
+            for feature_name in features.keys():
+                csv_file.write(f"{feature_name},")
+            csv_file.write("\n")
+
+        # Write the features to the CSV file
+        csv_file.write(f"{features['path']},")
+        for feature_value in features.values():
+            csv_file.write(f"{feature_value},")
+        csv_file.write("\n")
+
+
 def sample(input_dir: str, output_dir: str = None, num_stratas: int = 20,
            snippets_per_stratum: int = 20) -> list[list[str]]:
     """
@@ -187,7 +216,19 @@ def sample(input_dir: str, output_dir: str = None, num_stratas: int = 20,
     java_code_snippet_paths = list_java_files(input_dir)
 
     # Extract features from Java code snippets
-    features = [extract_features(path) for path in java_code_snippet_paths]
+    features = []
+    for path in java_code_snippet_paths:
+        features_of_snippet = extract_features(path)
+
+        # Store the features of the snippet, if an output directory is specified
+        if output_dir is not None:
+            append_features_to_csv(output_dir, features_of_snippet)
+
+        logging.info(f"Extracted features from {path}.")
+        features.append(list(features_of_snippet.values()))
+
+    logging.info(f"Extracted features from {len(java_code_snippet_paths)} Java code "
+                 f"snippets.")
 
     # Normalize the features and convert to a np array
     normalized_features = normalize_features(features)
@@ -204,11 +245,11 @@ def sample(input_dir: str, output_dir: str = None, num_stratas: int = 20,
     return stratas
 
 
-DATA_DIR = "D:/PyCharm_Projects_D/styler2.0/methods/AreaShop"
+DATA_DIR = "D:/PyCharm_Projects_D/styler2.0/methods/AreaShop/AddCommand.java"
 
 
 def main() -> None:
-    stratas = sample(DATA_DIR)
+    stratas = sample(DATA_DIR, num_stratas=2, snippets_per_stratum=2)
 
     # Print the selected snippets
     for stratum_idx, stratum in enumerate(stratas):
