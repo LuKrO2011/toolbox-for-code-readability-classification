@@ -16,11 +16,6 @@ WORKING_DIR = os.path.join(os.path.dirname(__file__), "../../res")
 EXTRACT_METRICS_CMD = "it.unimol.readability.metric.runnable.ExtractMetrics"
 
 
-# TODO: How to deal with nans when normalizing?
-# TODO: Improve similarity calculation
-# TODO: Write tests
-
-
 @deprecated("Actual snippets are not needed, only paths.")
 def load_snippets(data_dir: str) -> dict[str, str]:
     """
