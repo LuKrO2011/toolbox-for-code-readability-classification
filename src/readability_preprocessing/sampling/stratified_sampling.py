@@ -18,7 +18,8 @@ def extract_features(code_snippet: str) -> List[float]:
     :return: Extracted features
     """
     feature_extraction_command = ["java", "-jar", FEATURE_JAR_PATH, code_snippet]
-    process = subprocess.Popen(feature_extraction_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    process = subprocess.Popen(feature_extraction_command, stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE, text=True)
     stdout, _ = process.communicate()
     features = stdout.strip()
 
@@ -30,12 +31,13 @@ def extract_features(code_snippet: str) -> List[float]:
 
 def calculate_similarity(features1: List[float], features2: List[float]) -> float:
     """
-    Calculate the similarity between two Java code snippets based on their extracted features
+    Calculate the similarity between two Java snippets based on their extracted features
     :param features1: The extracted features of the first Java code snippet
     :param features2: The extracted features of the second Java code snippet
     :return: The similarity between the two Java code snippets
     """
-    similarity = np.dot(features1, features2) / (np.linalg.norm(features1) * np.linalg.norm(features2))
+    similarity = np.dot(features1, features2) / (
+        np.linalg.norm(features1) * np.linalg.norm(features2))
     return similarity
 
 
@@ -48,7 +50,8 @@ def calculate_similarity_matrix(features: List[List[float]]) -> np.ndarray[[floa
     features_array = np.array(features)
 
     # Normalize the feature vectors
-    normalized_features = features_array / np.linalg.norm(features_array, axis=1)[:, np.newaxis]
+    normalized_features = features_array / np.linalg.norm(features_array, axis=1)[:,
+                                           np.newaxis]
 
     # Calculate the similarity matrix using a dot product
     similarity_matrix = np.dot(normalized_features, normalized_features.T)
@@ -56,12 +59,14 @@ def calculate_similarity_matrix(features: List[List[float]]) -> np.ndarray[[floa
     return similarity_matrix
 
 
-def stratified_sampling(java_code_snippets: List[str], similarity_matrix: np.ndarray[[float]], num_stratas: int = 20,
+def stratified_sampling(java_code_snippets: List[str],
+                        similarity_matrix: np.ndarray[[float]], num_stratas: int = 20,
                         snippets_per_stratum: int = 20) -> (List[List[str]]):
     """
     Perform stratified sampling based on the similarity matrix.
-    The sampling is performed by first splitting the Java snippets into #num_stratas stratas based on the similarity
-    matrix (Euclidean distance). Each stratum should contain #snippets_per_stratum random Java snippets.
+    The sampling is performed by first splitting the Java snippets into
+    #num_stratas stratas based on the similarity matrix (Euclidean distance).
+    Each stratum should contain #snippets_per_stratum random Java snippets.
     :param java_code_snippets: List of Java code snippets
     :param similarity_matrix: The similarity matrix
     :param num_stratas: The number of stratas to use for sampling
@@ -69,14 +74,16 @@ def stratified_sampling(java_code_snippets: List[str], similarity_matrix: np.nda
     :return: The selected Java code snippets for training and testing
     """
     if len(java_code_snippets) != similarity_matrix.shape[0]:
-        raise ValueError("Number of code snippets must match the rows of the similarity matrix.")
+        raise ValueError(
+            "Number of code snippets must match the rows of the similarity matrix.")
 
     # Calculate Euclidean distance from the similarity matrix
     euclidean_distances = np.sqrt(np.sum((similarity_matrix - 1) ** 2, axis=1))
 
     # Divide the snippets into stratas based on Euclidean distance
     strata_indices = np.digitize(euclidean_distances,
-                                 bins=np.linspace(0, euclidean_distances.max(), num=num_stratas + 1))
+                                 bins=np.linspace(0, euclidean_distances.max(),
+                                                  num=num_stratas + 1))
 
     # Initialize lists to store the selected snippets for each stratum
     stratas = [[] for _ in range(num_stratas)]
@@ -108,7 +115,8 @@ def main() -> None:
     # Perform stratified sampling
     num_stratas = 20
     snippets_per_stratum = 20
-    stratas = stratified_sampling(java_code_snippets, similarity_matrix, num_stratas, snippets_per_stratum)
+    stratas = stratified_sampling(java_code_snippets, similarity_matrix, num_stratas,
+                                  snippets_per_stratum)
 
     # Print the selected snippets
     for stratum_idx, stratum in enumerate(stratas):
