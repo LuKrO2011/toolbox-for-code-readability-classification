@@ -3,7 +3,7 @@ import os
 
 import numpy as np
 
-from readability_preprocessing.utils.csv import load_features_from_csv
+from src.readability_preprocessing.utils.csv import load_features_from_csv
 from src.readability_preprocessing.sampling.stratified_sampling import (
     _extract_features, _calculate_similarity_matrix,
     _normalize_features, _parse_feature_output, sample,
@@ -32,6 +32,18 @@ def test_parse_feature_output():
 
 def test_extract_features():
     code_snippet = CODE_DIR + "AreaShop/AddCommand.java/execute.java"
+    features = _extract_features(code_snippet)
+
+    assert isinstance(features, dict)
+    assert len(features) == 110
+    for feature in features:
+        assert isinstance(feature, str)
+        assert isinstance(features[feature], float)
+        assert features[feature] >= 0.0 or math.isnan(features[feature])
+
+
+def test_extract_features_2():
+    code_snippet = CODE_DIR + "AreaShop/AreaShopInterface.java/debugI.java"
     features = _extract_features(code_snippet)
 
     assert isinstance(features, dict)
@@ -131,7 +143,9 @@ def test_calculate_features():
 
     assert isinstance(features, dict)
     assert len(features) == 4
-    for feature in features:
+    for paths in features.keys():
+        assert isinstance(paths, str)
+    for feature in features.values():
         assert isinstance(feature, dict)
         assert len(feature) == 110
         for feature_name, feature_value in feature.items():

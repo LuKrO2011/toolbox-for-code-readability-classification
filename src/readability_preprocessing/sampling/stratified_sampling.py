@@ -9,8 +9,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.metrics.pairwise import pairwise_distances
 
-from readability_preprocessing.utils.csv import append_features_to_csv
-from readability_preprocessing.utils.utils import list_java_files
+from src.readability_preprocessing.utils.csv import append_features_to_csv
+from src.readability_preprocessing.utils.utils import list_java_files
 
 FEATURE_JAR_PATH = (
     "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Metriken/RSE.jar"
@@ -20,6 +20,7 @@ EXTRACT_METRICS_CMD = "it.unimol.readability.metric.runnable.ExtractMetrics"
 CSV_NAME = "features.csv"
 
 
+# TODO: Use header.csv and fill values accordingly to make 110 values sure in right order
 def _parse_feature_output(feature_string: str) -> dict[str, float]:
     """
     Parse the output of the feature extraction JAR file to a dictionary

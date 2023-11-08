@@ -147,11 +147,6 @@ def _run_stratified_sampling(args: Any) -> None:
         for j, snippet_path in enumerate(stratum):
             logging.info(f"Stratum {i}, Snippet {j}: {snippet_path}")
 
-    # Save the sampled Java code snippet_path paths
-    if save_dir is not None:
-        if not os.path.isdir(save_dir):
-            os.makedirs(save_dir)
-
     # Save the sampled Java code snippet paths
     if save_dir is not None:
         store_as_txt(stratas, save_dir)
