@@ -1,15 +1,16 @@
 import logging
 import os
-import random
 import subprocess
 from typing import List, Dict
+
+from fastcluster import ward
 
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.metrics.pairwise import pairwise_distances
 
-from src.readability_preprocessing.utils.csv import append_features_to_csv
+from src.readability_preprocessing.utils.csv import append_features_to_csv, load_header
 from src.readability_preprocessing.utils.utils import list_java_files
 
 FEATURE_JAR_PATH = (
@@ -20,24 +21,28 @@ EXTRACT_METRICS_CMD = "it.unimol.readability.metric.runnable.ExtractMetrics"
 CSV_NAME = "features.csv"
 
 
-# TODO: Use header.csv and fill values accordingly to make 110 values sure in right order
 def _parse_feature_output(feature_string: str) -> dict[str, float]:
     """
     Parse the output of the feature extraction JAR file to a dictionary
     :param feature_string: The output of the feature extraction JAR file
     :return: The extracted features as a dictionary
     """
-    feature_lines = feature_string.split('\n')
+    feature_lines = feature_string.split('\n')[1:]
     feature_data = {}
+    header_feature_names = load_header()
 
-    for line in feature_lines:
-        if line:
-            parts = line.split(":")
-            if len(parts) == 2:
-                feature_name = parts[0].strip()
-                feature_value = parts[1].strip()
-                feature_value = float(feature_value)
-                feature_data[feature_name] = feature_value
+    # Initialize the feature dictionary with NaN values
+    for idx, header_feature_name in enumerate(header_feature_names[1:]):
+        feature_data[header_feature_name] = np.nan
+
+    # Parse the feature lines
+    for feature_line in feature_lines:
+        feature_name = feature_line.split(":")[0].strip()
+        feature_value = float(feature_line.split(":")[1].strip())
+        for header_feature_name in header_feature_names[1:]:
+            if header_feature_name == feature_name:
+                if feature_value >= 0.0:
+                    feature_data[header_feature_name] = feature_value
 
     return feature_data
 
@@ -113,7 +118,7 @@ def _stratified_sampling(java_code_snippets_paths: List[str],
     Perform stratified sampling based on the similarity matrix.
     The sampling is performed by first splitting the Java snippets into
     #num_stratas stratas based on the similarity matrix (Euclidean distance).
-    Each stratum should contain #snippets_per_stratum random Java snippets.
+    Each stratum should contain at most #snippets_per_stratum Java snippets.
     :param java_code_snippets_paths: The paths to the Java code snippets
     :param similarity_matrix: The similarity matrix
     :param metric: The metric to use for calculating the similarity matrix
@@ -133,26 +138,30 @@ def _stratified_sampling(java_code_snippets_paths: List[str],
 
     # Calculate the number of code snippets in each stratum
     num_snippets = len(java_code_snippets_paths)
-    snippets_per_stratum = min(snippets_per_stratum, num_snippets // num_stratas)
+    max_snippets_per_stratum = num_snippets // num_stratas
+    snippets_per_stratum = min(snippets_per_stratum, max_snippets_per_stratum)
 
-    # Create a list of indices corresponding to the code snippets
-    snippet_indices = list(range(num_snippets))
+    # Use ward clustering to split the snippets into stratas
+    linkage_matrix = ward(similarity_matrix)
+    strata_indices = linkage_matrix[:, :2].astype(int)
 
-    # Shuffle the snippet indices to randomize the sampling process
-    random.shuffle(snippet_indices)
+    # Iterate over the strata
+    for stratum_idx in range(num_stratas):
+        # Get the indices of the snippets in the current stratum
+        stratum_snippet_indices = list(np.where(strata_indices == stratum_idx))
 
-    # Iterate through each stratum
-    for stratum in range(num_stratas):
-        # Get the range of snippet indices for the current stratum
-        start = stratum * snippets_per_stratum
-        end = (stratum + 1) * snippets_per_stratum
+        # Get the paths to the snippets in the current stratum
+        stratum_snippet_paths = []
+        for snippet_idx in stratum_snippet_indices[0]:
+            stratum_snippet_paths.append(java_code_snippets_paths[snippet_idx])
 
-        # Randomly select snippet indices from the range
-        selected_indices = snippet_indices[start:end]
+        # Sample snippets from the current stratum
+        stratum_samples = np.random.choice(stratum_snippet_paths,
+                                           snippets_per_stratum,
+                                           replace=False)
 
-        # Add the corresponding code snippet paths to the current stratum
-        strata_samples[stratum] = [java_code_snippets_paths[i] for i in
-                                   selected_indices]
+        # Add the sampled snippets to the list of strata samples
+        strata_samples[stratum_idx] = stratum_samples.tolist()
 
     return strata_samples
 

@@ -52,6 +52,7 @@ def test_extract_features_2():
         assert isinstance(feature, str)
         assert isinstance(features[feature], float)
         assert features[feature] >= 0.0 or math.isnan(features[feature])
+    assert not all(math.isnan(feature) for feature in features.values())
 
 
 def test_normalize_features():

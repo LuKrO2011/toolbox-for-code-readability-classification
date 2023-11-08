@@ -2,6 +2,8 @@ import logging
 import os
 from typing import Dict
 
+HEADER_PATH = os.path.join(os.path.dirname(__file__), "../../res/header.csv")
+
 
 def append_features_to_csv(filename: str, snippet_path: str,
                            features: dict[str, float]) -> None:
@@ -19,12 +21,8 @@ def append_features_to_csv(filename: str, snippet_path: str,
     with open(filename, "a") as csv_file:
         # Write the header, if the CSV file does not exist
         if not csv_file_exists:
-            csv_file.write("path,")
-            for idx, feature_name in enumerate(features.keys()):
-                csv_file.write(feature_name)
-                if idx != len(features) - 1:
-                    csv_file.write(",")
-            csv_file.write("\n")
+            header = load_header()
+            csv_file.write(",".join(header) + "\n")
 
         # Append the feature to the CSV file
         csv_file.write(f"{snippet_path},")
@@ -71,3 +69,16 @@ def load_features_from_csv(csv_file_path: str) -> Dict[str, Dict[str, float]]:
     logging.info(f"Loaded features from {csv_file_path}.")
 
     return features
+
+
+def load_header(path: str = HEADER_PATH) -> list[str]:
+    """
+    Load the header of the CSV file.
+    :param path: The path to the CSV file
+    :return: The header of the CSV file
+    """
+    # Load the header
+    with open(path, "r") as header_file:
+        header = header_file.readline().strip().split(",")
+
+    return header
