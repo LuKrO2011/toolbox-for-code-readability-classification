@@ -3,7 +3,9 @@ import os
 import subprocess
 from typing import List, Dict
 
-from fastcluster import ward
+import fastcluster
+from fastcluster import ward, linkage
+import scipy.cluster.hierarchy as sch
 
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
@@ -109,7 +111,7 @@ def _calculate_similarity_matrix(features: np.ndarray[float], metric="cosine") -
 
     return similarity_matrix
 
-
+# TODO: Make sure that all clusters have the same amount of snippets
 def _stratified_sampling(java_code_snippets_paths: List[str],
                          similarity_matrix: np.ndarray[[float]], metric="cosine",
                          num_stratas: int = 20, snippets_per_stratum: int = 20) -> (
@@ -141,27 +143,15 @@ def _stratified_sampling(java_code_snippets_paths: List[str],
     max_snippets_per_stratum = num_snippets // num_stratas
     snippets_per_stratum = min(snippets_per_stratum, max_snippets_per_stratum)
 
-    # Use ward clustering to split the snippets into stratas
-    linkage_matrix = ward(similarity_matrix)
-    strata_indices = linkage_matrix[:, :2].astype(int)
+    # Perform Ward's hierarchical clustering to group the Java snippets into stratas
+    linkage_matrix = linkage(similarity_matrix, method="ward", metric="cosine")
 
-    # Iterate over the strata
-    for stratum_idx in range(num_stratas):
-        # Get the indices of the snippets in the current stratum
-        stratum_snippet_indices = list(np.where(strata_indices == stratum_idx))
+    # Crop the dendrogram at the desired number of clusters
+    cluster = sch.fcluster(linkage_matrix, num_stratas, criterion='maxclust')
 
-        # Get the paths to the snippets in the current stratum
-        stratum_snippet_paths = []
-        for snippet_idx in stratum_snippet_indices[0]:
-            stratum_snippet_paths.append(java_code_snippets_paths[snippet_idx])
-
-        # Sample snippets from the current stratum
-        stratum_samples = np.random.choice(stratum_snippet_paths,
-                                           snippets_per_stratum,
-                                           replace=False)
-
-        # Add the sampled snippets to the list of strata samples
-        strata_samples[stratum_idx] = stratum_samples.tolist()
+    # Add the Java code snippets to the stratas
+    for snippet_idx, stratum_idx in enumerate(cluster):
+        strata_samples[stratum_idx - 1].append(java_code_snippets_paths[snippet_idx])
 
     return strata_samples
 
