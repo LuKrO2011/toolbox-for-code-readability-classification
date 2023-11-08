@@ -53,22 +53,70 @@ def test_normalize_features():
             assert 0.0 <= value <= 1.0
 
 
-def test_calculate_similarity_matrix():
+def test_calculate_cosine_similarity_matrix():
     features = np.array([
         [0.12309149, 0.20739034, 0.26726124],
         [0.49236596, 0.51847585, 0.53452248],
         [0.86164044, 0.82956135, 0.80178373]
     ])
-    similarity_matrix = calculate_similarity_matrix(features)
+    similarity_matrix = calculate_similarity_matrix(features, metric="cosine")
 
+    epsilon = 1e-8
     assert isinstance(similarity_matrix, np.ndarray)
     assert similarity_matrix.shape == (3, 3)
-    assert similarity_matrix[0, 0] == 1.0
-    assert similarity_matrix[1, 1] == 1.0
-    assert similarity_matrix[2, 2] == 1.0
-    assert similarity_matrix[0, 1] == similarity_matrix[1, 0]
-    assert similarity_matrix[0, 2] == similarity_matrix[2, 0]
-    assert similarity_matrix[1, 2] == similarity_matrix[2, 1]
+    assert abs(similarity_matrix[0, 0] - 1.0) < epsilon
+    assert abs(similarity_matrix[1, 1] - 1.0) < epsilon
+    assert abs(similarity_matrix[2, 2] - 1.0) < epsilon
+    assert abs(similarity_matrix[0, 1] - similarity_matrix[1, 0]) < epsilon
+    assert abs(similarity_matrix[0, 2] - similarity_matrix[2, 0]) < epsilon
+    assert abs(similarity_matrix[1, 2] - similarity_matrix[2, 1]) < epsilon
+    for row in similarity_matrix:
+        for value in row:
+            assert -1.0 <= value <= 1.0
+
+
+def test_calculate_euclid_similarity_matrix():
+    features = np.array([
+        [0.12309149, 0.20739034, 0.26726124],
+        [0.49236596, 0.51847585, 0.53452248],
+        [0.86164044, 0.82956135, 0.80178373]
+    ])
+    similarity_matrix = calculate_similarity_matrix(features, metric="euclidean")
+
+    epsilon = 1e-8
+    assert isinstance(similarity_matrix, np.ndarray)
+    assert similarity_matrix.shape == (3, 3)
+    assert abs(similarity_matrix[0, 0]) < epsilon
+    assert abs(similarity_matrix[1, 1]) < epsilon
+    assert abs(similarity_matrix[2, 2]) < epsilon
+    assert abs(similarity_matrix[0, 1] - similarity_matrix[1, 0]) < epsilon
+    assert abs(similarity_matrix[0, 2] - similarity_matrix[2, 0]) < epsilon
+    assert abs(similarity_matrix[1, 2] - similarity_matrix[2, 1]) < epsilon
+    for row in similarity_matrix:
+        for value in row:
+            assert 0 <= value
+
+
+def test_calculate_jaccard_similarity_matrix():
+    features = np.array([
+        [0.12309149, 0.20739034, 0.26726124],
+        [0.49236596, 0.51847585, 0.53452248],
+        [0.86164044, 0.82956135, 0.80178373]
+    ])
+    similarity_matrix = calculate_similarity_matrix(features, metric="jaccard")
+
+    epsilon = 1e-8
+    assert isinstance(similarity_matrix, np.ndarray)
+    assert similarity_matrix.shape == (3, 3)
+    assert abs(similarity_matrix[0, 0] - 1.0) < epsilon
+    assert abs(similarity_matrix[1, 1] - 1.0) < epsilon
+    assert abs(similarity_matrix[2, 2] - 1.0) < epsilon
+    assert abs(similarity_matrix[0, 1] - similarity_matrix[1, 0]) < epsilon
+    assert abs(similarity_matrix[0, 2] - similarity_matrix[2, 0]) < epsilon
+    assert abs(similarity_matrix[1, 2] - similarity_matrix[2, 1]) < epsilon
+    for row in similarity_matrix:
+        for value in row:
+            assert 0.0 <= value <= 1.0
 
 
 def test_stratified_sampling():

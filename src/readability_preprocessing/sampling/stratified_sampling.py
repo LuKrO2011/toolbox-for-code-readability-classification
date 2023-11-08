@@ -5,6 +5,10 @@ from typing import List
 import numpy as np
 from typing_extensions import deprecated
 
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics.pairwise import euclidean_distances
+from sklearn.metrics.pairwise import pairwise_distances
+
 FEATURE_JAR_PATH = (
     "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Metriken/RSE.jar"
 )
@@ -115,13 +119,23 @@ def normalize_features(features: List[List[float]], epsilon=1e-8) -> np.ndarray[
     return normalized_features
 
 
-def calculate_similarity_matrix(features: np.ndarray[float]) -> np.ndarray[[float]]:
+def calculate_similarity_matrix(features: np.ndarray[float], metric="cosine") -> \
+    np.ndarray[[float]]:
     """
     Calculate the similarity matrix for a given list of Java code snippets.
     :param features: List of extracted features
+    :param metric: The metric to use for calculating the similarity matrix
     :return: The similarity matrix
     """
-    similarity_matrix = np.dot(features, features.T)
+    if metric == "cosine":
+        similarity_matrix = cosine_similarity(features)
+    elif metric == "jaccard":
+        similarity_matrix = 1 - pairwise_distances(features, metric="jaccard")
+    elif metric == "euclidean":
+        similarity_matrix = euclidean_distances(features)
+    else:
+        raise ValueError(f"Unknown metric: {metric}. Valid metrics are: cosine, "
+                         f"jaccard, euclidean.")
 
     return similarity_matrix
 
