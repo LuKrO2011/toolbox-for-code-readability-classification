@@ -3,6 +3,7 @@ import subprocess
 from typing import List
 
 import numpy as np
+from typing_extensions import deprecated
 
 FEATURE_JAR_PATH = (
     "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Metriken/RSE.jar"
@@ -12,11 +13,10 @@ EXTRACT_METRICS_CMD = "it.unimol.readability.metric.runnable.ExtractMetrics"
 
 
 # TODO: How to deal with nans when normalizing?
-# TODO: Convert features to a numpy array or similar
+# TODO: Improve similarity calculation
 # TODO: Write tests
-# TODO: Debug
 
-def load_snippets(data_dir: str) -> dict:
+def load_snippets(data_dir: str) -> dict[str, str]:
     """
     Loads the code snippets from the folder (data_dir) and returns them as a dictionary.
     The keys of the dictionary is the file path and the values are the code snippets.
@@ -34,7 +34,7 @@ def load_snippets(data_dir: str) -> dict:
     return code_snippets
 
 
-def parse_feature_output(feature_string: str) -> dict:
+def parse_feature_output(feature_string: str) -> dict[str, float]:
     """
     Parse the output of the feature extraction JAR file to a dictionary
     :param feature_string: The output of the feature extraction JAR file
@@ -74,12 +74,13 @@ def extract_features(snippet_path: str) -> List[float]:
     # Parse the extracted features into a dictionary
     features = parse_feature_output(feature_string)
 
-    # Convert the features to a list
-    features_list = list(features.values())
+    # Convert the dictionary to np array
+    features_array = list(features.values())
 
-    return features_list
+    return features_array
 
 
+@deprecated("Use matrix multiplication for efficiency instead.")
 def calculate_similarity(features1: List[float], features2: List[float]) -> float:
     """
     Calculate the similarity between two Java snippets based on their extracted features
@@ -115,17 +116,13 @@ def normalize_features(features: List[List[float]], epsilon=1e-8) -> np.ndarray[
     return normalized_features
 
 
-def calculate_similarity_matrix(features: List[List[float]]) -> \
-    np.ndarray[[float]]:
+def calculate_similarity_matrix(features: np.ndarray[float]) -> np.ndarray[[float]]:
     """
     Calculate the similarity matrix for a given list of Java code snippets.
     :param features: List of extracted features
     :return: The similarity matrix
     """
-    normalized_features = normalize_features(features)
-
-    # Calculate the similarity matrix using a dot product
-    similarity_matrix = np.dot(normalized_features, normalized_features.T)
+    similarity_matrix = np.dot(features, features.T)
 
     return similarity_matrix
 
@@ -184,8 +181,11 @@ def main() -> None:
     # Extract features from Java code snippets
     features = [extract_features(path) for path in java_code_snippet_paths]
 
+    # Normalize the features and convert to a np array
+    normalized_features = normalize_features(features)
+
     # Calculate the similarity matrix
-    similarity_matrix = calculate_similarity_matrix(features)
+    similarity_matrix = calculate_similarity_matrix(normalized_features)
 
     # Perform stratified sampling
     num_stratas = 20
