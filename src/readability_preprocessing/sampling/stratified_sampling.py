@@ -154,20 +154,37 @@ def stratified_sampling(java_code_snippets_paths: List[str],
     return strata_samples
 
 
-DATA_DIR = "D:/PyCharm_Projects_D/styler2.0/methods/AreaShop/AddCommand.java"
+def list_java_files(directory: str) -> List[str]:
+    """
+    List all Java files in a directory.
+    :param directory: The directory to search for Java files
+    :return: A list of Java files
+    """
+    java_files = []
 
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith(".java"):
+                java_files.append(os.path.abspath(os.path.join(root, file)))
 
-def main() -> None:
+    return java_files
+
+# TODO: Add intermediate saves
+def sample(input_dir: str, output_dir: str = None, num_stratas: int = 20,
+           snippets_per_stratum: int = 20) -> list[list[str]]:
     """
     Perform stratified sampling on a list of Java code snippets.
+    :param input_dir: The directory containing the Java code snippets
+    :param output_dir: The directory where the sampled Java code snippets should be stored
+    :param num_stratas: The number of stratas to use for sampling
+    :param snippets_per_stratum: The number of Java code snippets to sample per stratum
     :return: None
     """
-    # Set a random seed
-    random.seed(42)
+    if input_dir is None or not os.path.isdir(input_dir):
+        raise ValueError("Input directory must be a valid directory.")
 
     # Get the paths to the Java code snippets
-    java_code_snippet_paths = [os.path.join(DATA_DIR, file)
-                               for file in os.listdir(DATA_DIR)]
+    java_code_snippet_paths = list_java_files(input_dir)
 
     # Extract features from Java code snippets
     features = [extract_features(path) for path in java_code_snippet_paths]
@@ -179,12 +196,19 @@ def main() -> None:
     similarity_matrix = calculate_similarity_matrix(normalized_features)
 
     # Perform stratified sampling
-    num_stratas = 2
-    snippets_per_stratum = 4
     stratas = stratified_sampling(java_code_snippet_paths, similarity_matrix,
                                   metric="cosine",
                                   num_stratas=num_stratas,
                                   snippets_per_stratum=snippets_per_stratum)
+
+    return stratas
+
+
+DATA_DIR = "D:/PyCharm_Projects_D/styler2.0/methods/AreaShop"
+
+
+def main() -> None:
+    stratas = sample(DATA_DIR)
 
     # Print the selected snippets
     for stratum_idx, stratum in enumerate(stratas):
