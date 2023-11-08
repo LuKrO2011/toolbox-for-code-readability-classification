@@ -170,10 +170,12 @@ def list_java_files(directory: str) -> List[str]:
 
 
 # TODO: Move to other file?
-def append_features_to_csv(output_dir: str, features: dict[str, float]) -> None:
+def append_features_to_csv(output_dir: str, snippet_path: str,
+                           features: dict[str, float]) -> None:
     """
     Append the extracted features to a CSV file.
     :param output_dir: The directory where the CSV file should be stored
+    :param snippet_path: The path to the Java code snippet
     :param features: The extracted features
     :return: None
     """
@@ -193,7 +195,7 @@ def append_features_to_csv(output_dir: str, features: dict[str, float]) -> None:
             csv_file.write("\n")
 
         # Write the features to the CSV file
-        csv_file.write(f"{features['path']},")
+        csv_file.write(f"{snippet_path},")
         for feature_value in features.values():
             csv_file.write(f"{feature_value},")
         csv_file.write("\n")
@@ -222,7 +224,7 @@ def sample(input_dir: str, output_dir: str = None, num_stratas: int = 20,
 
         # Store the features of the snippet, if an output directory is specified
         if output_dir is not None:
-            append_features_to_csv(output_dir, features_of_snippet)
+            append_features_to_csv(output_dir, path, features_of_snippet)
 
         logging.info(f"Extracted features from {path}.")
         features.append(list(features_of_snippet.values()))
