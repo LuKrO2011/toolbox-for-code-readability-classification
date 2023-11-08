@@ -8,7 +8,7 @@ from typing_extensions import deprecated
 FEATURE_JAR_PATH = (
     "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Metriken/RSE.jar"
 )
-WORKING_DIR = "../../res"
+WORKING_DIR = os.path.join(os.path.dirname(__file__), "../../res")
 EXTRACT_METRICS_CMD = "it.unimol.readability.metric.runnable.ExtractMetrics"
 
 
@@ -61,13 +61,10 @@ def extract_features(snippet_path: str) -> List[float]:
     :param snippet_path: Path to the Java code snippet
     :return: Extracted features
     """
-    working_dir = os.path.join(os.getcwd(), WORKING_DIR)
-
-    jar_path = os.path.join(FEATURE_JAR_PATH)
-    feature_extraction_command = ["java", "-cp", jar_path, EXTRACT_METRICS_CMD,
+    feature_extraction_command = ["java", "-cp", FEATURE_JAR_PATH, EXTRACT_METRICS_CMD,
                                   snippet_path]
     process = subprocess.Popen(feature_extraction_command, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE, text=True, cwd=working_dir)
+                               stderr=subprocess.PIPE, text=True, cwd=WORKING_DIR)
     stdout, _ = process.communicate()
     feature_string = stdout.strip()
 
