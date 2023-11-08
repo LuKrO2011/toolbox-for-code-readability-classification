@@ -9,6 +9,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.metrics.pairwise import pairwise_distances
 
+from readability_preprocessing.utils.csv import append_features_to_csv
+from readability_preprocessing.utils.utils import list_java_files
+
 FEATURE_JAR_PATH = (
     "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Metriken/RSE.jar"
 )
@@ -153,98 +156,6 @@ def _stratified_sampling(java_code_snippets_paths: List[str],
     return strata_samples
 
 
-# TODO: Move to other file?
-def list_java_files(directory: str) -> List[str]:
-    """
-    List all Java files in a directory.
-    :param directory: The directory to search for Java files
-    :return: A list of Java files
-    """
-    java_files = []
-
-    for root, dirs, files in os.walk(directory):
-        for file in files:
-            if file.endswith(".java"):
-                java_files.append(os.path.abspath(os.path.join(root, file)))
-
-    return java_files
-
-
-# TODO: Move to other file?
-def append_features_to_csv(output_dir: str, snippet_path: str,
-                           features: dict[str, float]) -> None:
-    """
-    Append the extracted features to a CSV file.
-    :param output_dir: The directory where the CSV file should be stored
-    :param snippet_path: The path to the Java code snippet
-    :param features: The extracted features
-    :return: None
-    """
-    # Get the path to the CSV file
-    csv_file_path = os.path.join(output_dir, CSV_NAME)
-
-    # Check if the CSV file already exists
-    csv_file_exists = os.path.isfile(csv_file_path)
-
-    # Append the features to the CSV file
-    with open(csv_file_path, "a") as csv_file:
-        # Write the header, if the CSV file does not exist
-        if not csv_file_exists:
-            csv_file.write("path,")
-            for idx, feature_name in enumerate(features.keys()):
-                csv_file.write(feature_name)
-                if idx != len(features) - 1:
-                    csv_file.write(",")
-            csv_file.write("\n")
-
-        # Append the feature to the CSV file
-        csv_file.write(f"{snippet_path},")
-        for idx, feature_value in enumerate(features.values()):
-            csv_file.write(str(feature_value))
-            if idx != len(features) - 1:
-                csv_file.write(",")
-        csv_file.write("\n")
-
-
-# TODO: Move to other file?
-def load_features_from_csv(csv_file_path: str) -> Dict[str, Dict[str, float]]:
-    """
-    Load the extracted features from a CSV file.
-    :param csv_file_path: The path to the CSV file
-    :return: The extracted features
-    """
-    # Check if the CSV file exists
-    if not os.path.isfile(csv_file_path):
-        raise ValueError(f"CSV file does not exist: {csv_file_path}")
-
-    # Load the features from the CSV file
-    features = {}
-    with open(csv_file_path, 'r') as csv_file:
-
-        # Read the header
-        header = csv_file.readline().strip().split(",")
-
-        # Read the features
-        for line in csv_file:
-            # Create a dictionary to store the features
-            feature_data = {}
-
-            # Read the features
-            feature_values = line.strip().split(",")
-            for idx, feature_name in enumerate(header[1:]):
-                feature_value = feature_values[idx + 1]
-                feature_value = float(feature_value)
-                feature_data[feature_name] = feature_value
-
-            # Add the features to the list
-            if feature_data:  # Do not add empty entries
-                features.update({feature_values[0]: feature_data})
-
-    logging.info(f"Loaded features from {csv_file_path}.")
-
-    return features
-
-
 def calculate_features(input_dir: str, output_dir: str = None) -> Dict[
     str, Dict[str, float]]:
     """
@@ -266,7 +177,8 @@ def calculate_features(input_dir: str, output_dir: str = None) -> Dict[
 
         # Store the features of the snippet, if an output directory is specified
         if output_dir is not None:
-            append_features_to_csv(output_dir, path, features_of_snippet)
+            append_features_to_csv(os.path.join(output_dir, CSV_NAME), path,
+                                   features_of_snippet)
 
         logging.info(f"Extracted features from {path}.")
         features.update({path: features_of_snippet})

@@ -8,7 +8,9 @@ from pathlib import Path
 from typing import Any, List
 
 from readability_preprocessing.sampling.stratified_sampling import sample, \
-    load_features_from_csv, calculate_features
+    calculate_features
+from readability_preprocessing.utils.csv import load_features_from_csv
+from readability_preprocessing.utils.utils import store_as_txt
 
 DEFAULT_LOG_FILE_NAME = "readability-preprocessing"
 DEFAULT_LOG_FILE = f"{DEFAULT_LOG_FILE_NAME}.log"
@@ -44,20 +46,6 @@ def _setup_logging(log_file: str = DEFAULT_LOG_FILE, overwrite: bool = False) ->
     logger = logging.getLogger("")
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
-
-
-def store_as_txt(stratas: List[List[str]], output_dir: str) -> None:
-    """
-    Store the sampled Java code snippet paths in a txt file.
-    :param stratas: The sampled Java code snippet paths
-    :param output_dir: The directory where the txt file should be stored
-    :return: None
-    """
-    with open(os.path.join(output_dir, "stratas.txt"), "w") as file:
-        for stratum in stratas:
-            file.write(f"Stratum {stratas.index(stratum)}:\n")
-            for snippet in stratum:
-                file.write(f"{snippet}\n")
 
 
 class TaskNotSupportedException(Exception):
