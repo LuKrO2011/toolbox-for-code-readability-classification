@@ -7,7 +7,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, List
 
-from readability_preprocessing.sampling.stratified_sampling import sample
+from readability_preprocessing.sampling.stratified_sampling import sample, \
+    load_features_from_csv, calculate_features
 
 DEFAULT_LOG_FILE_NAME = "readability-preprocessing"
 DEFAULT_LOG_FILE = f"{DEFAULT_LOG_FILE_NAME}.log"
@@ -94,7 +95,8 @@ def _set_up_arg_parser() -> ArgumentParser:
         "-i",
         required=True,
         type=Path,
-        help="Path to the folder containing java files to sample from.",
+        help="Path to the folder containing java files to sample from or to a csv file "
+             "containing the paths and features of the java files.",
     )
     sample_parser.add_argument(
         "--save",
@@ -140,8 +142,14 @@ def _run_stratified_sampling(args: Any) -> None:
         if not os.path.isdir(save_dir):
             os.makedirs(save_dir)
 
+    # If the input is a csv file, read the paths and features from the csv file
+    if input_dir.suffix == ".csv":
+        features = load_features_from_csv(input_dir)
+    else:  # If the input is a directory, get the paths to the Java code snippets
+        features = calculate_features(input_dir, save_dir)
+
     # Get the paths to the Java code snippets
-    stratas = sample(input_dir, output_dir=save_dir,
+    stratas = sample(features,
                      num_stratas=num_stratas,
                      snippets_per_stratum=snippets_per_stratum)
 

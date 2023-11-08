@@ -190,26 +190,66 @@ def append_features_to_csv(output_dir: str, snippet_path: str,
         # Write the header, if the CSV file does not exist
         if not csv_file_exists:
             csv_file.write("path,")
-            for feature_name in features.keys():
-                csv_file.write(f"{feature_name},")
+            for idx, feature_name in enumerate(features.keys()):
+                csv_file.write(feature_name)
+                if idx != len(features) - 1:
+                    csv_file.write(",")
             csv_file.write("\n")
 
-        # Write the features to the CSV file
+        # Append the feature to the CSV file
         csv_file.write(f"{snippet_path},")
-        for feature_value in features.values():
-            csv_file.write(f"{feature_value},")
+        for idx, feature_value in enumerate(features.values()):
+            csv_file.write(str(feature_value))
+            if idx != len(features) - 1:
+                csv_file.write(",")
         csv_file.write("\n")
 
 
-def sample(input_dir: str, output_dir: str = None, num_stratas: int = 20,
-           snippets_per_stratum: int = 20) -> list[list[str]]:
+def load_features_from_csv(csv_file_path: str) -> Dict[str, Dict[str, float]]:
     """
-    Perform stratified sampling on a list of Java code snippets.
+    Load the extracted features from a CSV file.
+    :param csv_file_path: The path to the CSV file
+    :return: The extracted features
+    """
+    # Check if the CSV file exists
+    if not os.path.isfile(csv_file_path):
+        raise ValueError(f"CSV file does not exist: {csv_file_path}")
+
+    # Load the features from the CSV file
+    features = {}
+    with open(csv_file_path, 'r') as csv_file:
+
+        # Read the header
+        header = csv_file.readline().strip().split(",")
+
+        # Read the features
+        for line in csv_file:
+            # Create a dictionary to store the features
+            feature_data = {}
+
+            # Read the features
+            feature_values = line.strip().split(",")
+            for idx, feature_name in enumerate(header[1:]):
+                feature_value = feature_values[idx + 1]
+                feature_value = float(feature_value)
+                feature_data[feature_name] = feature_value
+
+            # Add the features to the list
+            if feature_data:  # Do not add empty entries
+                features.update({feature_values[0]: feature_data})
+
+    logging.info(f"Loaded features from {csv_file_path}.")
+
+    return features
+
+
+def calculate_features(input_dir: str, output_dir: str = None) -> Dict[
+    str, Dict[str, float]]:
+    """
+    Extract features from a list of Java code snippets.
     :param input_dir: The directory containing the Java code snippets
-    :param output_dir: The directory where the sampled Java code snippets should be stored
-    :param num_stratas: The number of stratas to use for sampling
-    :param snippets_per_stratum: The number of Java code snippets to sample per stratum
-    :return: None
+    :param output_dir: The directory where the extracted features should be stored
+    :return: The extracted features
     """
     if input_dir is None or not os.path.isdir(input_dir):
         raise ValueError("Input directory must be a valid directory.")
@@ -218,7 +258,7 @@ def sample(input_dir: str, output_dir: str = None, num_stratas: int = 20,
     java_code_snippet_paths = list_java_files(input_dir)
 
     # Extract features from Java code snippets
-    features = []
+    features = {}
     for path in java_code_snippet_paths:
         features_of_snippet = extract_features(path)
 
@@ -227,10 +267,26 @@ def sample(input_dir: str, output_dir: str = None, num_stratas: int = 20,
             append_features_to_csv(output_dir, path, features_of_snippet)
 
         logging.info(f"Extracted features from {path}.")
-        features.append(list(features_of_snippet.values()))
+        features.update({path: features_of_snippet})
 
     logging.info(f"Extracted features from {len(java_code_snippet_paths)} Java code "
                  f"snippets.")
+
+    return features
+
+
+def sample(features: Dict[str, Dict[str, float]], num_stratas: int = 20,
+           snippets_per_stratum: int = 20) -> list[list[str]]:
+    """
+    Perform stratified sampling on a list of features extracted from Java code snippets.
+    :param features: The features of the Java code snippets
+    :param num_stratas: The number of stratas to use for sampling
+    :param snippets_per_stratum: The number of Java code snippets to sample per stratum
+    :return: None
+    """
+    # Split the features into a list of paths and a list of features
+    java_code_snippet_paths = list(features.keys())
+    features = [list(feature.values()) for feature in features.values()]
 
     # Normalize the features and convert to a np array
     normalized_features = normalize_features(features)
