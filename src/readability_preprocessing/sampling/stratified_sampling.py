@@ -17,7 +17,7 @@ EXTRACT_METRICS_CMD = "it.unimol.readability.metric.runnable.ExtractMetrics"
 CSV_NAME = "features.csv"
 
 
-def parse_feature_output(feature_string: str) -> dict[str, float]:
+def _parse_feature_output(feature_string: str) -> dict[str, float]:
     """
     Parse the output of the feature extraction JAR file to a dictionary
     :param feature_string: The output of the feature extraction JAR file
@@ -38,7 +38,7 @@ def parse_feature_output(feature_string: str) -> dict[str, float]:
     return feature_data
 
 
-def extract_features(snippet_path: str) -> dict[str, float]:
+def _extract_features(snippet_path: str) -> dict[str, float]:
     """
     Extract features from a Java code snippet using the Java JAR file
     :param snippet_path: Path to the Java code snippet
@@ -52,12 +52,12 @@ def extract_features(snippet_path: str) -> dict[str, float]:
     feature_string = stdout.strip()
 
     # Parse the extracted features into a dictionary
-    features = parse_feature_output(feature_string)
+    features = _parse_feature_output(feature_string)
 
     return features
 
 
-def normalize_features(features: List[List[float]], epsilon=1e-8) -> np.ndarray[
+def _normalize_features(features: List[List[float]], epsilon=1e-8) -> np.ndarray[
     [float]]:
     """
     Normalizes the features. NaN values are replaced with zero.
@@ -80,7 +80,7 @@ def normalize_features(features: List[List[float]], epsilon=1e-8) -> np.ndarray[
     return normalized_features
 
 
-def calculate_similarity_matrix(features: np.ndarray[float], metric="cosine") -> \
+def _calculate_similarity_matrix(features: np.ndarray[float], metric="cosine") -> \
     np.ndarray[[float]]:
     """
     Calculate the similarity matrix for a given list of Java code snippets.
@@ -101,9 +101,9 @@ def calculate_similarity_matrix(features: np.ndarray[float], metric="cosine") ->
     return similarity_matrix
 
 
-def stratified_sampling(java_code_snippets_paths: List[str],
-                        similarity_matrix: np.ndarray[[float]], metric="cosine",
-                        num_stratas: int = 20, snippets_per_stratum: int = 20) -> (
+def _stratified_sampling(java_code_snippets_paths: List[str],
+                         similarity_matrix: np.ndarray[[float]], metric="cosine",
+                         num_stratas: int = 20, snippets_per_stratum: int = 20) -> (
     List[List[str]]):
     """
     Perform stratified sampling based on the similarity matrix.
@@ -153,6 +153,7 @@ def stratified_sampling(java_code_snippets_paths: List[str],
     return strata_samples
 
 
+# TODO: Move to other file?
 def list_java_files(directory: str) -> List[str]:
     """
     List all Java files in a directory.
@@ -205,6 +206,7 @@ def append_features_to_csv(output_dir: str, snippet_path: str,
         csv_file.write("\n")
 
 
+# TODO: Move to other file?
 def load_features_from_csv(csv_file_path: str) -> Dict[str, Dict[str, float]]:
     """
     Load the extracted features from a CSV file.
@@ -260,7 +262,7 @@ def calculate_features(input_dir: str, output_dir: str = None) -> Dict[
     # Extract features from Java code snippets
     features = {}
     for path in java_code_snippet_paths:
-        features_of_snippet = extract_features(path)
+        features_of_snippet = _extract_features(path)
 
         # Store the features of the snippet, if an output directory is specified
         if output_dir is not None:
@@ -289,16 +291,16 @@ def sample(features: Dict[str, Dict[str, float]], num_stratas: int = 20,
     features = [list(feature.values()) for feature in features.values()]
 
     # Normalize the features and convert to a np array
-    normalized_features = normalize_features(features)
+    normalized_features = _normalize_features(features)
 
     # Calculate the similarity matrix
-    similarity_matrix = calculate_similarity_matrix(normalized_features)
+    similarity_matrix = _calculate_similarity_matrix(normalized_features)
 
     # Perform stratified sampling
-    stratas = stratified_sampling(java_code_snippet_paths, similarity_matrix,
-                                  metric="cosine",
-                                  num_stratas=num_stratas,
-                                  snippets_per_stratum=snippets_per_stratum)
+    stratas = _stratified_sampling(java_code_snippet_paths, similarity_matrix,
+                                   metric="cosine",
+                                   num_stratas=num_stratas,
+                                   snippets_per_stratum=snippets_per_stratum)
 
     return stratas
 
@@ -307,7 +309,8 @@ DATA_DIR = "D:/PyCharm_Projects_D/styler2.0/methods/AreaShop/AddCommand.java"
 
 
 def main() -> None:
-    stratas = sample(DATA_DIR, num_stratas=2, snippets_per_stratum=2)
+    features = calculate_features(DATA_DIR)
+    stratas = sample(features, num_stratas=2, snippets_per_stratum=2)
 
     # Print the selected snippets
     for stratum_idx, stratum in enumerate(stratas):

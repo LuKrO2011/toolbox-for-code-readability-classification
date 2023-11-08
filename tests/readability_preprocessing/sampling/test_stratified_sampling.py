@@ -4,8 +4,9 @@ import os
 import numpy as np
 
 from src.readability_preprocessing.sampling.stratified_sampling import (
-    extract_features, calculate_similarity_matrix,
-    stratified_sampling, normalize_features, parse_feature_output, sample)
+    _extract_features, _calculate_similarity_matrix,
+    _stratified_sampling, _normalize_features, _parse_feature_output, sample,
+    calculate_features)
 
 RES_DIR = os.path.join(os.path.dirname(__file__), "../../res/")
 CODE_DIR = RES_DIR + "code_snippets/"
@@ -17,7 +18,7 @@ def test_parse_feature_output():
     with open(feature_string_file) as f:
         feature_string = f.read()
 
-    feature_data = parse_feature_output(feature_string)
+    feature_data = _parse_feature_output(feature_string)
 
     assert isinstance(feature_data, dict)
     assert len(feature_data) == 110
@@ -29,7 +30,7 @@ def test_parse_feature_output():
 
 def test_extract_features():
     code_snippet = CODE_DIR + "AreaShop/AddCommand.java/execute.java"
-    features = extract_features(code_snippet)
+    features = _extract_features(code_snippet)
 
     assert isinstance(features, dict)
     assert len(features) == 110
@@ -46,7 +47,7 @@ def test_normalize_features():
         [7.0, 8.0, 9.0]
     ]
 
-    normalized_features = normalize_features(features)
+    normalized_features = _normalize_features(features)
 
     assert isinstance(normalized_features, np.ndarray)
     assert normalized_features.shape == (3, 3)
@@ -61,7 +62,7 @@ def test_calculate_cosine_similarity_matrix():
         [0.49236596, 0.51847585, 0.53452248],
         [0.86164044, 0.82956135, 0.80178373]
     ])
-    similarity_matrix = calculate_similarity_matrix(features, metric="cosine")
+    similarity_matrix = _calculate_similarity_matrix(features, metric="cosine")
 
     epsilon = 1e-8
     assert isinstance(similarity_matrix, np.ndarray)
@@ -83,7 +84,7 @@ def test_calculate_euclid_similarity_matrix():
         [0.49236596, 0.51847585, 0.53452248],
         [0.86164044, 0.82956135, 0.80178373]
     ])
-    similarity_matrix = calculate_similarity_matrix(features, metric="euclidean")
+    similarity_matrix = _calculate_similarity_matrix(features, metric="euclidean")
 
     epsilon = 1e-8
     assert isinstance(similarity_matrix, np.ndarray)
@@ -105,7 +106,7 @@ def test_calculate_jaccard_similarity_matrix():
         [0.49236596, 0.51847585, 0.53452248],
         [0.86164044, 0.82956135, 0.80178373]
     ])
-    similarity_matrix = calculate_similarity_matrix(features, metric="jaccard")
+    similarity_matrix = _calculate_similarity_matrix(features, metric="jaccard")
 
     epsilon = 1e-8
     assert isinstance(similarity_matrix, np.ndarray)
@@ -126,7 +127,8 @@ def test_stratified_sampling():
     dir = os.path.join(CODE_DIR, folder)
     num_stratas = 2
     snippets_per_stratum = 2
-    stratas = sample(dir, num_stratas=num_stratas,
+    features = calculate_features(dir)
+    stratas = sample(features, num_stratas=num_stratas,
                      snippets_per_stratum=snippets_per_stratum)
 
     assert isinstance(stratas, list)
