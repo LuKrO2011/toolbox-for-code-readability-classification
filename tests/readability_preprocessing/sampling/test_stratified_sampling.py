@@ -3,14 +3,16 @@ import os
 
 import numpy as np
 
+from readability_preprocessing.utils.csv import load_features_from_csv
 from src.readability_preprocessing.sampling.stratified_sampling import (
     _extract_features, _calculate_similarity_matrix,
-    _stratified_sampling, _normalize_features, _parse_feature_output, sample,
+    _normalize_features, _parse_feature_output, sample,
     calculate_features)
 
 RES_DIR = os.path.join(os.path.dirname(__file__), "../../res/")
 CODE_DIR = RES_DIR + "code_snippets/"
 JAR_OUTPUTS_DIR = RES_DIR + "jar_outputs/"
+CSV_DIR = RES_DIR + "csv/"
 
 
 def test_parse_feature_output():
@@ -122,12 +124,28 @@ def test_calculate_jaccard_similarity_matrix():
             assert 0.0 <= value <= 1.0
 
 
-def test_stratified_sampling():
+def test_calculate_features():
     folder = "AreaShop/AddCommand.java"
     dir = os.path.join(CODE_DIR, folder)
+    features = calculate_features(dir)
+
+    assert isinstance(features, dict)
+    assert len(features) == 4
+    for feature in features:
+        assert isinstance(feature, dict)
+        assert len(feature) == 110
+        for feature_name, feature_value in feature.items():
+            assert isinstance(feature_name, str)
+            assert isinstance(feature_value, float)
+            assert feature_value >= 0.0 or math.isnan(feature_value)
+
+
+def test_stratified_sampling():
+    filename = "features.csv"
+    dir = os.path.join(CSV_DIR, filename)
     num_stratas = 2
     snippets_per_stratum = 2
-    features = calculate_features(dir)
+    features = load_features_from_csv(dir)
     stratas = sample(features, num_stratas=num_stratas,
                      snippets_per_stratum=snippets_per_stratum)
 
