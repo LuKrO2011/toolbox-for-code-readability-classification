@@ -54,6 +54,7 @@ def store_as_txt(stratas: List[List[str]], output_dir: str) -> None:
     """
     with open(os.path.join(output_dir, "stratas.txt"), "w") as file:
         for stratum in stratas:
+            file.write(f"Stratum {stratas.index(stratum)}:\n")
             for snippet in stratum:
                 file.write(f"{snippet}\n")
 
