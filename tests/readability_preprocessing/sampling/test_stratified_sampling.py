@@ -1,13 +1,30 @@
+import math
 import os
 
 import numpy as np
 
 from src.readability_preprocessing.sampling.stratified_sampling import (
-    extract_features, calculate_similarity, calculate_similarity_matrix,
-    stratified_sampling, normalize_features)
+    extract_features, calculate_similarity_matrix,
+    stratified_sampling, normalize_features, parse_feature_output)
 
 RES_DIR = os.path.join(os.path.dirname(__file__), "../../res/")
 CODE_DIR = RES_DIR + "code_snippets/"
+JAR_OUTPUTS_DIR = RES_DIR + "jar_outputs/"
+
+
+def test_parse_feature_output():
+    feature_string_file = JAR_OUTPUTS_DIR + "AreaShop/AddCommand.java/execute.txt"
+    with open(feature_string_file) as f:
+        feature_string = f.read()
+
+    feature_data = parse_feature_output(feature_string)
+
+    assert isinstance(feature_data, dict)
+    assert len(feature_data) == 110
+    for feature_name, feature_value in feature_data.items():
+        assert isinstance(feature_name, str)
+        assert isinstance(feature_value, float)
+        assert feature_value >= 0.0 or math.isnan(feature_value)
 
 
 def test_extract_features():
@@ -20,11 +37,27 @@ def test_extract_features():
         assert isinstance(feature, float)
 
 
-def test_calculate_similarity_matrix():
-    features = np.array([
+def test_normalize_features():
+    features = [
         [1.0, 2.0, 3.0],
         [4.0, 5.0, 6.0],
         [7.0, 8.0, 9.0]
+    ]
+
+    normalized_features = normalize_features(features)
+
+    assert isinstance(normalized_features, np.ndarray)
+    assert normalized_features.shape == (3, 3)
+    for row in normalized_features:
+        for value in row:
+            assert 0.0 <= value <= 1.0
+
+
+def test_calculate_similarity_matrix():
+    features = np.array([
+        [0.12309149, 0.20739034, 0.26726124],
+        [0.49236596, 0.51847585, 0.53452248],
+        [0.86164044, 0.82956135, 0.80178373]
     ])
     similarity_matrix = calculate_similarity_matrix(features)
 

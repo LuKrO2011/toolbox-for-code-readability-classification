@@ -16,6 +16,8 @@ EXTRACT_METRICS_CMD = "it.unimol.readability.metric.runnable.ExtractMetrics"
 # TODO: Improve similarity calculation
 # TODO: Write tests
 
+
+@deprecated("Actual snippets are not needed, only paths.")
 def load_snippets(data_dir: str) -> dict[str, str]:
     """
     Loads the code snippets from the folder (data_dir) and returns them as a dictionary.
