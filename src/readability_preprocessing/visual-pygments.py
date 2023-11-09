@@ -61,16 +61,15 @@ img = Image.open('out.png')
 
 
 # Define allowed colors
-def _load_colors_from_css(css: str,
-                          hex_colors_regex: str = r'#[0-9a-fA-F]{6}') -> \
-    set[str]:
+def _load_colors_from_css(file: str,
+                          hex_colors_regex: str = r'#[0-9a-fA-F]{6}') -> set[str]:
     """
     Load the css file and return the colors in it using the regex
-    :param css: path to the css file
+    :param file: path to the css file
     :param hex_colors_regex: regex to find the colors
     :return: list of colors
     """
-    with open(css, 'r') as f:
+    with open(file, 'r') as f:
         css_code = f.read()
 
     colors = re.findall(hex_colors_regex, css_code, re.MULTILINE)
@@ -80,18 +79,45 @@ def _load_colors_from_css(css: str,
 
 allowed_colors = _load_colors_from_css(css)
 
-# Convert the colors to rgba
-allowed_colors = {
-    tuple(int(allowed_color.lstrip('#')[i:i + 2], 16) for i in (0, 2, 4)) + (255,) for
-    allowed_color in allowed_colors}
+
+def _convert_hex_to_rgba(hex_colors: set[str]) -> set[tuple[int, int, int, int]]:
+    """
+    Convert the hex colors to rgba
+    :param hex_colors: set of hex colors
+    :return: set of rgba colors
+    """
+    return {
+        tuple(int(allowed_color.lstrip('#')[i:i + 2], 16) for i in (0, 2, 4)) + (255,)
+        for
+        allowed_color in hex_colors}
+
+
+allowed_colors = _convert_hex_to_rgba(allowed_colors)
+
+
+def _remove_blur(img: Image,
+                 allowed_colors: set[tuple[int, int, int, int]]) -> Image:
+    """
+    Remove the blur from the image.
+    Set all the pixels that are not in the allowed colors to the closest allowed color.
+    :param img: The image
+    :param allowed_colors: The allowed colors
+    :return: The image without blur
+    """
+    width, height = img.size
+
+    for i in range(width):
+        for j in range(height):
+            if img.getpixel((i, j)) not in allowed_colors:
+                closest_color = min(allowed_colors, key=lambda x: sum(
+                    abs(i - j) for i, j in zip(x, img.getpixel((i, j)))))
+                img.putpixel((i, j), closest_color)
+
+    return img
+
 
 # Set all the pixels that are not in the allowed colors to the closest allowed color
-for i in range(width):
-    for j in range(height):
-        if img.getpixel((i, j)) not in allowed_colors:
-            closest_color = min(allowed_colors, key=lambda x: sum(
-                abs(i - j) for i, j in zip(x, img.getpixel((i, j)))))
-            img.putpixel((i, j), closest_color)
+img = _remove_blur(img, allowed_colors)
 
 # Save the image
 img.save('out.png')
