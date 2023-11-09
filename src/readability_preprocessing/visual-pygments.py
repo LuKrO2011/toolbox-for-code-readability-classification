@@ -59,11 +59,13 @@ def _remove_blur(img: Image, width: int, height: int,
     return img
 
 
-def code_to_image(code: str, css: str = DEFAULT_CSS, width: int = 128,
+def code_to_image(code: str, output: str = DEFAULT_OUT, css: str = DEFAULT_CSS,
+                  width: int = 128,
                   height: int = 128):
     """
     Convert the given Java code to a visualisation/image.
     :param code: The code
+    :param output: The path to save the image
     :param css: The css to use for styling the code
     :param width: The width of the image
     :param height: The height of the image
@@ -90,10 +92,10 @@ def code_to_image(code: str, css: str = DEFAULT_CSS, width: int = 128,
     }
 
     # Convert the html code to image
-    imgkit.from_string(html, DEFAULT_OUT, css=css, options=options)
+    imgkit.from_string(html, output, css=css, options=options)
 
     # Open the image
-    img = Image.open(DEFAULT_OUT)
+    img = Image.open(output)
 
     # Remove the blur from the image
     allowed_colors = _load_colors_from_css(css)
@@ -101,7 +103,7 @@ def code_to_image(code: str, css: str = DEFAULT_CSS, width: int = 128,
     img = _remove_blur(img, width, height, allowed_colors)
 
     # Save the image
-    img.save(DEFAULT_OUT)
+    img.save(output)
 
 
 # Sample Java code
@@ -114,15 +116,18 @@ public void getNumber(){
     }
 }
 """
+output_name = "code.png"
+
+
+def main() -> None:
+    code_to_image(code, output_name)
+
+    # Show the image
+    img = Image.open(output_name)
+    img.show()
+
+
+if __name__ == "__main__":
+    main()
 
 code_to_image(code)
-
-# # Save the image
-# img.save('out.png')
-#
-# # Attach the css at the beginning of the html code
-# html_code = '<style>' + open(css, 'r').read() + '</style>' + html_code
-#
-# # Open the html code in the browser (with css)
-# with open('out.html', 'w') as f:
-#     f.write(html_code)
