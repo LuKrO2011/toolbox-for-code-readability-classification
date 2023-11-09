@@ -5,7 +5,7 @@ from typing import List, Dict
 
 import fastcluster
 from fastcluster import ward, linkage
-import scipy.cluster.hierarchy as sch
+from scipy.cluster.hierarchy import fcluster
 
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
@@ -111,6 +111,7 @@ def _calculate_similarity_matrix(features: np.ndarray[float], metric="cosine") -
 
     return similarity_matrix
 
+
 # TODO: Make sure that all clusters have the same amount of snippets
 def _stratified_sampling(java_code_snippets_paths: List[str],
                          similarity_matrix: np.ndarray[[float]], metric="cosine",
@@ -136,24 +137,27 @@ def _stratified_sampling(java_code_snippets_paths: List[str],
         raise ValueError(f"Unsupported metric: {metric}. Valid metrics are: cosine.")
 
     # Initialize lists to store the selected snippets for each stratum
-    strata_samples = [[] for _ in range(num_stratas)]
+    stratas = [[] for _ in range(num_stratas)]
 
-    # Calculate the number of code snippets in each stratum
-    num_snippets = len(java_code_snippets_paths)
-    max_snippets_per_stratum = num_snippets // num_stratas
-    snippets_per_stratum = min(snippets_per_stratum, max_snippets_per_stratum)
-
-    # Perform Ward's hierarchical clustering to group the Java snippets into stratas
+    # Perform Ward's hierarchical clustering to create a dendrogram/linkage matrix
     linkage_matrix = linkage(similarity_matrix, method="ward", metric="cosine")
 
     # Crop the dendrogram at the desired number of clusters
-    cluster = sch.fcluster(linkage_matrix, num_stratas, criterion='maxclust')
+    clusters = fcluster(linkage_matrix, num_stratas, criterion='maxclust')
 
     # Add the Java code snippets to the stratas
-    for snippet_idx, stratum_idx in enumerate(cluster):
-        strata_samples[stratum_idx - 1].append(java_code_snippets_paths[snippet_idx])
+    for snippet_idx, stratum_idx in enumerate(clusters):
+        stratas[stratum_idx - 1].append(java_code_snippets_paths[snippet_idx])
 
-    return strata_samples
+    # Remove random snippets from the stratas, if they contain too many snippets
+    for stratum_idx, stratum in enumerate(stratas):
+        if len(stratum) > snippets_per_stratum:
+            stratas[stratum_idx] = np.random.choice(stratum, snippets_per_stratum,
+                                                    replace=False)
+        else:
+            stratas[stratum_idx] = stratum
+
+    return stratas
 
 
 def calculate_features(input_dir: str, output_dir: str = None) -> Dict[
