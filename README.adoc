@@ -6,6 +6,10 @@ The model itself is not part of this repository.
 == Table of Contents
 
 * <<Installation>>
+* <<Usage>>
+** <<Sample>>
+** <<Preprocess>>
+*** <<Visualize>>
 
 [[Installation]]
 == Installation
@@ -41,4 +45,58 @@ Activate the virtual environment:
 poetry shell
 ----
 
-Now you're ready to use the source code readability prediction tool.
+Now you're ready to use the source code readability preprocessing tool.
+
+[[Usage]]
+== Usage
+
+[[Sample]]
+=== Sample
+
+To sample from a dictionary of Java source code snippets, use the following command:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py SAMPLE --input INPUT [--save SAVE] [--num-stratas NUM_STRATAS] [--snippets-per-stratum SNIPPETS_PER_STRATUM]
+----
+
+* `--input` or `-i` is the path to the dictionary with the Java source code snippets or to a csv file containing the paths and features of the java files.
+* `--save` or `-s` is the path to the file where the sampled snippets and the features (as csv) will be saved.
+* `--num-stratas` or `-n` is the number of stratas to sample from.
+* `--snippets-per-stratum` or `-sps` is the number of snippets to sample from each stratum.
+
+Example:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py SAMPLE -i <input_path> -s <save_path>
+----
+
+[[Preprocess]]
+=== Preprocess
+
+For preprocessing there are multiple options:
+
+[[Visualize]]
+==== Visualize
+
+To visualize the distribution of the features, use the following command:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py VISUALIZE --input INPUT --save SAVE [--css CSS] [--width WIDTH] [--height HEIGHT]
+----
+
+* `--input` or `-i` is the path to the file containing a java file or a dictionary with java files.
+* `--save` or `-s` is the path to the directory where the output images will be saved.
+* `--css` or `-c` is the path to the CSS file to use for styling the output images.
+* `--width` or `-w` is the width of the output images.
+* `--height` or `-h` is the height of the output images.
+
+Example:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py VISUALIZE -i <input_path> -s <save_path>
+----
+
