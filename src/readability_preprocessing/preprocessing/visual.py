@@ -1,3 +1,5 @@
+import os
+
 import imgkit
 from pygments import highlight
 from pygments.formatters.html import HtmlFormatter
@@ -6,7 +8,7 @@ from PIL import Image
 import re
 
 DEFAULT_OUT = 'out.png'
-DEFAULT_CSS = 'towards.css'
+DEFAULT_CSS = os.path.join(os.path.dirname(__file__), "../../res/css/towards.css")
 HEX_REGEX = r'#[0-9a-fA-F]{6}'
 
 
