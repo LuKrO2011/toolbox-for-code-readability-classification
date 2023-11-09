@@ -39,12 +39,17 @@ def _parse_feature_output(feature_string: str) -> dict[str, float]:
 
     # Parse the feature lines
     for feature_line in feature_lines:
+        if not feature_line or feature_line == "":  # Skip empty lines
+            continue
+
+        # Parse the feature name and value
         feature_name = feature_line.split(":")[0].strip()
         feature_value = float(feature_line.split(":")[1].strip())
         for header_feature_name in header_feature_names[1:]:
             if header_feature_name == feature_name:
                 if feature_value >= 0.0:
                     feature_data[header_feature_name] = feature_value
+                continue
 
     return feature_data
 
@@ -112,7 +117,6 @@ def _calculate_similarity_matrix(features: np.ndarray[float], metric="cosine") -
     return similarity_matrix
 
 
-# TODO: Make sure that all clusters have the same amount of snippets
 def _stratified_sampling(java_code_snippets_paths: List[str],
                          similarity_matrix: np.ndarray[[float]], metric="cosine",
                          num_stratas: int = 20, snippets_per_stratum: int = 20) -> (

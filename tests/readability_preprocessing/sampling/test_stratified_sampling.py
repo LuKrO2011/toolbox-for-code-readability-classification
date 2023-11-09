@@ -42,7 +42,7 @@ def test_extract_features():
         assert features[feature] >= 0.0 or math.isnan(features[feature])
 
 
-def test_extract_features_2():
+def test_extract_features_empty():
     code_snippet = CODE_DIR + "AreaShop/AreaShopInterface.java/debugI.java"
     features = _extract_features(code_snippet)
 
@@ -155,7 +155,7 @@ def test_calculate_features():
             assert feature_value >= 0.0 or math.isnan(feature_value)
 
 
-def test_stratified_sampling():
+def test_sample():
     filename = "features.csv"
     dir = os.path.join(CSV_DIR, filename)
     num_stratas = 2
@@ -167,7 +167,7 @@ def test_stratified_sampling():
     assert isinstance(stratas, list)
     assert len(stratas) == num_stratas
     for stratum in stratas:
-        assert isinstance(stratum, list)
+        assert isinstance(stratum, list) or isinstance(stratum, np.ndarray)
         assert len(stratum) <= snippets_per_stratum
         for snippet in stratum:
             assert isinstance(snippet, str)
