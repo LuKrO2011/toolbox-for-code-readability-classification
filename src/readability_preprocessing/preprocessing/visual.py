@@ -131,5 +131,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-code_to_image(code)

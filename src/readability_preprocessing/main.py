@@ -7,10 +7,11 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, List
 
+from readability_preprocessing.preprocessing.visual import code_to_image
 from readability_preprocessing.sampling.stratified_sampling import sample, \
     calculate_features
 from readability_preprocessing.utils.csv import load_features_from_csv
-from readability_preprocessing.utils.utils import store_as_txt
+from readability_preprocessing.utils.utils import store_as_txt, list_java_files
 
 DEFAULT_LOG_FILE_NAME = "readability-preprocessing"
 DEFAULT_LOG_FILE = f"{DEFAULT_LOG_FILE_NAME}.log"
@@ -59,6 +60,7 @@ class Tasks(Enum):
     Enum for the different tasks of the readability preprocessing toolbox.
     """
     SAMPLE = "SAMPLE"
+    VISUALIZE = "VISUALIZE"
 
     @classmethod
     def _missing_(cls, value: object) -> Any:
@@ -111,6 +113,44 @@ def _set_up_arg_parser() -> ArgumentParser:
         help="Number of snippets to sample per stratum.",
     )
 
+    # Parser for generating visualisations
+    visualize_parser = sub_parser.add_parser(str(Tasks.VISUALIZE))
+    visualize_parser.add_argument(
+        "--input",
+        "-i",
+        required=True,
+        type=Path,
+        help="Path to the folder containing java files or to a single java file.",
+    )
+    visualize_parser.add_argument(
+        "--save",
+        "-s",
+        required=True,
+        type=Path,
+        help="Path to the folder where the visualisations should be stored."
+    )
+    visualize_parser.add_argument(
+        "--css",
+        required=False,
+        type=Path,
+        help="Path to the css file to use for styling the code.",
+        default=os.path.join(os.path.dirname(__file__), "../res/css/towards.css")
+    )
+    visualize_parser.add_argument(
+        "--width",
+        required=False,
+        type=int,
+        default=128,
+        help="Width of the image.",
+    )
+    visualize_parser.add_argument(
+        "--height",
+        required=False,
+        type=int,
+        default=128,
+        help="Height of the image.",
+    )
+
     return arg_parser
 
 
@@ -152,6 +192,39 @@ def _run_stratified_sampling(args: Any) -> None:
         store_as_txt(stratas, save_dir)
 
 
+def _run_visualize(parsed_args: Any) -> None:
+    """
+    Runs the visualization of Java snippets.
+    :param parsed_args: Parsed arguments.
+    :return: None
+    """
+    # Get the parsed arguments
+    input_dir = parsed_args.input
+    save_dir = parsed_args.save
+    css = parsed_args.css
+    width = parsed_args.width
+    height = parsed_args.height
+
+    # Create the save directory, if it does not exist
+    if not os.path.isdir(save_dir):
+        os.makedirs(save_dir)
+
+    # Get the paths to the Java snippets
+    if input_dir.is_dir():
+        java_code_snippet_paths = list_java_files(input_dir)
+    else:
+        java_code_snippet_paths = [input_dir]
+
+    # Create the visualisations
+    for snippet_path in java_code_snippet_paths:
+        code = open(snippet_path, "r").read()
+        name = os.path.join(save_dir, os.path.basename(snippet_path) + ".png")
+        code_to_image(code, output=name, css=css, width=width, height=height)
+        logging.info(f"Visualized {snippet_path}.")
+
+    logging.info(f"Visualized {len(java_code_snippet_paths)} Java code snippets.")
+
+
 def main(args: list[str]) -> int:
     """
     Main function of the readability classifier.
@@ -178,6 +251,8 @@ def main(args: list[str]) -> int:
     match task:
         case Tasks.SAMPLE:
             _run_stratified_sampling(parsed_args)
+        case Tasks.VISUALIZE:
+            _run_visualize(parsed_args)
     return 0
 
 
