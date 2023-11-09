@@ -30,3 +30,13 @@ def list_java_files(directory: str) -> List[str]:
                 java_files.append(os.path.abspath(os.path.join(root, file)))
 
     return java_files
+
+
+def load_code(file: str) -> str:
+    """
+    Loads the code from a file.
+    :param file: Path to the file.
+    :return: Code.
+    """
+    with open(file) as file:
+        return file.read()
