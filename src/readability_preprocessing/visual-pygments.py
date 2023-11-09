@@ -5,64 +5,13 @@ from pygments.lexers import JavaLexer
 from PIL import Image
 import re
 
-# Sample Java code
-code = """
-// A method for counting
-public void getNumber(){
-    int count = 0;
-    while(count < 10){
-        count++;
-    }
-}
-"""
-
-# Lex the code
-lexer = JavaLexer()
-tokens = lexer.get_tokens(code)
-
-# Print the lexed tokens
-for token in tokens:
-    print(token)
-
-# Convert the code to html
-formatter = HtmlFormatter()
-print(formatter.get_style_defs())
-html_code = highlight(code, lexer, formatter)
-
-# Print the html code
-print(html_code)
-
-# Set the width and height of the image
-width = 128
-height = 128
-
-# Set the options
-options = {
-    # 'extended-help': '',
-    "format": "png",
-    "quality": "100",
-    "crop-h": str(height),
-    "crop-w": str(width),
-    "crop-x": '0',
-    "crop-y": '0',
-    "encoding": "UTF-8",
-    # "quiet": '',
-    "disable-smart-width": '',
-    "width": str(width),
-    "height": str(height)
-}
-css = 'towards.css'
-
-# Convert the html code to image
-imgkit.from_string(html_code, 'out.png', css=css, options=options)
-
-# Load the image
-img = Image.open('out.png')
+DEFAULT_OUT = 'out.png'
+DEFAULT_CSS = 'towards.css'
+HEX_REGEX = r'#[0-9a-fA-F]{6}'
 
 
-# Define allowed colors
 def _load_colors_from_css(file: str,
-                          hex_colors_regex: str = r'#[0-9a-fA-F]{6}') -> set[str]:
+                          hex_colors_regex: str = HEX_REGEX) -> set[str]:
     """
     Load the css file and return the colors in it using the regex
     :param file: path to the css file
@@ -77,9 +26,6 @@ def _load_colors_from_css(file: str,
     return set(colors)
 
 
-allowed_colors = _load_colors_from_css(css)
-
-
 def _convert_hex_to_rgba(hex_colors: set[str]) -> set[tuple[int, int, int, int]]:
     """
     Convert the hex colors to rgba
@@ -92,20 +38,17 @@ def _convert_hex_to_rgba(hex_colors: set[str]) -> set[tuple[int, int, int, int]]
         allowed_color in hex_colors}
 
 
-allowed_colors = _convert_hex_to_rgba(allowed_colors)
-
-
-def _remove_blur(img: Image,
+def _remove_blur(img: Image, width: int, height: int,
                  allowed_colors: set[tuple[int, int, int, int]]) -> Image:
     """
     Remove the blur from the image.
     Set all the pixels that are not in the allowed colors to the closest allowed color.
     :param img: The image
+    :param width: The width of the image
+    :param height: The height of the image
     :param allowed_colors: The allowed colors
     :return: The image without blur
     """
-    width, height = img.size
-
     for i in range(width):
         for j in range(height):
             if img.getpixel((i, j)) not in allowed_colors:
@@ -116,15 +59,70 @@ def _remove_blur(img: Image,
     return img
 
 
-# Set all the pixels that are not in the allowed colors to the closest allowed color
-img = _remove_blur(img, allowed_colors)
+def code_to_image(code: str, css: str = DEFAULT_CSS, width: int = 128,
+                  height: int = 128):
+    """
+    Convert the given Java code to a visualisation/image.
+    :param code: The code
+    :param css: The css to use for styling the code
+    :param width: The width of the image
+    :param height: The height of the image
+    :return: The image
+    """
+    # Convert the code to html
+    lexer = JavaLexer()
+    formatter = HtmlFormatter()
+    html = highlight(code, lexer, formatter)
 
-# Save the image
-img.save('out.png')
+    # Set the options for imgkit
+    options = {
+        "format": "png",
+        "quality": "100",
+        "crop-h": str(height),
+        "crop-w": str(width),
+        "crop-x": '0',
+        "crop-y": '0',
+        "encoding": "UTF-8",
+        "quiet": '',
+        "disable-smart-width": '',
+        "width": str(width),
+        "height": str(height)
+    }
 
-# Attach the css at the beginning of the html code
-html_code = '<style>' + open(css, 'r').read() + '</style>' + html_code
+    # Convert the html code to image
+    imgkit.from_string(html, DEFAULT_OUT, css=css, options=options)
 
-# Open the html code in the browser (with css)
-with open('out.html', 'w') as f:
-    f.write(html_code)
+    # Open the image
+    img = Image.open(DEFAULT_OUT)
+
+    # Remove the blur from the image
+    allowed_colors = _load_colors_from_css(css)
+    allowed_colors = _convert_hex_to_rgba(allowed_colors)
+    img = _remove_blur(img, width, height, allowed_colors)
+
+    # Save the image
+    img.save(DEFAULT_OUT)
+
+
+# Sample Java code
+code = """
+// A method for counting
+public void getNumber(){
+    int count = 0;
+    while(count < 10){
+        count++;
+    }
+}
+"""
+
+code_to_image(code)
+
+# # Save the image
+# img.save('out.png')
+#
+# # Attach the css at the beginning of the html code
+# html_code = '<style>' + open(css, 'r').read() + '</style>' + html_code
+#
+# # Open the html code in the browser (with css)
+# with open('out.html', 'w') as f:
+#     f.write(html_code)
