@@ -1,0 +1,66 @@
+/* background & default */
+* {
+  color: white;
+  background-color: white;
+  font-size: 2px;
+  padding: 0;
+  margin: 0;
+}
+
+/* comment */
+.c1 {
+  background-color: #006200;
+  color: #006200;
+}
+
+/* keywords */
+/* public */
+.kd {
+  background-color: #fa0200;
+  color: #fa0200;
+}
+
+/* void */
+.kt {
+  background-color: #fa0200;
+  color: #fa0200;
+}
+
+/* parentheses & semicolon & braces */
+.p {
+  background-color: #fefa01;
+  color: #fefa01;
+}
+
+/* whitespace */
+.w {
+  background-color: #ffffff;
+  color: #ffffff;
+}
+
+/* name/identifier */
+/* variable */
+.n {
+  background-color: #01ffff;
+  color: #01ffff;
+}
+/* function */
+.nf {
+  background-color: #01ffff;
+  color: #01ffff;
+}
+
+/* operator */
+.o {
+  background-color: #fefa01;
+  color: #fefa01;
+}
+
+/* number */
+/* integer */
+.mi {
+  background-color: #01ffff;
+  color: #01ffff;
+}
+
+

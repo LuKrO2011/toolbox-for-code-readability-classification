@@ -1,55 +1,66 @@
-import numpy as np
-from PIL import Image
-
+import imgkit
+from imgkit.config import Config
 from pygments import highlight
-from pygments.formatters.terminal import TerminalFormatter
+from pygments.formatters.html import HtmlFormatter
 from pygments.lexers import JavaLexer
 
 # Sample Java code
 code = """
-// This is a comment
-int num = 42;
-String text = "Hello, World!";
+// A very long comment. Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been
+// A method for counting
+public void getNumber(){
+    int count = 0;
+    while(count < 10){
+        count++;
+    }
+}
 """
 
-# Highlight the Java code using JavaLexer
-highlighted_code = highlight(code, JavaLexer(), TerminalFormatter())
+# Lex the code
+lexer = JavaLexer()
+tokens = lexer.get_tokens(code)
 
-# Create a dictionary to map color categories to RGB values
-color_mapping = {
-    'Comment': (0, 128, 0),  # Green
-    'Keyword': (0, 0, 255),  # Blue
-    'Operator': (255, 0, 0),  # Red
-    'Identifier': (128, 128, 128),  # Gray
-    'Literal': (255, 255, 0),  # Yellow
+# Print the lexed tokens
+for token in tokens:
+    print(token)
+
+# Convert the code to html
+formatter = HtmlFormatter()
+html_code = highlight(code, lexer, formatter)
+
+# Print the html code
+print(html_code)
+
+# Set the width and height of the image
+width = 128
+height = 128
+
+# Set the options
+options = {
+    # 'extended-help': '',
+    "format": "png",
+    "quality": "100",
+    "crop-h": str(height),
+    "crop-w": str(width),
+    "crop-x": '0',
+    "crop-y": '0',
+    "encoding": "UTF-8",
+    # "quiet": '',
+    "disable-smart-width": '',
+    "width": str(width),
+    "height": str(height)
 }
+css = 'towards.css'
+
+# Convert the html code to image
+imgkit.from_string(html_code, 'out.png', css=css, options=options)
+
+# Attach the css at the beginning of the html code
+html_code = '<style>' + open(css, 'r').read() + '</style>' + html_code
+
+# Open the html code in the browser (with css)
+with open('out.html', 'w') as f:
+    f.write(html_code)
 
 
-# Function to get the RGB value for a given color category
-def get_rgb_value(category):
-    return color_mapping.get(category, (255, 255, 255))  # Default to white
 
-
-# Create a blank image
-image_size = (128, 128)
-image = Image.new('RGB', image_size)
-
-# Example: Map the color category 'Comment' to the color block
-color_category = 'Comment'
-rgb_color = get_rgb_value(color_category)
-image.putdata([rgb_color] * (image_size[0] * image_size[1]))
-
-# Save the image
-image.save('color_block.png')
-
-# Convert to an RGB matrix
-rgb_matrix = list(image.getdata())
-rgb_matrix = [list(row) for row in rgb_matrix]
-
-# Ensure the matrix shape is (128, 128, 3)
-rgb_matrix = np.array(rgb_matrix, dtype=np.uint8).reshape(image_size[1], image_size[0],
-                                                          3)
-
-# Save the matrix as png
-image = Image.fromarray(rgb_matrix)
-image.save('color_block.png')
