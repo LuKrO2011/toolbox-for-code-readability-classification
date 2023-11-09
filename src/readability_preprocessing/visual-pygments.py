@@ -6,7 +6,6 @@ from PIL import Image
 
 # Sample Java code
 code = """
-// A very long comment. Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been
 // A method for counting
 public void getNumber(){
     int count = 0;
@@ -26,6 +25,7 @@ for token in tokens:
 
 # Convert the code to html
 formatter = HtmlFormatter()
+print(formatter.get_style_defs())
 html_code = highlight(code, lexer, formatter)
 
 # Print the html code

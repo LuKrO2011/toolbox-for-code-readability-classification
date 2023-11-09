@@ -8,19 +8,24 @@
 }
 
 /* comment */
-.c1 {
+.c,
+.ch,
+.cm,
+.cp,
+.cpf,
+.c1,
+.cs {
   background-color: #006200;
   color: #006200;
 }
 
 /* keywords */
-/* public */
-.kd {
-  background-color: #fa0200;
-  color: #fa0200;
-}
-
-/* void */
+.k,
+.kc,
+.kd,
+.kn,
+.kp,
+.kr,
 .kt {
   background-color: #fa0200;
   color: #fa0200;
@@ -32,35 +37,93 @@
   color: #fefa01;
 }
 
+/* operator */
+.o,
+.ow {
+  background-color: #fefa01;
+  color: #fefa01;
+}
+
 /* whitespace */
 .w {
   background-color: #ffffff;
   color: #ffffff;
 }
 
-/* name/identifier */
-/* variable */
-.n {
-  background-color: #01ffff;
-  color: #01ffff;
-}
-/* function */
-.nf {
+/* names/identifiers */
+.n,
+.na,
+.nb,
+.nc,
+.no,
+.nd,
+.ni,
+.ne,
+.nf,
+.nl,
+.nn,
+.nt,
+.nv {
   background-color: #01ffff;
   color: #01ffff;
 }
 
-/* operator */
-.o {
+/* literals */
+.m,
+.mb,
+.mf,
+.mh,
+.mi,
+.mo,
+.s,
+.sa,
+.sb,
+.sc,
+.dl,
+.sd,
+.s2,
+.se,
+.sh,
+.si,
+.sx,
+.sr,
+.s1,
+.ss,
+.b,
+.bp,
+.f,
+.fm,
+.v,
+.vc,
+.vg,
+.vi,
+.vm,
+.i,
+.il {
+  background-color: #01ffff;
+  color: #01ffff;
+}
+
+/* UNKNOWN */
+/* Error */
+.err {
+  background-color: #ffffff;
+  color: #ffffff;
+}
+
+/* Generics */
+.g,
+.gd,
+.ge,
+.ges,
+.gr,
+.gh,
+.gi,
+.go,
+.gp,
+.gs,
+.gu,
+.gt {
   background-color: #fefa01;
   color: #fefa01;
 }
-
-/* number */
-/* integer */
-.mi {
-  background-color: #01ffff;
-  color: #01ffff;
-}
-
-
