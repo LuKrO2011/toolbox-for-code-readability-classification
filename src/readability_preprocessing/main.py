@@ -5,16 +5,23 @@ import sys
 from argparse import ArgumentParser
 from enum import Enum
 from pathlib import Path
-from typing import Any, List
+from typing import Any
+
+from pyarrow.fs import copy_files
 
 from readability_preprocessing.preprocessing.visual import code_to_image
 from readability_preprocessing.sampling.stratified_sampling import sample, \
     calculate_features
 from readability_preprocessing.utils.csv import load_features_from_csv
+from readability_preprocessing.utils.dataset import add_images_to_dataset, \
+    is_huggingface_dataset, generate_java_files_from_dataset
 from readability_preprocessing.utils.utils import store_as_txt, list_java_files
 
 DEFAULT_LOG_FILE_NAME = "readability-preprocessing"
 DEFAULT_LOG_FILE = f"{DEFAULT_LOG_FILE_NAME}.log"
+DEFAULT_IMAGE_DIR_NAME = "images"
+DEFAULT_CODE_DIR_NAME = "code"
+DEFAULT_OUTPUT_DATASET_DIR_NAME = "dataset"
 
 
 def _setup_logging(log_file: str = DEFAULT_LOG_FILE, overwrite: bool = False) -> None:
@@ -120,7 +127,8 @@ def _set_up_arg_parser() -> ArgumentParser:
         "-i",
         required=True,
         type=Path,
-        help="Path to the folder containing java files or to a single java file.",
+        help="Path to the folder containing java files, a single java file or a folder "
+             "with a HuggingFace dataset.",
     )
     visualize_parser.add_argument(
         "--save",
@@ -192,10 +200,15 @@ def _run_stratified_sampling(args: Any) -> None:
         store_as_txt(stratas, save_dir)
 
 
-def _run_visualize(parsed_args: Any) -> None:
+def _run_visualize(parsed_args: Any, image_dir_name=DEFAULT_IMAGE_DIR_NAME,
+                   code_dir_name=DEFAULT_CODE_DIR_NAME,
+                   output_dataset_dir_name=DEFAULT_OUTPUT_DATASET_DIR_NAME) -> None:
     """
     Runs the visualization of Java snippets.
     :param parsed_args: Parsed arguments.
+    :param image_dir_name: The name of the image directory.
+    :param code_dir_name: The name of the code directory.
+    :param output_dataset_dir_name: The name of the output dataset directory.
     :return: None
     """
     # Get the parsed arguments
@@ -209,20 +222,46 @@ def _run_visualize(parsed_args: Any) -> None:
     if not os.path.isdir(save_dir):
         os.makedirs(save_dir)
 
+    # Create the image directory, if it does not exist
+    image_dir = os.path.join(save_dir, image_dir_name)
+    if not os.path.isdir(image_dir):
+        os.makedirs(image_dir)
+
+    # Create the code directory, if it does not exist
+    code_dir = os.path.join(save_dir, code_dir_name)
+    if not os.path.isdir(code_dir):
+        os.makedirs(code_dir)
+
+    # Create the output dataset directory, if it does not exist
+    output_dataset_dir = None
+    if is_huggingface_dataset(input_dir):
+        output_dataset_dir = os.path.join(save_dir, output_dataset_dir_name)
+        if not os.path.isdir(output_dataset_dir):
+            os.makedirs(output_dataset_dir)
+
     # Get the paths to the Java snippets
     if input_dir.is_dir():
-        java_code_snippet_paths = list_java_files(input_dir)
+        if is_huggingface_dataset(input_dir):
+            generate_java_files_from_dataset(input_dir, code_dir)
+            java_code_snippet_paths = list_java_files(code_dir)
+        else:
+            copy_files(input_dir, code_dir)
+            java_code_snippet_paths = list_java_files(input_dir)
     else:
         java_code_snippet_paths = [input_dir]
 
     # Create the visualisations
     for snippet_path in java_code_snippet_paths:
         code = open(snippet_path, "r").read()
-        name = os.path.join(save_dir, os.path.basename(snippet_path) + ".png")
+        name = os.path.join(image_dir, os.path.basename(snippet_path) + ".png")
         code_to_image(code, output=name, css=css, width=width, height=height)
         logging.info(f"Visualized {snippet_path}.")
 
     logging.info(f"Visualized {len(java_code_snippet_paths)} Java code snippets.")
+
+    # Store the visualisations as a HuggingFace dataset
+    if is_huggingface_dataset(input_dir):
+        add_images_to_dataset(image_dir, input_dir, output_dataset_dir)
 
 
 def main(args: list[str]) -> int:
