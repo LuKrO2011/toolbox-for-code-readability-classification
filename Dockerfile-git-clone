@@ -1,0 +1,9 @@
+FROM ubuntu:latest
+USER root
+RUN apt-get -y update
+RUN apt-get -y install git
+WORKDIR /app
+COPY scripts/git-clone-repos.sh /app/git-clone-repos.sh
+COPY src/res/repos/try5-2023-11-27-pom/repos_filtered.csv /app/repos_filtered.csv
+RUN chmod -R 777 /app
+#CMD ["/app/git-clone-repos.sh", "/app/repos_filtered.csv"]
