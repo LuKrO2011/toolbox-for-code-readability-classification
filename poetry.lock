@@ -779,6 +779,21 @@ plugins = ["setuptools"]
 requirements-deprecated-finder = ["pip-api", "pipreqs"]
 
 [[package]]
+name = "javalang"
+version = "0.13.0"
+description = "Pure Python Java parser and tools"
+optional = false
+python-versions = "*"
+files = [
+    {file = "javalang-0.13.0-py2-none-any.whl", hash = "sha256:5c20f9ee81c49062341e78a88485d6a16f2fa7282856fecf79d2a9dc32374cca"},
+    {file = "javalang-0.13.0-py3-none-any.whl", hash = "sha256:b203c258919b085b44b43b89effcba7291bb2d90c02906b915b39e86aa9fd8e6"},
+    {file = "javalang-0.13.0.tar.gz", hash = "sha256:1681a5a480a58116d42a7eedfd132abe25e6c0ffe552868d581ad84e6aa3424c"},
+]
+
+[package.dependencies]
+six = "*"
+
+[[package]]
 name = "joblib"
 version = "1.3.2"
 description = "Lightweight pipelining with Python functions"
@@ -2087,4 +2102,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11"
-content-hash = "b39f516441c0969830e4486780ddbab7ebb7dcf6ee12e2751e708053866d1d13"
+content-hash = "57a254ec389eecfe3ebf4eb6457abf07ed2796323aafc7a8cbf0d9f84fbbf836"

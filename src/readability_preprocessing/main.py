@@ -9,6 +9,8 @@ from typing import Any
 
 from pyarrow.fs import copy_files
 
+from readability_preprocessing.extractors.file_extractor import extract_files
+from readability_preprocessing.extractors.method_extractor import extract_methods
 from readability_preprocessing.preprocessing.visual import code_to_image
 from readability_preprocessing.sampling.stratified_sampling import sample, \
     calculate_features
@@ -28,6 +30,13 @@ def _setup_logging(log_file: str = DEFAULT_LOG_FILE, overwrite: bool = False) ->
     """
     Set up logging.
     """
+    # Create the log file and dir if it does not exist
+    if not os.path.exists(os.path.dirname(log_file)):
+        os.makedirs(os.path.dirname(log_file))
+    if not os.path.exists(log_file):
+        with open(log_file, "w") as f:
+            f.write("")
+
     # Get the overwrite flag
     mode = "w" if overwrite else "a"
 
@@ -68,6 +77,8 @@ class Tasks(Enum):
     """
     SAMPLE = "SAMPLE"
     VISUALIZE = "VISUALIZE"
+    EXTRACT_FILES = "EXTRACT_FILES"
+    EXTRACT_METHODS = "EXTRACT_METHODS"
 
     @classmethod
     def _missing_(cls, value: object) -> Any:
@@ -75,6 +86,15 @@ class Tasks(Enum):
 
     def __str__(self) -> str:
         return self.value
+
+
+class OverwriteMode(Enum):
+    """
+    Enum for the overwrite mode of method extractor.
+    """
+
+    OVERWRITE = 0
+    SKIP = 1
 
 
 def _set_up_arg_parser() -> ArgumentParser:
@@ -157,6 +177,81 @@ def _set_up_arg_parser() -> ArgumentParser:
         type=int,
         default=128,
         help="Height of the image.",
+    )
+
+    # Parser for extracting files
+    extract_files_parser = sub_parser.add_parser(str(Tasks.EXTRACT_FILES))
+    extract_files_parser.add_argument(
+        "--input",
+        "-i",
+        required=True,
+        type=Path,
+        help="Path to the folder containing the processed projects.",
+    )
+    extract_files_parser.add_argument(
+        "--output",
+        "-o",
+        required=True,
+        type=Path,
+        help="Path to the folder where the files should be stored.",
+    )
+    extract_files_parser.add_argument(
+        "--non-violated-subdir",
+        "-nvs",
+        required=False,
+        type=str,
+        default="non_violated",
+        help="Name of the subdirectory containing the non-violated files.",
+    )
+
+    # Parser for extracting methods
+    extract_methods_parser = sub_parser.add_parser(str(Tasks.EXTRACT_METHODS))
+    extract_methods_parser.add_argument(
+        "--input",
+        "-i",
+        required=True,
+        type=Path,
+        help="Path to the folder containing the processed projects.",
+    )
+    extract_methods_parser.add_argument(
+        "--output",
+        "-o",
+        required=True,
+        type=Path,
+        help="Path to the folder where the methods should be stored.",
+    )
+    extract_methods_parser.add_argument(
+        "--overwrite-mode",
+        "-om",
+        required=False,
+        type=OverwriteMode,
+        choices=list(OverwriteMode),
+        default=OverwriteMode.SKIP,
+        help="Overwrite mode for the method extraction.",
+    )
+    extract_methods_parser.add_argument(
+        "--include-method-comments",
+        "-imc",
+        required=False,
+        type=bool,
+        default=True,
+        help="Whether to include the comments of the method.",
+    )
+    extract_methods_parser.add_argument(
+        "--comments-required",
+        "-cr",
+        required=False,
+        type=bool,
+        default=True,
+        help="Whether to only extract methods with comments.",
+    )
+    extract_methods_parser.add_argument(
+        "--remove-indentation",
+        "-ri",
+        required=False,
+        type=bool,
+        default=True,
+        help="Whether to remove the indentation of the code.",
     )
 
     return arg_parser
@@ -264,6 +359,50 @@ def _run_visualize(parsed_args: Any, image_dir_name=DEFAULT_IMAGE_DIR_NAME,
         add_images_to_dataset(image_dir, input_dir, output_dataset_dir)
 
 
+def _run_extract_files(parsed_args: Any) -> None:
+    """
+    Extracts successfully processed files from the input directory.
+    :param parsed_args: Parsed arguments.
+    :return: None
+    """
+    # Get the parsed arguments
+    input_dir = parsed_args.input
+    output_dir = parsed_args.output
+    non_violated_subdir = parsed_args.non_violated_subdir
+
+    # Create the output directory, if it does not exist
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+
+    # Extract the files
+    extract_files(input_dir=input_dir, output_dir=output_dir,
+                  non_violated=non_violated_subdir)
+
+
+def _run_extract_methods(parsed_args: Any) -> None:
+    """
+    Extracts java methods from their classes and stores each in a separate file.
+    :param parsed_args: Parsed arguments.
+    :return: None
+    """
+    # Get the parsed arguments
+    input_dir = parsed_args.input
+    output_dir = parsed_args.output
+    overwrite_mode = parsed_args.overwrite_mode
+    include_method_comments = parsed_args.include_method_comments
+    comments_required = parsed_args.comments_required
+    remove_indentation = parsed_args.remove_indentation
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Extract the methods
+    extract_methods(input_dir=input_dir, output_dir=output_dir,
+                    overwrite_mode=overwrite_mode,
+                    include_method_comments=include_method_comments,
+                    comments_required=comments_required,
+                    remove_indentation=remove_indentation)
+
+
 def main(args: list[str]) -> int:
     """
     Main function of the readability classifier.
@@ -292,6 +431,8 @@ def main(args: list[str]) -> int:
             _run_stratified_sampling(parsed_args)
         case Tasks.VISUALIZE:
             _run_visualize(parsed_args)
+        case Tasks.EXTRACT_FILES:
+            _run_extract_files(parsed_args)
     return 0
 
 
