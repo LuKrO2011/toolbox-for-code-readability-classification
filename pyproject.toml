@@ -17,6 +17,7 @@ fastcluster = "^1.2.6"
 imgkit = "^1.2.3"
 datasets = "^2.14.6"
 javalang = "^0.13.0"
+matplotlib = "^3.8.2"
 
 
 [tool.poetry.group.dev.dependencies]
