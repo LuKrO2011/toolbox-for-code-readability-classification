@@ -3,7 +3,7 @@ from pathlib import Path
 from datasets import Dataset, concatenate_datasets, load_from_disk
 
 
-def _load_datasets(paths: list[Path]) -> list[Dataset]:
+def _load_datasets(paths: list[str]) -> list[Dataset]:
     """
     Loads the datasets from the specified paths.
     :param paths: The paths to the datasets.
@@ -11,7 +11,7 @@ def _load_datasets(paths: list[Path]) -> list[Dataset]:
     """
     datasets = []
     for path in paths:
-        dataset = load_from_disk(str(path))
+        dataset = load_from_disk(path)
         datasets.append(dataset)
 
     return datasets
@@ -51,7 +51,7 @@ def _remove_ambiguous_samples(dataset: Dataset,
     return dataset.from_list(filtered_samples)
 
 
-def combine_datasets(dataset_paths: list[Path], output_path: Path,
+def combine_datasets(dataset_paths: list[str], output_path: str,
                      percent_to_remove: float | None = 0.5) -> None:
     """
     Combines the datasets from the specified paths and saves the combined dataset to

@@ -517,6 +517,18 @@ class DatasetType(Enum):
     BW = "BW"
     DORN = "DORN"
 
+    @classmethod
+    def from_string(cls, value: str) -> "DatasetType":
+        """
+        Returns the dataset type for the given string.
+        :param value: The string.
+        :return: The dataset type.
+        """
+        try:
+            return cls[value.upper()]
+        except KeyError:
+            raise ValueError(f"{value} is not a valid DatasetType")
+
 
 def _build_csv_folder_to_dataset(dataset_type: DatasetType) -> CsvFolderToDataset:
     """
@@ -596,4 +608,7 @@ def convert_dataset_two_folders(original: str, rdh: str, output_path: str,
 
 
 if __name__ == "__main__":
-    krod()
+    convert_dataset_csv(csv=os.path.join(SCALABRIO_DATA_DIR, "scores.csv"),
+                        snippets_dir=os.path.join(SCALABRIO_DATA_DIR, "Snippets"),
+                        output_path=os.path.join(SCALABRIO_DATA_DIR, output_name),
+                        dataset_type=DatasetType.SCALABRIO)

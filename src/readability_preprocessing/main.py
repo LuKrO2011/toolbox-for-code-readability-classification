@@ -5,7 +5,7 @@ import sys
 from argparse import ArgumentParser
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from pyarrow.fs import copy_files
 
@@ -277,7 +277,7 @@ def _set_up_arg_parser() -> ArgumentParser:
         "-dt",
         required=True,
         type=str,
-        choices=list(DatasetType),
+        choices=[dataset_type.value for dataset_type in DatasetType],
         help="The type of the dataset.",
     )
 
@@ -287,21 +287,21 @@ def _set_up_arg_parser() -> ArgumentParser:
         "--readable",
         "-r",
         required=True,
-        type=Path,
+        type=str,
         help="Path to the folder containing the readable java files.",
     )
     convert_two_folders_parser.add_argument(
         "--not-readable",
         "-nr",
         required=True,
-        type=Path,
+        type=str,
         help="Path to the folder containing the not readable java files.",
     )
     convert_two_folders_parser.add_argument(
         "--output",
         "-o",
         required=True,
-        type=Path,
+        type=str,
         help="Path to the folder where the converted dataset should be stored.",
     )
     convert_two_folders_parser.add_argument(
@@ -327,7 +327,7 @@ def _set_up_arg_parser() -> ArgumentParser:
         "--input",
         "-i",
         required=True,
-        type=list[Path],
+        type=str,
         nargs="+",
         help="Paths to the folders containing the datasets.",
     )
@@ -335,7 +335,7 @@ def _set_up_arg_parser() -> ArgumentParser:
         "--output",
         "-o",
         required=True,
-        type=Path,
+        type=str,
         help="Path to the folder where the combined dataset should be stored.",
     )
     combine_parser.add_argument(
@@ -506,7 +506,7 @@ def _run_convert_csv(parsed_args: Any) -> None:
     snippets_dir = parsed_args.input
     csv = parsed_args.csv
     output_path = parsed_args.output
-    dataset_type = parsed_args.dataset_type
+    dataset_type = DatasetType(parsed_args.dataset_type)
 
     convert_dataset_csv(snippets_dir=snippets_dir, csv=csv, output_path=output_path,
                         dataset_type=dataset_type)

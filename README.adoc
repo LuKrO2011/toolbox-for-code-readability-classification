@@ -169,8 +169,7 @@ To combine multiple HuggingFace datasets into one, use the following command:
 
 [source,bash]
 ----
-python src/readability_preprocessing/main.py CONVERT_CSV [-h] --input INPUT [INPUT ...] --output OUTPUT
-                           [--percent-to-remove PERCENT_TO_REMOVE]
+python src/readability_preprocessing/main.py COMBINE [-h] --input INPUT [INPUT ...] --output OUTPUT [--percent-to-remove PERCENT_TO_REMOVE]
 ----
 
 * `--input` or `-i` is the paths to the directories containing the HuggingFace datasets.
@@ -181,7 +180,7 @@ Example:
 
 [source,bash]
 ----
-python src/readability_preprocessing/main.py CONVERT_CSV -i <input_path_1> <input_path_2> -o <output_path>
+python src/readability_preprocessing/main.py COMBINE -i <input_path_1> <input_path_2> -o <output_path>
 ----
 
 [[Sample]]
