@@ -50,6 +50,55 @@ Now you're ready to use the source code readability preprocessing tool.
 [[Usage]]
 == Usage
 
+[[Extract_Files]]
+=== Extract Files
+
+To extract Java source code files from multiple directories, use the following command:
+
+[source,bash]
+----
+main.py EXTRACT_FILES [-h] --input INPUT --output OUTPUT [--non-violated-subdir NON_VIOLATED_SUBDIR]
+----
+
+* `--input` or `-i` is the path to the directory containing the directories with the Java source code files.
+* `--output` or `-o` is the path to the directory where the extracted Java source code files will be saved.
+* `--non-violated-subdir` or `-nvs` is the name of the subdirectory where the non-violated Java source code files are saved.
+
+Example:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py EXTRACT_FILES -i <input_path> -o <output_path>
+----
+
+[[Extract_Methods]]
+=== Extract Methods
+
+To extract methods from a dictionary of Java source code snippets, use the following command:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py EXTRACT_METHODS --input INPUT --output OUTPUT [--overwrite-mode {OverwriteMode.OVERWRITE,OverwriteMode.SKIP}] [--include-method-comments INCLUDE_METHOD_COMMENTS] [--comments-required COMMENTS_REQUIRED] [--remove-indentation REMOVE_INDENTATION]
+----
+
+* `--input` or `-i` is the path to the dictionary with the Java source code snippets.
+* `--output` or `-o` is the path to the directory where the extracted methods will be saved.
+* `--overwrite-mode` or `-om` is the overwrite mode to use.
+The default is `OverwriteMode.SKIP`.
+* `--include-method-comments` or `-imc` is a boolean flag indicating whether to include method comments in the extracted methods.
+The default is `True`.
+* `--comments-required` or `-cr` is a boolean flag indicating whether to require comments for extracted methods.
+The default is `True`.
+* `--remove-indentation` or `-ri` is a boolean flag indicating whether to remove indentation from the extracted methods.
+The default is `True`.
+
+Example:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py EXTRACT_METHODS -i <input_path> -o <output_path>
+----
+
 [[Sample]]
 === Sample
 

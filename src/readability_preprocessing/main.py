@@ -10,7 +10,8 @@ from typing import Any
 from pyarrow.fs import copy_files
 
 from readability_preprocessing.extractors.file_extractor import extract_files
-from readability_preprocessing.extractors.method_extractor import extract_methods
+from readability_preprocessing.extractors.method_extractor import extract_methods, \
+    OverwriteMode
 from readability_preprocessing.preprocessing.visual import code_to_image
 from readability_preprocessing.sampling.stratified_sampling import sample, \
     calculate_features
@@ -86,15 +87,6 @@ class Tasks(Enum):
 
     def __str__(self) -> str:
         return self.value
-
-
-class OverwriteMode(Enum):
-    """
-    Enum for the overwrite mode of method extractor.
-    """
-
-    OVERWRITE = 0
-    SKIP = 1
 
 
 def _set_up_arg_parser() -> ArgumentParser:

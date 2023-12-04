@@ -1,19 +1,26 @@
 import logging
 import os
-import sys
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any
 
 import javalang
 from javalang.parser import JavaSyntaxError
 from javalang.tree import MethodDeclaration
 
-from readability_preprocessing.main import OverwriteMode
-
 # TODO: Fix Abstract methods of interfaces e.g. hadoop\AbfsCounter.java
 
 INPUT_DIR = r"D:\PyCharm_Projects_D\styler2.0\extracted"
 OUTPUT_DIR = r"D:\PyCharm_Projects_D\styler2.0\methods_2"
+
+
+class OverwriteMode(Enum):
+    """
+    Enum for the overwrite mode of method extractor.
+    """
+
+    OVERWRITE = 0
+    SKIP = 1
 
 
 class MethodExtractorConfigurationError(Exception):
