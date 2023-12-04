@@ -7,6 +7,12 @@ The model itself is not part of this repository.
 
 * <<Installation>>
 * <<Usage>>
+** <<Extract_Files>>
+** <<Extract_Methods>>
+** <<Convert_datasets>>
+*** <<Convert_datasets_csv>>
+*** <<Convert_datasets_two_folders>>
+** <<Combine_datasets>>
 ** <<Sample>>
 ** <<Preprocess>>
 *** <<Visualize>>
@@ -97,6 +103,85 @@ Example:
 [source,bash]
 ----
 python src/readability_preprocessing/main.py EXTRACT_METHODS -i <input_path> -o <output_path>
+----
+
+[[Convert_datasets]]
+=== Convert datasets
+
+This tool supports converting datasets from csv and a dictionary of Java source code snippets to a HuggingFace dataset.
+To do this, see <<Convert_datasets_csv>>.
+You can also convert two folders containing Java source code files, one folder with readable and the other with non-readable Java source code files, to a HuggingFace dataset.
+To do this, see <<Convert_datasets_two_folders>>.
+
+[[Convert_datasets_csv]]
+[[Convert_datasets_csv]]
+==== Convert datasets csv
+
+To convert a csv file to a HuggingFace dataset, use the following command:
+
+[source,bash]
+----
+src/readability_preprocessing/main.py CONVERT_CSV [-h] --input INPUT --csv CSV --output OUTPUT --dataset-type {SCALABRIO,BW,DORN}
+----
+
+* `--input` or `-i` is the path to the directory containing the directories with the Java source code files.
+* `--csv` or `-c` is the path to the csv file containing the paths and features of the java files.
+* `--output` or `-o` is the path to the directory where the converted dataset will be saved.
+* `--dataset-type` or `-dt` is the type of the dataset to convert.
+Currently, the following types are supported: `SCALABRIO`, `BW`, `DORN`.
+
+Example:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py CONVERT_CSV -i <input_path> -c <csv_path> -o <output_path> -dt SCALABRIO
+----
+
+[[Convert_datasets_two_folders]]
+==== Convert datasets from two folders
+
+To convert two folders containing Java source code files, one folder with readable and the other with non-readable Java source code files, to a HuggingFace dataset, use the following command:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py CONVERT_TWO_FOLDERS [-h] --readable READABLE --not-readable NOT_READABLE --output OUTPUT [--readable-score READABLE_SCORE] [--not-readable-score NOT_READABLE_SCORE]
+----
+
+* `--readable` or `-r` is the path to the directory containing the readable Java source code files.
+* `--not-readable` or `-nr` is the path to the directory containing the non-readable Java source code files.
+* `--output` or `-o` is the path to the directory where the converted dataset will be saved.
+* `--readable-score` or `-rs` is the score to assign to the readable Java source code files.
+The default is `4.5`.
+* `--not-readable-score` or `-nrs` is the score to assign to the non-readable Java source code files.
+The default is `1.5`.
+
+Example:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py CONVERT_TWO_FOLDERS -r <readable_path> -nr <not_readable_path> -o <output_path>
+----
+
+[[Combine_datasets]]
+=== Combine datasets
+
+To combine multiple HuggingFace datasets into one, use the following command:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py CONVERT_CSV [-h] --input INPUT [INPUT ...] --output OUTPUT
+                           [--percent-to-remove PERCENT_TO_REMOVE]
+----
+
+* `--input` or `-i` is the paths to the directories containing the HuggingFace datasets.
+* `--output` or `-o` is the path to the directory where the combined dataset will be saved.
+* `--percent-to-remove` or `-ptr` is the percentage of examples to remove from the combined dataset.
+
+Example:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py CONVERT_CSV -i <input_path_1> <input_path_2> -o <output_path>
 ----
 
 [[Sample]]

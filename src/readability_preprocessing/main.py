@@ -9,6 +9,9 @@ from typing import Any
 
 from pyarrow.fs import copy_files
 
+from readability_preprocessing.dataset.dataset_combiner import combine_datasets
+from readability_preprocessing.dataset.dataset_converter import convert_dataset_csv, \
+    convert_dataset_two_folders, DatasetType
 from readability_preprocessing.extractors.file_extractor import extract_files
 from readability_preprocessing.extractors.method_extractor import extract_methods, \
     OverwriteMode
@@ -77,6 +80,9 @@ class Tasks(Enum):
     VISUALIZE = "VISUALIZE"
     EXTRACT_FILES = "EXTRACT_FILES"
     EXTRACT_METHODS = "EXTRACT_METHODS"
+    CONVERT_CSV = "CONVERT_CSV"
+    CONVERT_TWO_FOLDERS = "CONVERT_TWO_FOLDERS"
+    COMBINE = "COMBINE"
 
     @classmethod
     def _missing_(cls, value: object) -> Any:
@@ -243,6 +249,104 @@ def _set_up_arg_parser() -> ArgumentParser:
         help="Whether to remove the indentation of the code.",
     )
 
+    # Parser for converting csv datasets
+    convert_csv_parser = sub_parser.add_parser(str(Tasks.CONVERT_CSV))
+    convert_csv_parser.add_argument(
+        "--input",
+        "-i",
+        required=True,
+        type=Path,
+        help="Path to the folder containing the java files.",
+    )
+    convert_csv_parser.add_argument(
+        "--csv",
+        "-c",
+        required=True,
+        type=Path,
+        help="Path to the csv file containing the ratings.",
+    )
+    convert_csv_parser.add_argument(
+        "--output",
+        "-o",
+        required=True,
+        type=Path,
+        help="Path to the folder where the converted dataset should be stored.",
+    )
+    convert_csv_parser.add_argument(
+        "--dataset-type",
+        "-dt",
+        required=True,
+        type=str,
+        choices=list(DatasetType),
+        help="The type of the dataset.",
+    )
+
+    # Parser for converting two folder datasets
+    convert_two_folders_parser = sub_parser.add_parser(str(Tasks.CONVERT_TWO_FOLDERS))
+    convert_two_folders_parser.add_argument(
+        "--readable",
+        "-r",
+        required=True,
+        type=Path,
+        help="Path to the folder containing the readable java files.",
+    )
+    convert_two_folders_parser.add_argument(
+        "--not-readable",
+        "-nr",
+        required=True,
+        type=Path,
+        help="Path to the folder containing the not readable java files.",
+    )
+    convert_two_folders_parser.add_argument(
+        "--output",
+        "-o",
+        required=True,
+        type=Path,
+        help="Path to the folder where the converted dataset should be stored.",
+    )
+    convert_two_folders_parser.add_argument(
+        "--readable-score",
+        "-rs",
+        required=False,
+        type=float,
+        default=4.5,
+        help="The readability score of the readable java files.",
+    )
+    convert_two_folders_parser.add_argument(
+        "--not-readable-score",
+        "-nrs",
+        required=False,
+        type=float,
+        default=1.5,
+        help="The readability score of the not readable java files.",
+    )
+
+    # Parser for combining datasets
+    combine_parser = sub_parser.add_parser(str(Tasks.COMBINE))
+    combine_parser.add_argument(
+        "--input",
+        "-i",
+        required=True,
+        type=list[Path],
+        nargs="+",
+        help="Paths to the folders containing the datasets.",
+    )
+    combine_parser.add_argument(
+        "--output",
+        "-o",
+        required=True,
+        type=Path,
+        help="Path to the folder where the combined dataset should be stored.",
+    )
+    combine_parser.add_argument(
+        "--percent-to-remove",
+        "-ptr",
+        required=False,
+        type=float,
+        default=0.5,
+        help="Percentage of ambiguous samples to remove from the dataset.",
+    )
+
     return arg_parser
 
 
@@ -392,6 +496,59 @@ def _run_extract_methods(parsed_args: Any) -> None:
                     remove_indentation=remove_indentation)
 
 
+def _run_convert_csv(parsed_args: Any) -> None:
+    """
+    Converts a dataset from a folder of snippets and csv with ratings to a HuggingFace
+    dataset.
+    :param parsed_args: Parsed arguments.
+    :return: None
+    """
+    snippets_dir = parsed_args.input
+    csv = parsed_args.csv
+    output_path = parsed_args.output
+    dataset_type = parsed_args.dataset_type
+
+    convert_dataset_csv(snippets_dir=snippets_dir, csv=csv, output_path=output_path,
+                        dataset_type=dataset_type)
+
+
+def _run_convert_two_folders(parsed_args: Any) -> None:
+    """
+    Converts a dataset from two folders of snippets to a HuggingFace dataset.
+    :param parsed_args: Parsed arguments.
+    :return: None
+    """
+    readable_snippets_dir = parsed_args.readable
+    readable_score = parsed_args.readable_score
+    not_readable_snippets_dir = parsed_args.not_readable
+    not_readable_score = parsed_args.not_readable_score
+    output_path = parsed_args.output
+
+    convert_dataset_two_folders(original=readable_snippets_dir,
+                                rdh=not_readable_snippets_dir,
+                                original_score=readable_score,
+                                rdh_score=not_readable_score,
+                                output_path=output_path)
+
+
+def _run_combine_datasets(parsed_args: Any) -> None:
+    """
+    Converts a dataset to a HuggingFace dataset.
+    :param parsed_args: Parsed arguments.
+    :return: None
+    """
+    input_paths = parsed_args.input
+    output_dir = parsed_args.output
+    percent_to_remove = parsed_args.percent_to_remove
+
+    # Create the output directory, if it does not exist
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+
+    # Convert the dataset
+    combine_datasets(input_paths, output_dir, percent_to_remove)
+
+
 def main(args: list[str]) -> int:
     """
     Main function of the readability classifier.
@@ -426,6 +583,12 @@ def main(args: list[str]) -> int:
             _run_extract_files(parsed_args)
         case Tasks.EXTRACT_METHODS:
             _run_extract_methods(parsed_args)
+        case Tasks.CONVERT_CSV:
+            _run_convert_csv(parsed_args)
+        case Tasks.CONVERT_TWO_FOLDERS:
+            _run_convert_two_folders(parsed_args)
+        case Tasks.COMBINE:
+            _run_combine_datasets(parsed_args)
     return 0
 
 

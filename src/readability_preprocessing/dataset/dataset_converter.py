@@ -1,6 +1,7 @@
 import logging
 import os
 from abc import ABC, abstractmethod
+from enum import Enum
 
 import pandas as pd
 from datasets import Dataset
@@ -145,7 +146,6 @@ class KrodCodeLoader(CodeLoader):
     """
     Loads the java code snippets of the own dataset (krod).
     """
-
 
     def __init__(self, name_appendix: str = ""):
         """
@@ -512,5 +512,88 @@ def krod():
     logging.info(f"Saved {len(dataset)} to {output_name}")
 
 
+class DatasetType(Enum):
+    SCALABRIO = "SCALABRIO"
+    BW = "BW"
+    DORN = "DORN"
+
+
+def _build_csv_folder_to_dataset(dataset_type: DatasetType) -> CsvFolderToDataset:
+    """
+    Builds the CsvFolderToDataset for the given dataset type.
+    :param dataset_type: The dataset type.
+    :return: The CsvFolderToDataset.
+    """
+    if dataset_type == DatasetType.SCALABRIO:
+        return CsvFolderToDataset(
+            csv_loader=ScalabrioCsvLoader(), code_loader=ScalabrioCodeLoader()
+        )
+    elif dataset_type == DatasetType.BW:
+        return CsvFolderToDataset(
+            csv_loader=BWCsvLoader(), code_loader=BWCodeLoader()
+        )
+    elif dataset_type == DatasetType.DORN:
+        return CsvFolderToDataset(
+            csv_loader=DornCsvLoader(), code_loader=DornCodeLoader()
+        )
+    else:
+        raise ValueError(f"Dataset type {dataset_type} not supported.")
+
+
+def convert_dataset_csv(csv: str, snippets_dir: str, output_path: str,
+                        dataset_type: DatasetType):
+    """
+    Loads the data and converts it to the HuggingFace format.
+    :param csv: Path to the CSV file containing the scores.
+    :param snippets_dir: Path to the directory containing the code snippets.
+    :param output_path: Path to the output directory
+    :param dataset_type: The type of the dataset
+    :return: The HuggingFace datasets.
+    """
+    # Log the configuration
+    logging.info(f"Loading data from {snippets_dir} with scores from {csv}")
+
+    # Load the data
+    data_loader = _build_csv_folder_to_dataset(dataset_type)
+    dataset = data_loader.convert_to_dataset(csv, snippets_dir)
+
+    # Store the dataset
+    dataset.save_to_disk(os.path.join(output_path))
+
+    # Log the number of saved code snippets
+    logging.info(f"Saved {len(dataset)} to {output_path}")
+
+
+def convert_dataset_two_folders(original: str, rdh: str, output_path: str,
+                                original_score: float = 4.5, rdh_score: float = 1.5):
+    """
+    Loads the data and converts it to the HuggingFace format.
+    :param original: Path to the directory containing the original code
+    :param rdh: Path to the directory containing the RDH code
+    :param output_path: Path to the output directory
+    :param original_score: The score for the original code
+    :param rdh_score: The score for the RDH code
+    :return: The HuggingFace datasets.
+    """
+    # Log the configuration
+    logging.info(f"Loading data from {original} and {rdh}")
+
+    # Load the data
+    data_loader = TwoFoldersToDataset(
+        original_loader=KrodCodeLoader(),
+        rdh_loader=KrodCodeLoader(name_appendix="_rdh"),
+    )
+    dataset = data_loader.convert_to_dataset(original_data_dir=original,
+                                             rdh_data_dir=rdh,
+                                             original_score=original_score,
+                                             rdh_score=rdh_score)
+
+    # Store the dataset
+    dataset.save_to_disk(os.path.join(output_path))
+
+    # Log the number of saved code snippets
+    logging.info(f"Saved {len(dataset)} to {output_path}")
+
+
 if __name__ == "__main__":
-    dorn()
+    krod()
