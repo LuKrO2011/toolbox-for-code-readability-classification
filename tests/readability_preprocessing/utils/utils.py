@@ -1,6 +1,8 @@
 import unittest
 from tempfile import TemporaryDirectory
 
+from datasets import load_from_disk
+
 
 class DirTest(unittest.TestCase):
     output_dir = None  # Set to "output" to generate output
@@ -17,3 +19,11 @@ class DirTest(unittest.TestCase):
         # Clean up temporary directories
         if self.temp_dir is not None:
             self.temp_dir.cleanup()
+
+
+@unittest.skip("Does not test own code.")
+def own_load_from_disk():
+    # Test loading a dataset from a directory
+    dataset = load_from_disk("D:\PyCharm_Projects_D\styler2.0\krod")
+    dataset = dataset['train'].to_list()
+    assert len(dataset) >= 10000
