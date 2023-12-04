@@ -76,3 +76,4 @@ def copy_files(from_dir: str, to_dir: str) -> None:
         to_file = os.path.join(to_dir, file)
         if os.path.isfile(from_file):
             shutil.copy2(from_file, to_file)
+

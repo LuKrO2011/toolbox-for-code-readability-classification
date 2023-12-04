@@ -5,23 +5,24 @@ import sys
 from argparse import ArgumentParser
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from pyarrow.fs import copy_files
 
-from readability_preprocessing.dataset.dataset_combiner import combine_datasets
-from readability_preprocessing.dataset.dataset_converter import convert_dataset_csv, \
+from src.readability_preprocessing.dataset.dataset_combiner import combine_datasets
+from src.readability_preprocessing.dataset.dataset_converter import convert_dataset_csv, \
     convert_dataset_two_folders, DatasetType
-from readability_preprocessing.extractors.file_extractor import extract_files
-from readability_preprocessing.extractors.method_extractor import extract_methods, \
+from src.readability_preprocessing.extractors.file_extractor import extract_files
+from src.readability_preprocessing.extractors.method_extractor import extract_methods, \
     OverwriteMode
-from readability_preprocessing.preprocessing.visual import code_to_image
-from readability_preprocessing.sampling.stratified_sampling import sample, \
+from src.readability_preprocessing.preprocessing.visual import code_to_image
+from src.readability_preprocessing.sampling.stratified_sampling import sample, \
     calculate_features
-from readability_preprocessing.utils.csv import load_features_from_csv
-from readability_preprocessing.utils.dataset import add_images_to_dataset, \
-    is_huggingface_dataset, generate_java_files_from_dataset
-from readability_preprocessing.utils.utils import store_as_txt, list_java_files
+from src.readability_preprocessing.utils.csv import load_features_from_csv
+from src.readability_preprocessing.utils.dataset import add_images_to_dataset, \
+    is_huggingface_dataset, generate_java_files_from_dataset, upload_dataset, \
+    download_dataset
+from src.readability_preprocessing.utils.utils import store_as_txt, list_java_files
 
 DEFAULT_LOG_FILE_NAME = "readability-preprocessing"
 DEFAULT_LOG_FILE = f"{DEFAULT_LOG_FILE_NAME}.log"
@@ -83,6 +84,8 @@ class Tasks(Enum):
     CONVERT_CSV = "CONVERT_CSV"
     CONVERT_TWO_FOLDERS = "CONVERT_TWO_FOLDERS"
     COMBINE = "COMBINE"
+    DOWNLOAD = "DOWNLOAD"
+    UPLOAD = "UPLOAD"
 
     @classmethod
     def _missing_(cls, value: object) -> Any:
@@ -347,6 +350,55 @@ def _set_up_arg_parser() -> ArgumentParser:
         help="Percentage of ambiguous samples to remove from the dataset.",
     )
 
+    # Parser for uploading datasets
+    upload_parser = sub_parser.add_parser(str(Tasks.UPLOAD))
+    upload_parser.add_argument(
+        "--input",
+        "-i",
+        required=True,
+        type=str,
+        help="Path to the folder containing the dataset.",
+    )
+    upload_parser.add_argument(
+        "--name",
+        "-n",
+        required=True,
+        type=str,
+        help="Name of the dataset.",
+    )
+    upload_parser.add_argument(
+        "--token-file",
+        "-tf",
+        required=True,
+        type=str,
+        help="Path to the file containing your HuggingFace token.",
+    )
+
+    # Parser for downloading datasets
+    download_parser = sub_parser.add_parser(str(Tasks.DOWNLOAD))
+    download_parser.add_argument(
+        "--name",
+        "-n",
+        required=True,
+        type=str,
+        help="Name of the dataset.",
+    )
+    download_parser.add_argument(
+        "--output",
+        "-o",
+        required=True,
+        type=str,
+        help="Path to the folder where the dataset should be stored.",
+    )
+    download_parser.add_argument(
+        "--token-file",
+        "-tf",
+        required=False,
+        type=str,
+        help="Path to the file containing your HuggingFace token. If not specified, "
+             "the dataset must be public.",
+    )
+
     return arg_parser
 
 
@@ -549,6 +601,36 @@ def _run_combine_datasets(parsed_args: Any) -> None:
     combine_datasets(input_paths, output_dir, percent_to_remove)
 
 
+def _run_download(parsed_args: Any) -> None:
+    """
+    Downloads a dataset from the HuggingFace hub.
+    :param parsed_args: Parsed arguments.
+    :return: None
+    """
+    dataset_name = parsed_args.name
+    dataset_dir = parsed_args.output
+    token_file = parsed_args.token_file
+
+    download_dataset(dataset_name=dataset_name,
+                     dataset_dir=dataset_dir,
+                     token_file=token_file)
+
+
+def _run_upload(parsed_args: Any) -> None:
+    """
+    Uploads a dataset to the HuggingFace hub.
+    :param parsed_args: Parsed arguments.
+    :return: None
+    """
+    dataset_dir = parsed_args.input
+    dataset_name = parsed_args.name
+    token_file = parsed_args.token_file
+
+    upload_dataset(dataset_dir=dataset_dir,
+                   dataset_name=dataset_name,
+                   token_file=token_file)
+
+
 def main(args: list[str]) -> int:
     """
     Main function of the readability classifier.
@@ -589,6 +671,11 @@ def main(args: list[str]) -> int:
             _run_convert_two_folders(parsed_args)
         case Tasks.COMBINE:
             _run_combine_datasets(parsed_args)
+        case Tasks.DOWNLOAD:
+            _run_download(parsed_args)
+        case Tasks.UPLOAD:
+            _run_upload(parsed_args)
+
     return 0
 
 

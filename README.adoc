@@ -13,6 +13,8 @@ The model itself is not part of this repository.
 *** <<Convert_datasets_csv>>
 *** <<Convert_datasets_two_folders>>
 ** <<Combine_datasets>>
+** <<Download_datasets>>
+** <<Upload_datasets>>
 ** <<Sample>>
 ** <<Preprocess>>
 *** <<Visualize>>
@@ -203,6 +205,49 @@ Example:
 [source,bash]
 ----
 python src/readability_preprocessing/main.py SAMPLE -i <input_path> -s <save_path>
+----
+
+[[Download_datasets]]
+=== Download datasets
+
+To download a dataset from the HuggingFace Hub, use the following command:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py DOWNLOAD [-h] --name NAME --output OUTPUT [--token-file TOKEN_FILE]
+----
+
+* `--name` or `-n` is the name of the dataset to download.
+* `--output` or `-o` is the path to the directory where the downloaded dataset will be saved.
+* `--token-file` or `-tf` is the path to the file containing the HuggingFace API token.
+If not provided, the dataset must be public.
+
+Example:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py DOWNLOAD -n <dataset_name> -o <output_path>
+----
+
+[[Upload_datasets]]
+=== Upload datasets
+
+To upload a dataset to the HuggingFace Hub, use the following command:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py UPLOAD [-h] --input INPUT --name NAME --token-file TOKEN_FILE
+----
+
+* `--input` or `-i` is the path to the directory containing the dataset to upload.
+* `--name` or `-n` is the name of the dataset to upload.
+* `--token-file` or `-tf` is the path to the file containing the HuggingFace API token.
+
+Example:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py UPLOAD -i <input_path> -n <dataset_name> -tf <token_file_path>
 ----
 
 [[Preprocess]]
