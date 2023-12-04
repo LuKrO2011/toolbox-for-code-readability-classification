@@ -424,6 +424,8 @@ def main(args: list[str]) -> int:
             _run_visualize(parsed_args)
         case Tasks.EXTRACT_FILES:
             _run_extract_files(parsed_args)
+        case Tasks.EXTRACT_METHODS:
+            _run_extract_methods(parsed_args)
     return 0
 
 
