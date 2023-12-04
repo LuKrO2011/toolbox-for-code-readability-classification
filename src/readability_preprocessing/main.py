@@ -31,9 +31,6 @@ def _setup_logging(log_file: str = DEFAULT_LOG_FILE, overwrite: bool = False) ->
     """
     Set up logging.
     """
-    # Create the log file and dir if it does not exist
-    if not os.path.exists(os.path.dirname(log_file)):
-        os.makedirs(os.path.dirname(log_file))
     if not os.path.exists(log_file):
         with open(log_file, "w") as f:
             f.write("")
@@ -409,6 +406,8 @@ def main(args: list[str]) -> int:
     logfile = DEFAULT_LOG_FILE
     if hasattr(parsed_args, "save") and parsed_args.save:
         folder_path = Path(parsed_args.save)
+        if not os.path.isdir(folder_path):
+            os.makedirs(folder_path)
         folder_name = Path(parsed_args.save).name
         logfile = folder_path / Path(f"{DEFAULT_LOG_FILE_NAME}-{folder_name}.log")
     _setup_logging(logfile, overwrite=True)
