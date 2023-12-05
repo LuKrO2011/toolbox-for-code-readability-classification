@@ -1,8 +1,12 @@
 import unittest
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from datasets import load_from_disk
 
+RES_DIR = Path("res")
+DATASET_DIR = RES_DIR / "datasets/"
+ENCODED_DIR = DATASET_DIR / "encoded/"
 
 class DirTest(unittest.TestCase):
     output_dir = None  # Set to "output" to generate output

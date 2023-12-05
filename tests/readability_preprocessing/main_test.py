@@ -3,11 +3,9 @@ import unittest
 from pathlib import Path
 
 from src.readability_preprocessing.main import _run_download, _run_upload
-from tests.readability_preprocessing.utils.utils import DirTest
+from tests.readability_preprocessing.utils.utils import DirTest, ENCODED_DIR
 
-RES_DIR = Path("res")
-DATASET_DIR = RES_DIR / "datasets/"
-RAW_BW = DATASET_DIR / "raw/bw"
+BW_DIR = ENCODED_DIR / "bw"
 
 
 class TestRunDownload(DirTest):
@@ -34,7 +32,7 @@ class TestRunUpload:
         token = str(RES_DIR / "credentials/huggingface_token.txt")
 
         class MockParsedArgs:
-            def __init__(self, dir_path: Path = RAW_BW, token_path: str = token):
+            def __init__(self, dir_path: Path = BW_DIR, token_path: str = token):
                 self.name = "LuKrO/test"
                 self.input = str(dir_path)
                 self.token_file = token_path
