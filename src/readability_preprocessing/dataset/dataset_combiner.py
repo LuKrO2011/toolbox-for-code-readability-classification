@@ -17,7 +17,6 @@ def _load_datasets(paths: list[str]) -> list[Dataset]:
     return datasets
 
 
-# TODO: Test this function
 def _remove_ambiguous_samples(dataset: Dataset,
                               percent_to_remove: float = 0.5) -> Dataset:
     """
