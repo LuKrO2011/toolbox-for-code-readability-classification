@@ -1,6 +1,7 @@
 import logging
 import os
 import subprocess
+from pathlib import Path
 from typing import List, Dict
 
 import fastcluster
@@ -15,10 +16,10 @@ from sklearn.metrics.pairwise import pairwise_distances
 from src.readability_preprocessing.utils.csv import append_features_to_csv, load_header
 from src.readability_preprocessing.utils.utils import list_java_files
 
-FEATURE_JAR_PATH = (
-    "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Metriken/RSE.jar"
-)
-WORKING_DIR = os.path.join(os.path.dirname(__file__), "../../res")
+CURR_DIR = Path(os.path.dirname(os.path.relpath(__file__)))
+WORKING_DIR = CURR_DIR / "../../res"
+RSE_DIR = WORKING_DIR / "rse"
+FEATURE_JAR_PATH = (RSE_DIR / "RSE.jar").absolute()
 EXTRACT_METRICS_CMD = "it.unimol.readability.metric.runnable.ExtractMetrics"
 CSV_NAME = "features.csv"
 
@@ -225,11 +226,9 @@ def sample(features: Dict[str, Dict[str, float]], num_stratas: int = 20,
     return stratas
 
 
-DATA_DIR = "D:/PyCharm_Projects_D/styler2.0/methods/AreaShop/AddCommand.java"
-
-
 def main() -> None:
-    features = calculate_features(DATA_DIR)
+    data_dir = "D:/PyCharm_Projects_D/styler2.0/methods/AreaShop/AddCommand.java"
+    features = calculate_features(data_dir)
     stratas = sample(features, num_stratas=2, snippets_per_stratum=2)
 
     # Print the selected snippets
