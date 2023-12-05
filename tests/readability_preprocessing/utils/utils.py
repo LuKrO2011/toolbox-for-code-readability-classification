@@ -26,6 +26,7 @@ CHECKSTYLED_DIR = RES_DIR / "checkstyled/"
 
 EXTRACTED_DIR = RES_DIR / "extracted/"
 
+
 class DirTest(unittest.TestCase):
     output_dir = None  # Set to "output" to generate output
 
