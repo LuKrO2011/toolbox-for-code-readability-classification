@@ -1,7 +1,7 @@
-= Predicting Source Code Readability
+= Toolbox: Predicting Source Code Readability
 
-This Python program preprocesses Java source code snippets for predicting their readability.
-The model itself is not part of this repository.
+This is a toolbox that is used to help with predicting the readability of Java source code snippets.
+The model itself as well as necessary representation creation steps are not part of this repository.
 
 == Table of Contents
 
@@ -16,12 +16,15 @@ The model itself is not part of this repository.
 ** <<Download_datasets>>
 ** <<Upload_datasets>>
 ** <<Sample>>
-** <<Preprocess>>
-*** <<Visualize>>
 
 [[Installation]]
 == Installation
 
+You can either do a <<Local Installation>> or you can go with the <<Podman Installation>>.
+
+=== Local Installation
+
+[[Local_Installation]]
 To set up the project and its dependencies, follow these steps:
 
 Clone this repository to your local machine:
@@ -53,10 +56,20 @@ Activate the virtual environment:
 poetry shell
 ----
 
+If you want to use the <<Sample>> command, you additionally need to install https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html[Java 17].
+
 Now you're ready to use the source code readability preprocessing tool.
+
+=== Podman Installation
+
+[[Podman_Installation]]
+In order to use podman, make sure you have https://podman.io/[Podman] installed.
+Then you can use the https://hub.docker.com/repository/docker/lukro2011/rp/general[Podman image] to run the tool in a container.
 
 [[Usage]]
 == Usage
+
+In this section you will find information on how to use the source code readability preprocessing tool.
 
 [[Extract_Files]]
 === Extract Files
@@ -110,7 +123,7 @@ python src/readability_preprocessing/main.py EXTRACT_METHODS -i <input_path> -o 
 [[Convert_datasets]]
 === Convert datasets
 
-This tool supports converting datasets from csv and a dictionary of Java source code snippets to a HuggingFace dataset.
+This tool supports converting datasets from csv and a dictionary of Java source code snippets to a https://huggingface.co/[Hugging Face] dataset.
 To do this, see <<Convert_datasets_csv>>.
 You can also convert two folders containing Java source code files, one folder with readable and the other with non-readable Java source code files, to a HuggingFace dataset.
 To do this, see <<Convert_datasets_two_folders>>.
@@ -249,32 +262,3 @@ Example:
 ----
 python src/readability_preprocessing/main.py UPLOAD -i <input_path> -n <dataset_name> -tf <token_file_path>
 ----
-
-[[Preprocess]]
-=== Preprocess
-
-For preprocessing there are multiple options:
-
-[[Visualize]]
-==== Visualize
-
-To visualize the distribution of the features, use the following command:
-
-[source,bash]
-----
-python src/readability_preprocessing/main.py VISUALIZE --input INPUT --save SAVE [--css CSS] [--width WIDTH] [--height HEIGHT]
-----
-
-* `--input` or `-i` is the path to the file containing a java file or a dictionary with java files.
-* `--save` or `-s` is the path to the directory where the output images will be saved.
-* `--css` or `-c` is the path to the CSS file to use for styling the output images.
-* `--width` or `-w` is the width of the output images.
-* `--height` or `-h` is the height of the output images.
-
-Example:
-
-[source,bash]
-----
-python src/readability_preprocessing/main.py VISUALIZE -i <input_path> -s <save_path>
-----
-
