@@ -7,22 +7,18 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from pyarrow.fs import copy_files
-
 from src.readability_preprocessing.dataset.dataset_combiner import combine_datasets
 from src.readability_preprocessing.dataset.dataset_converter import convert_dataset_csv, \
     convert_dataset_two_folders, DatasetType
 from src.readability_preprocessing.extractors.file_extractor import extract_files
 from src.readability_preprocessing.extractors.method_extractor import extract_methods, \
     OverwriteMode
-from src.readability_preprocessing.preprocessing.visual import code_to_image
 from src.readability_preprocessing.sampling.stratified_sampling import sample, \
     calculate_features
 from src.readability_preprocessing.utils.csv import load_features_from_csv
-from src.readability_preprocessing.utils.dataset import add_images_to_dataset, \
-    is_huggingface_dataset, generate_java_files_from_dataset, upload_dataset, \
+from src.readability_preprocessing.utils.dataset import upload_dataset, \
     download_dataset
-from src.readability_preprocessing.utils.utils import store_as_txt, list_java_files
+from src.readability_preprocessing.utils.utils import store_as_txt
 
 DEFAULT_LOG_FILE_NAME = "readability-preprocessing"
 DEFAULT_LOG_FILE = f"{DEFAULT_LOG_FILE_NAME}.log"
@@ -78,7 +74,6 @@ class Tasks(Enum):
     Enum for the different tasks of the readability preprocessing toolbox.
     """
     SAMPLE = "SAMPLE"
-    VISUALIZE = "VISUALIZE"
     EXTRACT_FILES = "EXTRACT_FILES"
     EXTRACT_METHODS = "EXTRACT_METHODS"
     CONVERT_CSV = "CONVERT_CSV"
@@ -136,45 +131,6 @@ def _set_up_arg_parser() -> ArgumentParser:
         type=int,
         default=20,
         help="Number of snippets to sample per stratum.",
-    )
-
-    # Parser for generating visualisations
-    visualize_parser = sub_parser.add_parser(str(Tasks.VISUALIZE))
-    visualize_parser.add_argument(
-        "--input",
-        "-i",
-        required=True,
-        type=Path,
-        help="Path to the folder containing java files, a single java file or a folder "
-             "with a HuggingFace dataset.",
-    )
-    visualize_parser.add_argument(
-        "--save",
-        "-s",
-        required=True,
-        type=Path,
-        help="Path to the folder where the visualisations should be stored."
-    )
-    visualize_parser.add_argument(
-        "--css",
-        required=False,
-        type=Path,
-        help="Path to the css file to use for styling the code.",
-        default=os.path.join(os.path.dirname(__file__), "../res/css/towards.css")
-    )
-    visualize_parser.add_argument(
-        "--width",
-        required=False,
-        type=int,
-        default=128,
-        help="Width of the image.",
-    )
-    visualize_parser.add_argument(
-        "--height",
-        required=False,
-        type=int,
-        default=128,
-        help="Height of the image.",
     )
 
     # Parser for extracting files
@@ -440,68 +396,6 @@ def _run_stratified_sampling(args: Any) -> None:
         store_as_txt(stratas, save_dir)
 
 
-def _run_visualize(parsed_args: Any, image_dir_name=DEFAULT_IMAGE_DIR_NAME,
-                   code_dir_name=DEFAULT_CODE_DIR_NAME,
-                   output_dataset_dir_name=DEFAULT_OUTPUT_DATASET_DIR_NAME) -> None:
-    """
-    Runs the visualization of Java snippets.
-    :param parsed_args: Parsed arguments.
-    :param image_dir_name: The name of the image directory.
-    :param code_dir_name: The name of the code directory.
-    :param output_dataset_dir_name: The name of the output dataset directory.
-    :return: None
-    """
-    # Get the parsed arguments
-    input_dir = parsed_args.input
-    save_dir = parsed_args.save
-    css = parsed_args.css
-    width = parsed_args.width
-    height = parsed_args.height
-
-    # Create the save directory, if it does not exist
-    if not os.path.isdir(save_dir):
-        os.makedirs(save_dir)
-
-    # Create the image directory, if it does not exist
-    image_dir = os.path.join(save_dir, image_dir_name)
-    if not os.path.isdir(image_dir):
-        os.makedirs(image_dir)
-
-    # Create the code directory, if it does not exist
-    code_dir = os.path.join(save_dir, code_dir_name)
-    if not os.path.isdir(code_dir):
-        os.makedirs(code_dir)
-
-    # Create the output dataset directory, if it does not exist
-    output_dataset_dir = None
-    if is_huggingface_dataset(input_dir):
-        output_dataset_dir = os.path.join(save_dir, output_dataset_dir_name)
-        if not os.path.isdir(output_dataset_dir):
-            os.makedirs(output_dataset_dir)
-
-    # Get the paths to the Java snippets
-    if input_dir.is_dir():
-        if is_huggingface_dataset(input_dir):
-            generate_java_files_from_dataset(input_dir, code_dir)
-            java_code_snippet_paths = list_java_files(code_dir)
-        else:
-            copy_files(input_dir, code_dir)
-            java_code_snippet_paths = list_java_files(input_dir)
-    else:
-        java_code_snippet_paths = [input_dir]
-
-    # Create the visualisations
-    for snippet_path in java_code_snippet_paths:
-        code = open(snippet_path, "r").read()
-        name = os.path.join(image_dir, os.path.basename(snippet_path) + ".png")
-        code_to_image(code, output=name, css=css, width=width, height=height)
-        logging.info(f"Visualized {snippet_path}.")
-
-    logging.info(f"Visualized {len(java_code_snippet_paths)} Java code snippets.")
-
-    # Store the visualisations as a HuggingFace dataset
-    if is_huggingface_dataset(input_dir):
-        add_images_to_dataset(image_dir, input_dir, output_dataset_dir)
 
 
 def _run_extract_files(parsed_args: Any) -> None:
@@ -659,8 +553,6 @@ def main(args: list[str]) -> int:
     match task:
         case Tasks.SAMPLE:
             _run_stratified_sampling(parsed_args)
-        case Tasks.VISUALIZE:
-            _run_visualize(parsed_args)
         case Tasks.EXTRACT_FILES:
             _run_extract_files(parsed_args)
         case Tasks.EXTRACT_METHODS:
