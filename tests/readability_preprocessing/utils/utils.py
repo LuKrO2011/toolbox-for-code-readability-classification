@@ -5,8 +5,26 @@ from tempfile import TemporaryDirectory
 from datasets import load_from_disk
 
 RES_DIR = Path("res")
+
 DATASET_DIR = RES_DIR / "datasets/"
 ENCODED_DIR = DATASET_DIR / "encoded/"
+ENCODED_BW_DIR = ENCODED_DIR / "bw"
+ENCODED_DORN_DIR = ENCODED_DIR / "dorn"
+ENCODED_SCALABRIO_DIR = ENCODED_DIR / "scalabrio"
+
+RAW_DIR = RES_DIR / "raw_data/"
+RAW_BW_DIR = RAW_DIR / "bw"
+RAW_DORN_DIR = RAW_DIR / "dorn"
+RAW_SCALABRIO_DIR = RAW_DIR / "scalabrio"
+RAW_KROD_DIR = RAW_DIR / "krod"
+
+CODE_SNIPPETS_DIR = RES_DIR / "code_snippets/"
+CODE_SNIPPET_AREA_SHOP_DIR = CODE_SNIPPETS_DIR / "AreaShop/"
+CODE_SNIPPET_ADD_COMMAND_DIR = CODE_SNIPPET_AREA_SHOP_DIR / "AddCommand.java/"
+
+CHECKSTYLED_DIR = RES_DIR / "checkstyled/"
+
+EXTRACTED_DIR = RES_DIR / "extracted/"
 
 class DirTest(unittest.TestCase):
     output_dir = None  # Set to "output" to generate output
