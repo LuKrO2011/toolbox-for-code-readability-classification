@@ -396,8 +396,6 @@ def _run_stratified_sampling(args: Any) -> None:
         store_as_txt(stratas, save_dir)
 
 
-
-
 def _run_extract_files(parsed_args: Any) -> None:
     """
     Extracts successfully processed files from the input directory.
