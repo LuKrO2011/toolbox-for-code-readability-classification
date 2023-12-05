@@ -201,7 +201,7 @@ class KrodCodeLoader(CodeLoader):
         :param file_name: The file name.
         :return: The snippet name.
         """
-        return _get_snippet_name(file_name, "Krod")
+        return file_name
 
 
 class CsvLoader(ABC):
