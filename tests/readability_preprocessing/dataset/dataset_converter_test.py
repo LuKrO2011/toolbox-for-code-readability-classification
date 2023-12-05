@@ -10,6 +10,8 @@ from src.readability_preprocessing.dataset.dataset_converter import (
     ScalabrioCodeLoader,
     ScalabrioCsvLoader,
     TwoFoldersToDataset,
+    convert_dataset_csv,
+    convert_dataset_two_folders, DatasetType
 )
 from tests.readability_preprocessing.utils.utils import DirTest
 
@@ -17,8 +19,13 @@ from tests.readability_preprocessing.utils.utils import DirTest
 class TestDataConversion(DirTest):
     test_data_dir = "res/raw_data"
 
+    def _check_if_dataset_was_saved(self):
+        assert os.path.exists(
+            os.path.join(self.output_dir, "data-00000-of-00001.arrow"))
+        assert os.path.exists(os.path.join(self.output_dir, "dataset_info.json"))
+        assert os.path.exists(os.path.join(self.output_dir, "state.json"))
+
     def test_ScalabrioDataConversion(self):
-        # Test loading and saving Scalabrio dataset
         data_dir = os.path.join(self.test_data_dir, "scalabrio")
         csv = os.path.join(data_dir, "scores.csv")
         snippets_dir = os.path.join(data_dir, "Snippets")
@@ -33,10 +40,9 @@ class TestDataConversion(DirTest):
         dataset.save_to_disk(self.output_dir)
 
         # Check if the dataset was saved successfully
-        assert os.path.exists(self.output_dir)
+        self._check_if_dataset_was_saved()
 
     def test_BWDataConversion(self):
-        # Test loading and saving BW dataset
         data_dir = os.path.join(self.test_data_dir, "bw")
         csv = os.path.join(data_dir, "scores.csv")
         snippets_dir = os.path.join(data_dir, "Snippets")
@@ -51,10 +57,9 @@ class TestDataConversion(DirTest):
         dataset.save_to_disk(self.output_dir)
 
         # Check if the dataset was saved successfully
-        assert os.path.exists(self.output_dir)
+        self._check_if_dataset_was_saved()
 
     def test_DornDataConversion(self):
-        # Test loading and saving Dorn dataset
         data_dir = os.path.join(self.test_data_dir, "dorn")
         csv = os.path.join(data_dir, "scores.csv")
         snippets_dir = os.path.join(data_dir, "Snippets")
@@ -69,10 +74,9 @@ class TestDataConversion(DirTest):
         dataset.save_to_disk(self.output_dir)
 
         # Check if the dataset was saved successfully
-        assert os.path.exists(self.output_dir)
+        self._check_if_dataset_was_saved()
 
     def test_KrodDataConversion(self):
-        # Test loading and saving Krodinger dataset
         data_dir = os.path.join(self.test_data_dir, "krod")
         original = os.path.join(data_dir, "original")
         rdh = os.path.join(data_dir, "rdh")
@@ -88,4 +92,35 @@ class TestDataConversion(DirTest):
         dataset.save_to_disk(self.output_dir)
 
         # Check if the dataset was saved successfully
-        assert os.path.exists(self.output_dir)
+        self._check_if_dataset_was_saved()
+
+    def test_convert_dataset_csv(self):
+        data_dir = os.path.join(self.test_data_dir, "bw")
+        csv = os.path.join(data_dir, "scores.csv")
+        snippets_dir = os.path.join(data_dir, "Snippets")
+
+        # Load the data
+        convert_dataset_csv(
+            csv=csv,
+            snippets_dir=snippets_dir,
+            output_path=self.output_dir,
+            dataset_type=DatasetType.BW
+        )
+
+        # Check if the dataset was saved successfully
+        self._check_if_dataset_was_saved()
+
+    def test_convert_dataset_two_folders(self):
+        data_dir = os.path.join(self.test_data_dir, "krod")
+        original = os.path.join(data_dir, "original")
+        rdh = os.path.join(data_dir, "rdh")
+
+        # Load the data
+        convert_dataset_two_folders(
+            original=original,
+            rdh=rdh,
+            output_path=self.output_dir
+        )
+
+        # Check if the dataset was saved successfully
+        self._check_if_dataset_was_saved()
