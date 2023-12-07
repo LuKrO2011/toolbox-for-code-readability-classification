@@ -1,5 +1,6 @@
 import os
 
+from datasets import Dataset
 from src.readability_preprocessing.dataset.dataset_converter import (
     BWCodeLoader,
     BWCsvLoader,
@@ -25,6 +26,13 @@ class TestDataConversion(DirTest):
         assert os.path.exists(os.path.join(self.output_dir, "dataset_info.json"))
         assert os.path.exists(os.path.join(self.output_dir, "state.json"))
 
+    def _check_dataset_format(self):
+        dataset = Dataset.load_from_disk(self.output_dir)
+        assert "name" in dataset.column_names
+        assert "score" in dataset.column_names
+        assert "code_snippet" in dataset.column_names
+
+
     def test_ScalabrioDataConversion(self):
         data_dir = os.path.join(self.test_data_dir, "scalabrio")
         csv = os.path.join(data_dir, "scores.csv")
@@ -41,6 +49,7 @@ class TestDataConversion(DirTest):
 
         # Check if the dataset was saved successfully
         self._check_if_dataset_was_saved()
+        self._check_dataset_format()
 
     def test_BWDataConversion(self):
         data_dir = os.path.join(self.test_data_dir, "bw")
@@ -58,6 +67,7 @@ class TestDataConversion(DirTest):
 
         # Check if the dataset was saved successfully
         self._check_if_dataset_was_saved()
+        self._check_dataset_format()
 
     def test_DornDataConversion(self):
         data_dir = os.path.join(self.test_data_dir, "dorn")
@@ -75,6 +85,7 @@ class TestDataConversion(DirTest):
 
         # Check if the dataset was saved successfully
         self._check_if_dataset_was_saved()
+        self._check_dataset_format()
 
     def test_KrodDataConversion(self):
         data_dir = os.path.join(self.test_data_dir, "krod")
@@ -93,6 +104,7 @@ class TestDataConversion(DirTest):
 
         # Check if the dataset was saved successfully
         self._check_if_dataset_was_saved()
+        self._check_dataset_format()
 
     def test_convert_dataset_csv(self):
         data_dir = os.path.join(self.test_data_dir, "bw")
@@ -109,6 +121,7 @@ class TestDataConversion(DirTest):
 
         # Check if the dataset was saved successfully
         self._check_if_dataset_was_saved()
+        self._check_dataset_format()
 
     def test_convert_dataset_two_folders(self):
         data_dir = os.path.join(self.test_data_dir, "krod")
@@ -124,3 +137,4 @@ class TestDataConversion(DirTest):
 
         # Check if the dataset was saved successfully
         self._check_if_dataset_was_saved()
+        self._check_dataset_format()

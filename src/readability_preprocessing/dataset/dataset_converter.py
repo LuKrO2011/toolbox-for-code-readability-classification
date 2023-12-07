@@ -404,9 +404,12 @@ class TwoFoldersToDataset:
         # Combine the scores and the code snippets into a list
         data = []
         for _, code_snippet in original_code_snippets.items():
-            data.append({"code_snippet": code_snippet, "score": original_score})
+            data.append({"name": self.code_loader.get_snippet_name(_),
+                         "code_snippet": code_snippet,
+                         "score": original_score})
         for _, code_snippet in rdh_code_snippets.items():
-            data.append({"code_snippet": code_snippet, "score": rdh_score})
+            data.append({"name": self.rdh_loader.get_snippet_name(_),
+                         "code_snippet": code_snippet, "score": rdh_score})
 
         # Log the number of loaded code snippets
         logging.info(f"Loaded {len(data)} code snippets with estimated scores")
