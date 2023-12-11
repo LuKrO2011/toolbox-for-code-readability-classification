@@ -32,7 +32,6 @@ class TestDataConversion(DirTest):
         assert "score" in dataset.column_names
         assert "code_snippet" in dataset.column_names
 
-
     def test_ScalabrioDataConversion(self):
         data_dir = os.path.join(self.test_data_dir, "scalabrio")
         csv = os.path.join(data_dir, "scores.csv")

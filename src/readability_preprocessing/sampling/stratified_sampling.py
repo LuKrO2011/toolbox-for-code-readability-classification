@@ -1,4 +1,6 @@
+import json
 import logging
+import math
 import os
 import subprocess
 from pathlib import Path
@@ -118,53 +120,6 @@ def _calculate_similarity_matrix(features: np.ndarray[float], metric="cosine") -
     return similarity_matrix
 
 
-def _stratified_sampling(java_code_snippets_paths: List[str],
-                         similarity_matrix: np.ndarray[[float]], metric="cosine",
-                         num_stratas: int = 20, snippets_per_stratum: int = 20) -> (
-    List[List[str]]):
-    """
-    Perform stratified sampling based on the similarity matrix.
-    The sampling is performed by first splitting the Java snippets into
-    #num_stratas stratas based on the similarity matrix (Euclidean distance).
-    Each stratum should contain at most #snippets_per_stratum Java snippets.
-    :param java_code_snippets_paths: The paths to the Java code snippets
-    :param similarity_matrix: The similarity matrix
-    :param metric: The metric to use for calculating the similarity matrix
-    :param num_stratas: The number of stratas to use for sampling
-    :param snippets_per_stratum: The number of Java code snippets to sample per stratum
-    :return: The selected Java code snippets for training and testing
-    """
-    if len(java_code_snippets_paths) != similarity_matrix.shape[0]:
-        raise ValueError(
-            "Number of code snippets must match the rows of the similarity matrix.")
-
-    if metric != "cosine":
-        raise ValueError(f"Unsupported metric: {metric}. Valid metrics are: cosine.")
-
-    # Initialize lists to store the selected snippets for each stratum
-    stratas = [[] for _ in range(num_stratas)]
-
-    # Perform Ward's hierarchical clustering to create a dendrogram/linkage matrix
-    linkage_matrix = linkage(similarity_matrix, method="ward", metric="cosine")
-
-    # Crop the dendrogram at the desired number of clusters
-    clusters = fcluster(linkage_matrix, num_stratas, criterion='maxclust')
-
-    # Add the Java code snippets to the stratas
-    for snippet_idx, stratum_idx in enumerate(clusters):
-        stratas[stratum_idx - 1].append(java_code_snippets_paths[snippet_idx])
-
-    # Remove random snippets from the stratas, if they contain too many snippets
-    for stratum_idx, stratum in enumerate(stratas):
-        if len(stratum) > snippets_per_stratum:
-            stratas[stratum_idx] = np.random.choice(stratum, snippets_per_stratum,
-                                                    replace=False)
-        else:
-            stratas[stratum_idx] = stratum
-
-    return stratas
-
-
 def calculate_features(input_dir: str, output_dir: str = None) -> Dict[
     str, Dict[str, float]]:
     """
@@ -198,46 +153,163 @@ def calculate_features(input_dir: str, output_dir: str = None) -> Dict[
     return features
 
 
-def sample(features: Dict[str, Dict[str, float]], num_stratas: int = 20,
-           snippets_per_stratum: int = 20) -> list[list[str]]:
-    """
-    Perform stratified sampling on a list of features extracted from Java code snippets.
-    :param features: The features of the Java code snippets
-    :param num_stratas: The number of stratas to use for sampling
-    :param snippets_per_stratum: The number of Java code snippets to sample per stratum
-    :return: None
-    """
-    # Split the features into a list of paths and a list of features
-    java_code_snippet_paths = list(features.keys())
-    features = [list(feature.values()) for feature in features.values()]
+class StratifiedSampler:
+    save_dir: str
 
-    # Normalize the features and convert to a np array
-    normalized_features = _normalize_features(features)
+    def __init__(self, save_dir: str):
+        self.save_dir = save_dir
 
-    # Calculate the similarity matrix
-    similarity_matrix = _calculate_similarity_matrix(normalized_features)
+    def sample(self, features: Dict[str, Dict[str, float]],
+               max_num_stratas: int = 20,
+               num_snippets: int = 400) -> None:
+        """
+        Perform stratified sampling on a list of features extracted from Java code
+        snippets.
+        :param features: The features of the Java code snippets
+        :param max_num_stratas: The number of stratas to use for sampling
+        :param num_snippets: The number of Java code snippets to sample per stratum
+        :return: None
+        """
+        # Split the features into a list of paths and a list of features
+        java_code_snippet_paths = list(features.keys())
+        features = [list(feature.values()) for feature in features.values()]
 
-    # Perform stratified sampling
-    stratas = _stratified_sampling(java_code_snippet_paths, similarity_matrix,
-                                   metric="cosine",
-                                   num_stratas=num_stratas,
-                                   snippets_per_stratum=snippets_per_stratum)
+        # Normalize the features and convert to a np array
+        normalized_features = _normalize_features(features)
 
-    return stratas
+        # Calculate the similarity matrix
+        similarity_matrix = _calculate_similarity_matrix(normalized_features)
 
+        # Perform stratified sampling
+        self._stratified_sampling(java_code_snippets_paths=java_code_snippet_paths,
+                                  similarity_matrix=similarity_matrix,
+                                  metric="cosine",
+                                  max_num_stratas=max_num_stratas,
+                                  num_snippets=num_snippets)
 
-def main() -> None:
-    data_dir = "D:/PyCharm_Projects_D/styler2.0/methods/AreaShop/AddCommand.java"
-    features = calculate_features(data_dir)
-    stratas = sample(features, num_stratas=2, snippets_per_stratum=2)
+    def _stratified_sampling(self, java_code_snippets_paths: List[str],
+                             similarity_matrix: np.ndarray[[float]],
+                             metric="cosine",
+                             max_num_stratas: int = 20,
+                             num_snippets: int = 400) -> None:
+        """
+        Perform stratified sampling based on the similarity matrix.
+        The sampling is performed by first splitting the Java snippets into
+        #num_stratas stratas based on the similarity matrix (Euclidean distance).
+        Each stratum should contain at most #snippets_per_stratum Java snippets.
+        :param java_code_snippets_paths: The paths to the Java code snippets
+        :param similarity_matrix: The similarity matrix
+        :param metric: The metric to use for calculating the similarity matrix
+        :param max_num_stratas: The maximum number of stratas to use for sampling
+        :param num_snippets: The number of Java code snippets to sample in total
+        :return: None
+        """
+        if len(java_code_snippets_paths) != similarity_matrix.shape[0]:
+            raise ValueError(
+                "Number of code snippets must match the rows of the similarity matrix.")
 
-    # Print the selected snippets
-    for stratum_idx, stratum in enumerate(stratas):
-        print(f"Stratum {stratum_idx + 1}:")
-        for snippet in stratum:
-            print(snippet)
-        print()
+        if metric != "cosine":
+            raise ValueError(
+                f"Unsupported metric: {metric}. Valid metrics are: cosine.")
 
+        # Perform Ward's hierarchical clustering to create a dendrogram/linkage matrix
+        linkage_matrix = linkage(similarity_matrix, method="ward", metric="cosine")
 
-if __name__ == "__main__":
-    main()
+        # Calculate merge distances and differences
+        self._save_merge_distances(linkage_matrix)
+
+        # Save the clusters from max_num_stratas to 2
+        for num_stratas in range(max_num_stratas, 1, -1):
+            self._save_cluster(linkage_matrix, num_stratas, java_code_snippets_paths,
+                               snippets_per_stratum=math.ceil(
+                                   num_snippets / num_stratas))
+
+    def _save_cluster(self, linkage_matrix: np.ndarray[[float]], num_stratas: int,
+                      java_code_snippets_paths: List[str],
+                      snippets_per_stratum: int) -> None:
+        """
+        Save the clusters to a file.
+        :param linkage_matrix: The linkage matrix
+        :param num_stratas: The number of stratas to use for sampling
+        :param java_code_snippets_paths: The paths to the Java code snippets
+        :param snippets_per_stratum: The number of Java code snippets to sample per
+        stratum
+        :return: None
+        """
+        stratas = [[] for _ in range(num_stratas)]
+
+        # Add the Java code snippets to the stratas
+        clusters = fcluster(linkage_matrix, num_stratas, criterion='maxclust')
+
+        # Add the Java code snippets to the stratas
+        for snippet_idx, stratum_idx in enumerate(clusters):
+            stratas[stratum_idx - 1].append(java_code_snippets_paths[snippet_idx])
+
+        # Create a subdirectory for the stratas with the number of clusters
+        stratas_dir = os.path.join(self.save_dir, f"{num_stratas}_stratas_all")
+        if not os.path.exists(stratas_dir):
+            os.mkdir(stratas_dir)
+
+        # Save the clusters
+        for stratum_idx, stratum in enumerate(stratas):
+            save_path = os.path.join(stratas_dir, f"stratum_{stratum_idx}.txt")
+            with open(save_path, "w") as f:
+                for snippet in stratum:
+                    f.write(snippet + "\n")
+
+        # Remove random snippets from the stratas, if they contain too many snippets
+        for stratum_idx, stratum in enumerate(stratas):
+            if len(stratum) > snippets_per_stratum:
+                stratas[stratum_idx] = np.random.choice(stratum,
+                                                        snippets_per_stratum,
+                                                        replace=False)
+            else:
+                stratas[stratum_idx] = stratum
+
+        # Create a subdirectory for the stratas with the number of clusters
+        stratas_dir = os.path.join(self.save_dir,
+                                   f"{num_stratas}_stratas_{snippets_per_stratum}")
+        if not os.path.exists(stratas_dir):
+            os.mkdir(stratas_dir)
+
+        # Save the clusters
+        for stratum_idx, stratum in enumerate(stratas):
+            save_path = os.path.join(stratas_dir, f"stratum_{stratum_idx}.txt")
+            with open(save_path, "w") as f:
+                for snippet in stratum:
+                    f.write(snippet + "\n")
+
+    def _save_merge_distances(self, linkage_matrix: np.ndarray[[float]],
+                              stratas_limit: int = 20
+                              ) -> None:
+        """
+        Calculate and save the merge distances.
+        :param linkage_matrix: The linkage matrix
+        :param stratas_limit: The maximum number of stratas to consider
+        :return: None
+        """
+        # Get the merge distances
+        merge_distances = linkage_matrix[:, 2]
+
+        # Get the merge distances for cluster sizes <= stratas_limit
+        merge_distances = merge_distances[:stratas_limit][::-1]
+
+        # Calculate the differences between the merge distances
+        merge_distances_and_diffs = []
+        for idx in range(1, len(merge_distances) + 1):
+            merge_distance = merge_distances[idx - 1]
+            diff = merge_distances[idx] - merge_distance if idx < len(
+                merge_distances) else 0.0
+            merge_distances_and_diffs.append(
+                {"new_num_stratas": idx, "merge_distance": merge_distance,
+                 "diff_to_prev": diff})
+
+        # Invert the list of dictionaries
+        merge_distances_and_diffs = merge_distances_and_diffs[::-1]
+
+        # Store the list of dictionaries in a JSON file
+        with open(os.path.join(self.save_dir, "merge_distances.json"), "w") as f:
+            json.dump(merge_distances_and_diffs, f, indent=4)
+
+        # Log the content of the json file
+        logging.info(f"Merge distances: {merge_distances_and_diffs}")

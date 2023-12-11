@@ -12,7 +12,7 @@ FEATURES_CSV_PATH = os.path.join(os.path.dirname(__file__),
 class TestCsv(DirTest):
 
     def test_append_features_to_csv(self):
-        csv_path = os.path.join(self.temp_dir.name, "test.csv")
+        csv_path = os.path.join(self.output_dir, "test.csv")
         append_features_to_csv(csv_path, "test.java", {"no_matter_what": 1.0})
 
         # Get the header line:
@@ -27,7 +27,7 @@ class TestCsv(DirTest):
 
     def test_load_features_from_csv(self):
         features = load_features_from_csv(FEATURES_CSV_PATH)
-        assert len(features) == 4
+        assert len(features) == 8
         assert len(list(features.values())[0]) == 110
 
     def test_load_header(self):

@@ -15,7 +15,7 @@ from tests.readability_preprocessing.utils.utils import DirTest, RES_DIR, \
 class TestRunMain(DirTest):
     def test_run_stratified_sampling(self):
         class MockParsedArgs:
-            def __init__(self, save: str = self.temp_dir.name):
+            def __init__(self, save: str = self.output_dir):
                 self.input = CODE_SNIPPET_ADD_COMMAND_DIR
                 self.save = save
                 self.num_stratas = 2
@@ -27,11 +27,11 @@ class TestRunMain(DirTest):
         _run_stratified_sampling(parsed_args)
 
         # Assert that the stratified sampling has been performed successfully
-        assert len(os.listdir(self.temp_dir.name)) != 0
+        assert len(os.listdir(self.output_dir)) != 0
 
     def test_run_extract_files(self):
         class MockParsedArgs:
-            def __init__(self, save: str = self.temp_dir.name):
+            def __init__(self, save: str = self.output_dir):
                 self.input = CHECKSTYLED_DIR
                 self.output = save
                 self.non_violated_subdir = "non_violated"
@@ -42,11 +42,11 @@ class TestRunMain(DirTest):
         _run_extract_files(parsed_args)
 
         # Assert that the files have been extracted successfully
-        assert len(os.listdir(self.temp_dir.name)) != 0
+        assert len(os.listdir(self.output_dir)) != 0
 
     def test_run_extract_methods(self):
         class MockParsedArgs:
-            def __init__(self, save: str = self.temp_dir.name):
+            def __init__(self, save: str = self.output_dir):
                 self.input = EXTRACTED_DIR
                 self.output = save
                 self.overwrite_mode = OverwriteMode.SKIP
@@ -60,11 +60,11 @@ class TestRunMain(DirTest):
         _run_extract_methods(parsed_args)
 
         # Assert that the methods have been extracted successfully
-        assert len(os.listdir(self.temp_dir.name)) != 0
+        assert len(os.listdir(self.output_dir)) != 0
 
     def test_run_convert_csv(self):
         class MockParsedArgs:
-            def __init__(self, save: str = self.temp_dir.name):
+            def __init__(self, save: str = self.output_dir):
                 self.input = RAW_BW_DIR / "Snippets"
                 self.csv = RAW_BW_DIR / "scores.csv"
                 self.output = save
@@ -76,11 +76,11 @@ class TestRunMain(DirTest):
         _run_convert_csv(parsed_args)
 
         # Assert that the CSV files have been converted successfully
-        assert len(os.listdir(self.temp_dir.name)) != 0
+        assert len(os.listdir(self.output_dir)) != 0
 
     def test_run_convert_two_folders(self):
         class MockParsedArgs:
-            def __init__(self, save: str = self.temp_dir.name):
+            def __init__(self, save: str = self.output_dir):
                 self.readable = str(RAW_KROD_DIR / "original")
                 self.not_readable = str(RAW_KROD_DIR / "rdh")
                 self.output = save
@@ -93,11 +93,11 @@ class TestRunMain(DirTest):
         _run_convert_two_folders(parsed_args)
 
         # Assert that the CSV files have been converted successfully
-        assert len(os.listdir(self.temp_dir.name)) != 0
+        assert len(os.listdir(self.output_dir)) != 0
 
     def test_run_combine_datasets(self):
         class MockParsedArgs:
-            def __init__(self, save: str = self.temp_dir.name):
+            def __init__(self, save: str = self.output_dir):
                 self.input = [ENCODED_BW_DIR, ENCODED_BW_DIR, ENCODED_BW_DIR]
                 self.output = save
                 self.percent_to_remove = 0.5
@@ -108,11 +108,11 @@ class TestRunMain(DirTest):
         _run_combine_datasets(parsed_args)
 
         # Assert that the datasets have been combined successfully
-        assert len(os.listdir(self.temp_dir.name)) != 0
+        assert len(os.listdir(self.output_dir)) != 0
 
     def test_run_download(self):
         class MockParsedArgs:
-            def __init__(self, temp_dir_name: str = self.temp_dir.name):
+            def __init__(self, temp_dir_name: str = self.output_dir):
                 self.name = "se2p/code-readability-merged"
                 self.output = temp_dir_name
                 self.token_file = None
@@ -123,7 +123,7 @@ class TestRunMain(DirTest):
         _run_download(parsed_args)
 
         # Assert that the dataset has been downloaded successfully
-        self.assertNotEqual(len(os.listdir(self.temp_dir.name)), 0)
+        self.assertNotEqual(len(os.listdir(self.output_dir)), 0)
 
     @unittest.skip("Uploads a dataset to HuggingFace Hub. Requires authentication.")
     def test_run_upload(self):

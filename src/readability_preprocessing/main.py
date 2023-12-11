@@ -13,12 +13,11 @@ from src.readability_preprocessing.dataset.dataset_converter import convert_data
 from src.readability_preprocessing.extractors.file_extractor import extract_files
 from src.readability_preprocessing.extractors.method_extractor import extract_methods, \
     OverwriteMode
-from src.readability_preprocessing.sampling.stratified_sampling import sample, \
-    calculate_features
+from src.readability_preprocessing.sampling.stratified_sampling import \
+    calculate_features, StratifiedSampler
 from src.readability_preprocessing.utils.csv import load_features_from_csv
 from src.readability_preprocessing.utils.dataset import upload_dataset, \
     download_dataset
-from src.readability_preprocessing.utils.utils import store_as_txt
 
 DEFAULT_LOG_FILE_NAME = "readability-preprocessing"
 DEFAULT_LOG_FILE = f"{DEFAULT_LOG_FILE_NAME}.log"
@@ -380,20 +379,10 @@ def _run_stratified_sampling(args: Any) -> None:
     else:  # If the input is a directory, get the paths to the Java code snippets
         features = calculate_features(input_dir, save_dir)
 
-    # Get the paths to the Java code snippets
-    stratas = sample(features,
-                     num_stratas=num_stratas,
-                     snippets_per_stratum=snippets_per_stratum)
-
-    # Log the results
-    logging.info(f"The following Java code snippets were sampled:")
-    for i, stratum in enumerate(stratas):
-        for j, snippet_path in enumerate(stratum):
-            logging.info(f"Stratum {i}, Snippet {j}: {snippet_path}")
-
-    # Save the sampled Java code snippet paths
-    if save_dir is not None:
-        store_as_txt(stratas, save_dir)
+    # Perform stratified sampling
+    StratifiedSampler(save_dir=save_dir).sample(features=features,
+                                                max_num_stratas=num_stratas,
+                                                num_snippets=snippets_per_stratum)
 
 
 def _run_extract_files(parsed_args: Any) -> None:
