@@ -167,7 +167,7 @@ class StratifiedSampler:
         snippets.
         :param features: The features of the Java code snippets
         :param max_num_stratas: The number of stratas to use for sampling
-        :param num_snippets: The number of Java code snippets to sample per stratum
+        :param num_snippets: The number of Java code snippets to sample in total
         :return: None
         """
         # Split the features into a list of paths and a list of features

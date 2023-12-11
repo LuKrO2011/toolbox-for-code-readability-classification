@@ -126,12 +126,12 @@ def _set_up_arg_parser() -> ArgumentParser:
         help="Number of stratas to use for sampling.",
     )
     sample_parser.add_argument(
-        "--snippets-per-stratum",
-        "-sps",
+        "--num_snippets",
+        "-ns",
         required=False,
         type=int,
-        default=20,
-        help="Number of snippets to sample per stratum.",
+        default=400,
+        help="Number of snippets to sample in total.",
     )
 
     # Parser for the extraction of sampled files
@@ -393,7 +393,7 @@ def _run_stratified_sampling(args: Any) -> None:
     input_dir = args.input
     save_dir = args.save
     num_stratas = args.num_stratas
-    snippets_per_stratum = args.snippets_per_stratum
+    num_snippets = args.num_snippets
 
     # Create the save directory, if it does not exist
     if save_dir is not None:
@@ -409,7 +409,7 @@ def _run_stratified_sampling(args: Any) -> None:
     # Perform stratified sampling
     StratifiedSampler(save_dir=save_dir).sample(features=features,
                                                 max_num_stratas=num_stratas,
-                                                num_snippets=snippets_per_stratum)
+                                                num_snippets=num_snippets)
 
 
 def _run_extract_sampled(parsed_args: Any) -> None:

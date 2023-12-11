@@ -20,7 +20,7 @@ class TestRunMain(DirTest):
                 self.input = METHODS_ORIGINAL_ADD_COMMAND_DIR
                 self.save = save
                 self.num_stratas = 2
-                self.snippets_per_stratum = 2
+                self.num_snippets = 2
 
         parsed_args = MockParsedArgs()
 
