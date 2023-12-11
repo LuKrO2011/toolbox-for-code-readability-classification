@@ -29,9 +29,12 @@ EXTRACTED_DIR = RES_DIR / "extracted/"
 SAMPLED_DIR = RES_DIR / "sampled/"
 SAMPLED_DIR_2_2 = SAMPLED_DIR / "2_stratas_2/"
 
+JAR_OUTPUTS_DIR = RES_DIR / "jar_outputs/"
+
+CSV_DIR = RES_DIR / "csv/"
 
 class DirTest(unittest.TestCase):
-    output_dir_name = "output"  # Set to "output" to generate output
+    output_dir_name = None  # Set to "output" to generate output
 
     def setUp(self):
         # Create temporary directories for testing if output directory is None
