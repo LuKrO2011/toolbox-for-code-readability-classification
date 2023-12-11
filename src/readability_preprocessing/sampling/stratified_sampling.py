@@ -245,17 +245,7 @@ class StratifiedSampler:
         for snippet_idx, stratum_idx in enumerate(clusters):
             stratas[stratum_idx - 1].append(java_code_snippets_paths[snippet_idx])
 
-        # Create a subdirectory for the stratas with the number of clusters
-        stratas_dir = os.path.join(self.save_dir, f"{num_stratas}_stratas_all")
-        if not os.path.exists(stratas_dir):
-            os.mkdir(stratas_dir)
-
-        # Save the clusters
-        for stratum_idx, stratum in enumerate(stratas):
-            save_path = os.path.join(stratas_dir, f"stratum_{stratum_idx}.txt")
-            with open(save_path, "w") as f:
-                for snippet in stratum:
-                    f.write(snippet + "\n")
+        self._save_clusters(stratas, f"{num_stratas}_stratas_all")
 
         # Remove random snippets from the stratas, if they contain too many snippets
         for stratum_idx, stratum in enumerate(stratas):
@@ -266,9 +256,17 @@ class StratifiedSampler:
             else:
                 stratas[stratum_idx] = stratum
 
-        # Create a subdirectory for the stratas with the number of clusters
-        stratas_dir = os.path.join(self.save_dir,
-                                   f"{num_stratas}_stratas_{snippets_per_stratum}")
+        self._save_clusters(stratas, f"{num_stratas}_stratas_{snippets_per_stratum}")
+
+    def _save_clusters(self, stratas: List[List[str]], subdir_name: str
+                       ) -> None:
+        """
+        Save the clusters to files in a subdirectory.
+        :param stratas: The stratas to save
+        :param subdir_name: The name of the subdirectory
+        :return: None
+        """
+        stratas_dir = os.path.join(self.save_dir, subdir_name)
         if not os.path.exists(stratas_dir):
             os.mkdir(stratas_dir)
 
