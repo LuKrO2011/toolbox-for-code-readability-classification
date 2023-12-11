@@ -18,7 +18,7 @@ RAW_DORN_DIR = RAW_DIR / "dorn"
 RAW_SCALABRIO_DIR = RAW_DIR / "scalabrio"
 RAW_KROD_DIR = RAW_DIR / "krod"
 
-CODE_SNIPPETS_DIR = RES_DIR / "code_snippets/"
+CODE_SNIPPETS_DIR = RES_DIR / "methods_original/"
 CODE_SNIPPET_AREA_SHOP_DIR = CODE_SNIPPETS_DIR / "AreaShop/"
 CODE_SNIPPET_ADD_COMMAND_DIR = CODE_SNIPPET_AREA_SHOP_DIR / "AddCommand.java/"
 
@@ -26,9 +26,12 @@ CHECKSTYLED_DIR = RES_DIR / "checkstyled/"
 
 EXTRACTED_DIR = RES_DIR / "extracted/"
 
+SAMPLED_DIR = RES_DIR / "sampled/"
+SAMPLED_DIR_2_2 = SAMPLED_DIR / "2_stratas_2/"
+
 
 class DirTest(unittest.TestCase):
-    output_dir_name = None  # Set to "output" to generate output
+    output_dir_name = "output"  # Set to "output" to generate output
 
     def setUp(self):
         # Create temporary directories for testing if output directory is None
@@ -38,7 +41,7 @@ class DirTest(unittest.TestCase):
         else:
             Path(self.output_dir_name).mkdir(parents=True, exist_ok=True)
             self._temp_dir = None
-            self.output_dir = self.output_dir_name.name
+            self.output_dir = self.output_dir_name
 
     def tearDown(self):
         # Clean up temporary directories

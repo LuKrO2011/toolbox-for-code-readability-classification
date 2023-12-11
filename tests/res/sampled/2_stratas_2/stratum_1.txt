@@ -1,0 +1,2 @@
+C:\Users\lukas\PycharmProjects\readability-preprocessing\tests\res\methods_original\AreaShop\AddfriendCommand.java\getTabCompleteList.java
+C:\Users\lukas\PycharmProjects\readability-preprocessing\tests\res\methods_original\AreaShop\AddCommand.java\getTabCompleteList.java
