@@ -7,6 +7,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from readability_preprocessing.extractors.sampled_extractor import extract_sampled
 from src.readability_preprocessing.dataset.dataset_combiner import combine_datasets
 from src.readability_preprocessing.dataset.dataset_converter import convert_dataset_csv, \
     convert_dataset_two_folders, DatasetType
@@ -73,6 +74,7 @@ class Tasks(Enum):
     Enum for the different tasks of the readability preprocessing toolbox.
     """
     SAMPLE = "SAMPLE"
+    EXTRACT_SAMPLED = "EXTRACT_SAMPLED"
     EXTRACT_FILES = "EXTRACT_FILES"
     EXTRACT_METHODS = "EXTRACT_METHODS"
     CONVERT_CSV = "CONVERT_CSV"
@@ -130,6 +132,31 @@ def _set_up_arg_parser() -> ArgumentParser:
         type=int,
         default=20,
         help="Number of snippets to sample per stratum.",
+    )
+
+    # Parser for the extraction of sampled files
+    extract_sampled_parser = sub_parser.add_parser(str(Tasks.EXTRACT_SAMPLED))
+    extract_sampled_parser.add_argument(
+        "--input",
+        "-i",
+        required=True,
+        type=str,
+        nargs="+",
+        help="Path to the folders containing the extracted methods.",
+    )
+    extract_sampled_parser.add_argument(
+        "--sampling",
+        "-s",
+        required=True,
+        type=str,
+        help="Path to the folder containing the sampling information (from SAMPLE).",
+    )
+    extract_sampled_parser.add_argument(
+        "--output",
+        "-o",
+        required=True,
+        type=str,
+        help="Path to the folder where the sampled, extracted methods should be stored.",
     )
 
     # Parser for extracting files
@@ -383,6 +410,27 @@ def _run_stratified_sampling(args: Any) -> None:
     StratifiedSampler(save_dir=save_dir).sample(features=features,
                                                 max_num_stratas=num_stratas,
                                                 num_snippets=snippets_per_stratum)
+
+
+def _run_extract_sampled(parsed_args: Any) -> None:
+    """
+    Extracts the sampled files from the input director(ies) as specified in the sampling
+    information. Stores the extracted files in the output directory.
+    :param parsed_args: Parsed arguments.
+    :return: None
+    """
+    # Get the parsed arguments
+    input_dirs = parsed_args.input
+    sampling_dir = parsed_args.sampling
+    output_dir = parsed_args.output
+
+    # Create the output directory, if it does not exist
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+
+    # Extract the files
+    extract_sampled(input_dirs=input_dirs, output_dir=output_dir,
+                    sampling_dir=sampling_dir)
 
 
 def _run_extract_files(parsed_args: Any) -> None:
