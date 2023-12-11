@@ -5,7 +5,7 @@ import os
 import numpy as np
 
 from tests.readability_preprocessing.utils.utils import DirTest, assert_lines_equal, \
-    CODE_SNIPPETS_DIR, CSV_DIR, JAR_OUTPUTS_DIR
+    METHODS_ORIGINAL_DIR, CSV_DIR, JAR_OUTPUTS_DIR
 from src.readability_preprocessing.utils.csv import load_features_from_csv
 from src.readability_preprocessing.sampling.stratified_sampling import (
     _extract_features, _calculate_similarity_matrix,
@@ -30,7 +30,7 @@ class TestCalculateFeatures:
             assert feature_value >= 0.0 or math.isnan(feature_value)
 
     def test_extract_features(self):
-        code_snippet = CODE_SNIPPETS_DIR / "AreaShop/AddCommand.java/execute.java"
+        code_snippet = METHODS_ORIGINAL_DIR / "AreaShop/AddCommand.java/execute.java"
         features = _extract_features(code_snippet)
 
         assert isinstance(features, dict)
@@ -41,7 +41,7 @@ class TestCalculateFeatures:
             assert features[feature] >= 0.0 or math.isnan(features[feature])
 
     def test_extract_features_empty(self):
-        code_snippet = CODE_SNIPPETS_DIR / "AreaShop/AreaShopInterface.java/debugI.java"
+        code_snippet = METHODS_ORIGINAL_DIR / "AreaShop/AreaShopInterface.java/debugI.java"
         features = _extract_features(str(code_snippet.absolute()))
 
         assert isinstance(features, dict)
@@ -132,7 +132,7 @@ class TestCalculateFeatures:
 
     def test_calculate_features(self):
         folder = "AreaShop/AddCommand.java"
-        dir = os.path.join(CODE_SNIPPETS_DIR, folder)
+        dir = os.path.join(METHODS_ORIGINAL_DIR, folder)
         features = calculate_features(dir)
 
         assert isinstance(features, dict)

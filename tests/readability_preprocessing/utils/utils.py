@@ -18,9 +18,13 @@ RAW_DORN_DIR = RAW_DIR / "dorn"
 RAW_SCALABRIO_DIR = RAW_DIR / "scalabrio"
 RAW_KROD_DIR = RAW_DIR / "krod"
 
-CODE_SNIPPETS_DIR = RES_DIR / "methods_original/"
-CODE_SNIPPET_AREA_SHOP_DIR = CODE_SNIPPETS_DIR / "AreaShop/"
-CODE_SNIPPET_ADD_COMMAND_DIR = CODE_SNIPPET_AREA_SHOP_DIR / "AddCommand.java/"
+METHODS_ORIGINAL_DIR = RES_DIR / "methods_original/"
+METHODS_ORIGINAL_AREA_SHOP_DIR = METHODS_ORIGINAL_DIR / "AreaShop/"
+METHODS_ORIGINAL_ADD_COMMAND_DIR = METHODS_ORIGINAL_AREA_SHOP_DIR / "AddCommand.java/"
+
+METHODS_RDH_DIR = RES_DIR / "methods_rdh/"
+METHODS_RDH_AREA_SHOP_DIR = METHODS_RDH_DIR / "AreaShop/"
+METHODS_RDH_ADD_COMMAND_DIR = METHODS_RDH_AREA_SHOP_DIR / "AddCommand.java/"
 
 CHECKSTYLED_DIR = RES_DIR / "checkstyled/"
 
@@ -33,8 +37,9 @@ JAR_OUTPUTS_DIR = RES_DIR / "jar_outputs/"
 
 CSV_DIR = RES_DIR / "csv/"
 
+
 class DirTest(unittest.TestCase):
-    output_dir_name = None  # Set to "output" to generate output
+    output_dir_name = "output"  # Set to "output" to generate output
 
     def setUp(self):
         # Create temporary directories for testing if output directory is None

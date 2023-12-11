@@ -8,7 +8,7 @@ from src.readability_preprocessing.main import _run_stratified_sampling, \
     _run_convert_two_folders, \
     _run_combine_datasets, _run_download, _run_upload
 from tests.readability_preprocessing.utils.utils import DirTest, RES_DIR, \
-    ENCODED_BW_DIR, CODE_SNIPPET_ADD_COMMAND_DIR, \
+    ENCODED_BW_DIR, METHODS_ORIGINAL_ADD_COMMAND_DIR, \
     CHECKSTYLED_DIR, EXTRACTED_DIR, RAW_BW_DIR, RAW_KROD_DIR
 
 
@@ -16,7 +16,7 @@ class TestRunMain(DirTest):
     def test_run_stratified_sampling(self):
         class MockParsedArgs:
             def __init__(self, save: str = self.output_dir):
-                self.input = CODE_SNIPPET_ADD_COMMAND_DIR
+                self.input = METHODS_ORIGINAL_ADD_COMMAND_DIR
                 self.save = save
                 self.num_stratas = 2
                 self.snippets_per_stratum = 2
