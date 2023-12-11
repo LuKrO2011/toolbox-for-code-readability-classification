@@ -10,7 +10,8 @@ class DatasetCombinerTest(DirTest):
 
     @staticmethod
     def test_load_datasets():
-        datasets = _load_datasets([ENCODED_BW_DIR, ENCODED_DORN_DIR, ENCODED_SCALABRIO_DIR])
+        datasets = _load_datasets(
+            [ENCODED_BW_DIR, ENCODED_DORN_DIR, ENCODED_SCALABRIO_DIR])
         assert len(datasets) == 3
 
     @staticmethod
@@ -22,5 +23,6 @@ class DatasetCombinerTest(DirTest):
         assert max(dataset["score"]) == 4.347107438016529
 
     def test_combine_datasets(self):
-        combine_datasets([ENCODED_BW_DIR, ENCODED_DORN_DIR, ENCODED_SCALABRIO_DIR], self.output_dir)
+        combine_datasets([ENCODED_BW_DIR, ENCODED_DORN_DIR, ENCODED_SCALABRIO_DIR],
+                         self.output_dir)
         assert len(os.listdir(self.output_dir)) == 3

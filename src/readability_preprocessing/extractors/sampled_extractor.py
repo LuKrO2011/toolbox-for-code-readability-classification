@@ -3,7 +3,6 @@ import shutil
 from pathlib import Path
 
 
-# TODO: Use relative paths, also in sampling!
 def extract_sampled(input_dirs: list[Path], output_dir: Path,
                     sampling_dir: Path) -> None:
     """
@@ -34,6 +33,7 @@ def extract_sampled(input_dirs: list[Path], output_dir: Path,
 
     # Load the content of each sampling file
     strata_contents = [file.read_text().splitlines() for file in strata_names]
+    strata_contents = _to_relative_paths(strata_contents)
     stratas_with_names = list(zip(strata_names, strata_contents))
 
     # Copy the files to the output directory
@@ -47,7 +47,7 @@ def extract_sampled(input_dirs: list[Path], output_dir: Path,
 
                 # Check if the file is in any of the sampling files
                 for name, stratum in stratas_with_names:
-                    if absolute_file_path in stratum:
+                    if _check_path_in(absolute_file_path, stratum):
                         # Copy the file to the output directory
                         input_file_path = absolute_file_path
 
@@ -79,3 +79,54 @@ def _calculate_new_file_name(file_path: str, input_dir: Path) -> str:
     new_file_name = relative_file_path.as_posix().replace("/", "_")
 
     return new_file_name
+
+
+def _to_relative_paths(strata_contents: list[list[str]]) -> list[list[str]]:
+    """
+    Converts the absolute paths to relative paths.
+    :param strata_contents: The strata contents.
+    :return: The strata contents with relative paths.
+    """
+    return [[_to_relative_path(absolute_path) for absolute_path in stratum]
+            for stratum in strata_contents]
+
+
+def _to_relative_path(absolute_path: str,
+                      relative_to_dir: str = "methods_original") -> str:
+    """
+    Converts the absolute path to a relative path to the given folder name.
+    :param absolute_path: The absolute path.
+    :param relative_to_dir: The folder name to make the path relative to.
+    :return: The relative path.
+    """
+    absolute_path = Path(absolute_path)
+
+    # Remove everything after the first occurrence of the relative_to_dir
+    relative_to_path = absolute_path.parts[
+                       :absolute_path.parts.index(relative_to_dir) + 1]
+    relative_to_path = Path(*relative_to_path)
+
+    # Get the path relative to relative_to_path
+    relative_path = absolute_path.relative_to(relative_to_path)
+
+    return str(relative_path)
+
+
+def _check_path_in(path: str, paths: list[str]) -> bool:
+    """
+    Checks if the path is in the list of paths.
+    :param path: The path to check.
+    :param paths: The list of paths.
+    :return: True if the path is in the list of paths, False otherwise.
+    """
+    return any([_is_path_in(path_to_check, path) for path_to_check in paths])
+
+
+def _is_path_in(path: str, path_to_check: str) -> bool:
+    """
+    Checks if the path is a part of the path to check.
+    :param path: The path to check.
+    :param path_to_check: The path to check in.
+    :return: True if the path is in the path to check, False otherwise.
+    """
+    return path in path_to_check

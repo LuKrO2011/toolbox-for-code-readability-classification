@@ -1,7 +1,8 @@
 import os
 from pathlib import Path
 
-from readability_preprocessing.extractors.sampled_extractor import extract_sampled
+from readability_preprocessing.extractors.sampled_extractor import extract_sampled, \
+    _to_relative_paths, _check_path_in
 from tests.readability_preprocessing.utils.utils import DirTest, SAMPLED_DIR_2_2, \
     METHODS_ORIGINAL_DIR, METHODS_RDH_DIR
 
@@ -56,3 +57,49 @@ class TestExtractSampled(DirTest):
         assert os.listdir(stratum_1_rdh) == [
             "AreaShop_AddCommand.java_getTabCompleteList.java",
             "AreaShop_AddfriendCommand.java_getTabCompleteList.java"]
+
+    def test_to_relative_paths(self):
+        absolute_paths = [
+            [
+                'res\\methods_original\\AreaShop\\AddCommand.java\\execute.java',
+                'res\\methods_original\\AreaShop\\AddfriendCommand.java\\execute.java'
+            ],
+            [
+                'res\\methods_original\\AreaShop\\AddfriendCommand.java\\getTabCompleteList.java',
+                'res\\methods_original\\AreaShop\\AddCommand.java\\getTabCompleteList.java'
+            ]
+        ]
+
+        relative_paths_expected = [
+            [
+                'AreaShop\\AddCommand.java\\execute.java',
+                'AreaShop\\AddfriendCommand.java\\execute.java'
+            ],
+            [
+                'AreaShop\\AddfriendCommand.java\\getTabCompleteList.java',
+                'AreaShop\\AddCommand.java\\getTabCompleteList.java'
+            ]
+        ]
+
+        relative_paths_actual = _to_relative_paths(absolute_paths)
+
+        assert relative_paths_actual == relative_paths_expected
+
+    def test_check_path_in(self):
+        path = "res\\methods_rdh\\AreaShop\\AddCommand.java\\execute.java"
+
+        paths = [
+            'AreaShop\\AddCommand.java\\execute.java',
+            'AreaShop\\AddfriendCommand.java\\execute.java'
+        ]
+
+        assert _check_path_in(path, paths) is True
+
+    def test_check_path_in_false(self):
+        path = "res\\methods_rdh\\AreaShop\\AddCommand.java\\execute.java"
+
+        paths = [
+            'AreaShop\\AddfriendCommand.java\\execute.java'
+        ]
+
+        assert _check_path_in(path, paths) is False
