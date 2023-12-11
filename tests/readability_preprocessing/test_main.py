@@ -6,10 +6,11 @@ from src.readability_preprocessing.extractors.method_extractor import OverwriteM
 from src.readability_preprocessing.main import _run_stratified_sampling, \
     _run_extract_files, _run_extract_methods, _run_convert_csv, \
     _run_convert_two_folders, \
-    _run_combine_datasets, _run_download, _run_upload
+    _run_combine_datasets, _run_download, _run_upload, _run_extract_sampled
 from tests.readability_preprocessing.utils.utils import DirTest, RES_DIR, \
     ENCODED_BW_DIR, METHODS_ORIGINAL_ADD_COMMAND_DIR, \
-    CHECKSTYLED_DIR, EXTRACTED_DIR, RAW_BW_DIR, RAW_KROD_DIR
+    CHECKSTYLED_DIR, EXTRACTED_DIR, RAW_BW_DIR, RAW_KROD_DIR, SAMPLED_DIR_2_2, \
+    METHODS_ORIGINAL_DIR
 
 
 class TestRunMain(DirTest):
@@ -27,6 +28,21 @@ class TestRunMain(DirTest):
         _run_stratified_sampling(parsed_args)
 
         # Assert that the stratified sampling has been performed successfully
+        assert len(os.listdir(self.output_dir)) != 0
+
+    def test_run_extract_sampled(self):
+        class MockParsedArgs:
+            def __init__(self, output: str = self.output_dir):
+                self.input = [METHODS_ORIGINAL_DIR]
+                self.sampling = SAMPLED_DIR_2_2
+                self.output = output
+
+        parsed_args = MockParsedArgs()
+
+        # Extracting sampled files within the test
+        _run_extract_sampled(parsed_args)
+
+        # Assert that the sampled files have been extracted successfully
         assert len(os.listdir(self.output_dir)) != 0
 
     def test_run_extract_files(self):

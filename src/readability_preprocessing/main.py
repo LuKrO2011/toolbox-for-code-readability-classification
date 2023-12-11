@@ -420,9 +420,9 @@ def _run_extract_sampled(parsed_args: Any) -> None:
     :return: None
     """
     # Get the parsed arguments
-    input_dirs = parsed_args.input
-    sampling_dir = parsed_args.sampling
-    output_dir = parsed_args.output
+    input_dirs = [Path(input_dir) for input_dir in parsed_args.input]
+    sampling_dir = Path(parsed_args.sampling)
+    output_dir = Path(parsed_args.output)
 
     # Create the output directory, if it does not exist
     if not os.path.isdir(output_dir):
@@ -588,6 +588,8 @@ def main(args: list[str]) -> int:
     match task:
         case Tasks.SAMPLE:
             _run_stratified_sampling(parsed_args)
+        case Tasks.EXTRACT_SAMPLED:
+            _run_extract_sampled(parsed_args)
         case Tasks.EXTRACT_FILES:
             _run_extract_files(parsed_args)
         case Tasks.EXTRACT_METHODS:
