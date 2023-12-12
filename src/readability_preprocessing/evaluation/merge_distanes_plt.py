@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 
 CURR_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
 ROOT_DIR = CURR_DIR / '../../../'
-INPUT_PATH = ROOT_DIR / 'tests/res/sampled/merge_distances.json'
+# INPUT_PATH = ROOT_DIR / 'tests/res/sampled/merge_distances.json'
+INPUT_PATH = ROOT_DIR / 'src/res/merge_distances.json'
 
 REVERSE_X_AXIS = True
 PLOT_DIFF_TO_PREV = True
@@ -18,6 +19,9 @@ else:
 
 with open(INPUT_PATH, 'r') as file:
     data = json.load(file)
+
+# Remove last entries
+data = data[:-2]
 
 # Extract merge distances and create a list for x-axis (number of stratas)
 num_stratas = [entry['new_num_stratas'] for entry in data]
