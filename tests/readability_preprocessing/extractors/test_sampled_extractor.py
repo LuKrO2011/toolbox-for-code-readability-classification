@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 from readability_preprocessing.extractors.sampled_extractor import extract_sampled, \
-    _to_relative_paths, _check_path_in
+    _to_relative_paths, _check_path_in, _get_common_path
 from tests.readability_preprocessing.utils.utils import DirTest, SAMPLED_DIR_2_2, \
     METHODS_ORIGINAL_DIR, METHODS_RDH_DIR
 
@@ -72,18 +72,34 @@ class TestExtractSampled(DirTest):
 
         relative_paths_expected = [
             [
-                'AreaShop\\AddCommand.java\\execute.java',
-                'AreaShop\\AddfriendCommand.java\\execute.java'
+                'AddCommand.java\\execute.java',
+                'AddfriendCommand.java\\execute.java'
             ],
             [
-                'AreaShop\\AddfriendCommand.java\\getTabCompleteList.java',
-                'AreaShop\\AddCommand.java\\getTabCompleteList.java'
+                'AddfriendCommand.java\\getTabCompleteList.java',
+                'AddCommand.java\\getTabCompleteList.java'
             ]
         ]
 
         relative_paths_actual = _to_relative_paths(absolute_paths)
 
         assert relative_paths_actual == relative_paths_expected
+
+    def test_get_common_path(self):
+        absolute_paths = [
+            [
+                'res\\methods_original\\AreaShop\\AddCommand.java\\execute.java',
+                'res\\methods_original\\AreaShop\\AddfriendCommand.java\\execute.java'
+            ],
+            [
+                'res\\methods_original\\AreaShop\\AddfriendCommand.java\\getTabCompleteList.java',
+                'res\\methods_original\\AreaShop\\AddCommand.java\\getTabCompleteList.java'
+            ]
+        ]
+
+        common_path = _get_common_path(absolute_paths)
+
+        assert common_path == 'res\\methods_original\\AreaShop'
 
     def test_check_path_in(self):
         path = "res\\methods_rdh\\AreaShop\\AddCommand.java\\execute.java"

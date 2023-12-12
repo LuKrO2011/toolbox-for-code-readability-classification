@@ -113,18 +113,39 @@ def _get_new_file_name(file_path: str, input_dir: Path) -> str:
     return new_file_name
 
 
+def _get_common_path(strata_contents: list[list[str]]) -> str:
+    """
+    Calculates the common path from all strata contents.
+    :param strata_contents: The strata contents.
+    :return: The common path.
+    """
+    # Flatten the strata contents
+    strata_contents = [file for stratum in strata_contents for file in stratum]
+
+    # Get the common path
+    common_path = os.path.commonpath(strata_contents)
+
+    return common_path
+
+
 def _to_relative_paths(strata_contents: list[list[str]]) -> list[list[str]]:
     """
     Converts the absolute paths to relative paths.
     :param strata_contents: The strata contents.
     :return: The strata contents with relative paths.
     """
-    return [[_to_relative_path(absolute_path) for absolute_path in stratum]
-            for stratum in strata_contents]
+    # Calculate the common path from all strata contents
+    common_path = _get_common_path(strata_contents)
+
+    # Get the last folder name of the common path
+    common_path = Path(common_path)
+    last_common_folder = common_path.parts[-1]
+
+    return [[_to_relative_path(absolute_path, last_common_folder) for absolute_path in
+             stratum] for stratum in strata_contents]
 
 
-def _to_relative_path(absolute_path: str,
-                      relative_to_dir: str = "methods_original") -> str:
+def _to_relative_path(absolute_path: str, relative_to_dir: str) -> str:
     """
     Converts the absolute path to a relative path to the given folder name.
     :param absolute_path: The absolute path.
