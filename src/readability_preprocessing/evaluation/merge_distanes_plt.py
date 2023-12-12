@@ -11,6 +11,11 @@ INPUT_PATH = ROOT_DIR / 'tests/res/sampled/merge_distances.json'
 REVERSE_X_AXIS = True
 PLOT_DIFF_TO_PREV = True
 
+if PLOT_DIFF_TO_PREV:
+    title = 'Merge Distances and Diff to Previous vs Number of Stratas'
+else:
+    title = 'Merge Distances vs Number of Stratas'
+
 with open(INPUT_PATH, 'r') as file:
     data = json.load(file)
 
@@ -38,8 +43,10 @@ if PLOT_DIFF_TO_PREV:
     ax2.set_ylabel('Diff to Previous', color='r')
     ax2.tick_params('y', colors='r')
 
+# Reverse x-axis if specified
 if REVERSE_X_AXIS:
     ax1.invert_xaxis()
+    plt.xticks(num_stratas, [str(i) for i in reversed(num_stratas)])  # Reversed x-axis ticks and labels
 
 # Combine legends
 lines_1, labels_1 = ax1.get_legend_handles_labels()
@@ -51,6 +58,6 @@ else:
     ax1.legend(lines_1, labels_1, loc='upper right')
 
 # Show the plot
-plt.title('Merge Distances and Diff to Previous vs Number of Stratas')
+plt.title(title)
 plt.tight_layout()
 plt.show()
