@@ -295,8 +295,9 @@ class StratifiedSampler:
         # Get the merge distances
         merge_distances = linkage_matrix[:, 2]
 
-        # Get the merge distances for cluster sizes <= stratas_limit
-        merge_distances = merge_distances[:stratas_limit][::-1]
+        # Get the merge distances for cluster sizes >= stratas_limit
+        merge_distances = merge_distances[-stratas_limit:]
+        merge_distances = merge_distances[::-1]
 
         # Calculate the differences between the merge distances
         merge_distances_and_diffs = []

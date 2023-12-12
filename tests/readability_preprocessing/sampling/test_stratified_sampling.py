@@ -5,7 +5,7 @@ import os
 import numpy as np
 
 from tests.readability_preprocessing.utils.utils import DirTest, assert_lines_equal, \
-    METHODS_ORIGINAL_DIR, CSV_DIR, JAR_OUTPUTS_DIR
+    METHODS_ORIGINAL_DIR, CSV_DIR, JAR_OUTPUTS_DIR, SAMPLED_DIR
 from src.readability_preprocessing.utils.csv import load_features_from_csv
 from src.readability_preprocessing.sampling.stratified_sampling import (
     _extract_features, _calculate_similarity_matrix,
@@ -186,6 +186,22 @@ class TestStratifiedSampling(DirTest):
         with open(os.path.join(self.output_dir, "merge_distances.json"), "r") as f:
             merge_distances = json.load(f)
             assert merge_distances == expected_merge_distances
+
+    def test_save_merge_distances_large(self):
+        # Load the linkage matrix
+        linkage_matrix = np.load(
+            os.path.join(SAMPLED_DIR, "linkage_matrix.npy"), allow_pickle=True)
+
+        # Calculate the merge distances
+        self.sampler._save_merge_distances(linkage_matrix)
+        with open(os.path.join(self.output_dir, "merge_distances.json"), "r") as f:
+            actual_merge_distances = json.load(f)
+
+        # Load the expected merge distances
+        with open(os.path.join(SAMPLED_DIR, "merge_distances.json"), "r") as f:
+            expected_merge_distances = json.load(f)
+
+        assert actual_merge_distances == expected_merge_distances
 
     def test_sample(self):
         filename = "features.csv"

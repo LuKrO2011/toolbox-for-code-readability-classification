@@ -38,6 +38,8 @@ JAR_OUTPUTS_DIR = RES_DIR / "jar_outputs/"
 CSV_DIR = RES_DIR / "csv/"
 
 
+
+
 class DirTest(unittest.TestCase):
     output_dir_name = None  # Set to "output" to generate output
 
