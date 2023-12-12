@@ -180,6 +180,9 @@ class StratifiedSampler:
         # Calculate the similarity matrix
         similarity_matrix = _calculate_similarity_matrix(normalized_features)
 
+        # Dump the similarity matrix to a file
+        np.save(os.path.join(self.save_dir, "similarity_matrix.npy"), similarity_matrix)
+
         # Perform stratified sampling
         self._stratified_sampling(java_code_snippets_paths=java_code_snippet_paths,
                                   similarity_matrix=similarity_matrix,
@@ -214,6 +217,9 @@ class StratifiedSampler:
 
         # Perform Ward's hierarchical clustering to create a dendrogram/linkage matrix
         linkage_matrix = linkage(similarity_matrix, method="ward", metric="cosine")
+
+        # Dump the linkage matrix to a file
+        np.save(os.path.join(self.save_dir, "linkage_matrix.npy"), linkage_matrix)
 
         # Calculate merge distances and differences
         self._save_merge_distances(linkage_matrix)
