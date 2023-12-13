@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 from pathlib import Path
@@ -18,6 +19,7 @@ def extract_sampled(input_dirs: list[Path], output_dir: Path,
 
     # Load the sampling files
     strata_names = [file for file in sampling_dir.iterdir() if file.is_file()]
+    logging.info(f"Number of strata: {len(strata_names)}")
 
     # Create the subdirectories for each sampling file and input directory
     for stratum_name in strata_names:
@@ -25,7 +27,17 @@ def extract_sampled(input_dirs: list[Path], output_dir: Path,
 
     # Load the contents of the sampling files
     strata_contents = [file.read_text().splitlines() for file in strata_names]
+
+    # Log the first line of each stratum
+    for idx, stratum_contents in enumerate(strata_contents):
+        logging.info(f"{idx}: first stratum entry absolute: {stratum_contents[0]}")
+
     strata_contents = _to_relative_paths(strata_contents)
+
+    # Log the first line of each stratum
+    for idx, stratum_contents in enumerate(strata_contents):
+        logging.info(f"{idx}: first stratum entry relative: {stratum_contents[0]}")
+
     stratas_with_names = list(zip(strata_names, strata_contents))
 
     # Copy the files to the output directory
