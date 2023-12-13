@@ -154,10 +154,10 @@ def calculate_features(input_dir: str, output_dir: str = None) -> Dict[
 
 
 class StratifiedSampler:
-    save_dir: str
+    output_dir: str
 
-    def __init__(self, save_dir: str):
-        self.save_dir = save_dir
+    def __init__(self, output_dir: str):
+        self.output_dir = output_dir
 
     def sample(self, features: Dict[str, Dict[str, float]],
                max_num_stratas: int = 20,
@@ -181,7 +181,8 @@ class StratifiedSampler:
         similarity_matrix = _calculate_similarity_matrix(normalized_features)
 
         # Dump the similarity matrix to a file
-        np.save(os.path.join(self.save_dir, "similarity_matrix.npy"), similarity_matrix)
+        np.save(os.path.join(self.output_dir, "similarity_matrix.npy"),
+                similarity_matrix)
 
         # Perform stratified sampling
         self._stratified_sampling(java_code_snippets_paths=java_code_snippet_paths,
@@ -219,7 +220,7 @@ class StratifiedSampler:
         linkage_matrix = linkage(similarity_matrix, method="ward", metric="cosine")
 
         # Dump the linkage matrix to a file
-        np.save(os.path.join(self.save_dir, "linkage_matrix.npy"), linkage_matrix)
+        np.save(os.path.join(self.output_dir, "linkage_matrix.npy"), linkage_matrix)
 
         # Calculate merge distances and differences
         self._save_merge_distances(linkage_matrix)
@@ -272,7 +273,7 @@ class StratifiedSampler:
         :param subdir_name: The name of the subdirectory
         :return: None
         """
-        stratas_dir = os.path.join(self.save_dir, subdir_name)
+        stratas_dir = os.path.join(self.output_dir, subdir_name)
         if not os.path.exists(stratas_dir):
             os.mkdir(stratas_dir)
 
@@ -313,7 +314,7 @@ class StratifiedSampler:
         merge_distances_and_diffs = merge_distances_and_diffs[::-1]
 
         # Store the list of dictionaries in a JSON file
-        with open(os.path.join(self.save_dir, "merge_distances.json"), "w") as f:
+        with open(os.path.join(self.output_dir, "merge_distances.json"), "w") as f:
             json.dump(merge_distances_and_diffs, f, indent=4)
 
         # Log the content of the json file

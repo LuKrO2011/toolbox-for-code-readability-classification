@@ -152,7 +152,7 @@ class TestStratifiedSampling(DirTest):
 
     def setUp(self):
         super().setUp()
-        self.sampler = StratifiedSampler(save_dir=self.output_dir)
+        self.sampler = StratifiedSampler(output_dir=self.output_dir)
 
     def test_save_merge_distances(self):
         expected_merge_distances = [

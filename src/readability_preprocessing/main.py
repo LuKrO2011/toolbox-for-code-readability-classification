@@ -110,8 +110,8 @@ def _set_up_arg_parser() -> ArgumentParser:
              "containing the paths and features of the java files.",
     )
     sample_parser.add_argument(
-        "--save",
-        "-s",
+        "--output",
+        "-o",
         required=False,
         type=Path,
         help="Path to the folder where the intermediate results and the final sampling "
@@ -391,25 +391,25 @@ def _run_stratified_sampling(args: Any) -> None:
     """
     # Get the input and output paths
     input_dir = args.input
-    save_dir = args.save
+    output_dir = args.output
     num_stratas = args.num_stratas
     num_snippets = args.num_snippets
 
     # Create the save directory, if it does not exist
-    if save_dir is not None:
-        if not os.path.isdir(save_dir):
-            os.makedirs(save_dir)
+    if output_dir is not None:
+        if not os.path.isdir(output_dir):
+            os.makedirs(output_dir)
 
     # If the input is a csv file, read the paths and features from the csv file
     if input_dir.suffix == ".csv":
         features = load_features_from_csv(input_dir)
     else:  # If the input is a directory, get the paths to the Java code snippets
-        features = calculate_features(input_dir, save_dir)
+        features = calculate_features(input_dir, output_dir)
 
     # Perform stratified sampling
-    StratifiedSampler(save_dir=save_dir).sample(features=features,
-                                                max_num_stratas=num_stratas,
-                                                num_snippets=num_snippets)
+    StratifiedSampler(output_dir=output_dir).sample(features=features,
+                                                    max_num_stratas=num_stratas,
+                                                    num_snippets=num_snippets)
 
 
 def _run_extract_sampled(parsed_args: Any) -> None:
@@ -572,12 +572,11 @@ def main(args: list[str]) -> int:
 
     # Set up logging and specify logfile name
     logfile = DEFAULT_LOG_FILE
-    if hasattr(parsed_args, "save") and parsed_args.save:
-        folder_path = Path(parsed_args.save)
+    if hasattr(parsed_args, "output") and parsed_args.output:
+        folder_path = Path(parsed_args.output)
         if not os.path.isdir(folder_path):
             os.makedirs(folder_path)
-        folder_name = Path(parsed_args.save).name
-        logfile = folder_path / Path(f"{DEFAULT_LOG_FILE_NAME}-{folder_name}.log")
+        logfile = folder_path / Path(f"{DEFAULT_LOG_FILE_NAME}.log")
     _setup_logging(logfile, overwrite=True)
 
     # Set a random seed

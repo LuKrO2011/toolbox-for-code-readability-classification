@@ -16,9 +16,9 @@ from tests.readability_preprocessing.utils.utils import DirTest, RES_DIR, \
 class TestRunMain(DirTest):
     def test_run_stratified_sampling(self):
         class MockParsedArgs:
-            def __init__(self, save: str = self.output_dir):
+            def __init__(self, output: str = self.output_dir):
                 self.input = METHODS_ORIGINAL_ADD_COMMAND_DIR
-                self.save = save
+                self.output = output
                 self.num_stratas = 2
                 self.num_snippets = 2
 
