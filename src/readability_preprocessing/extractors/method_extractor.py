@@ -344,7 +344,8 @@ class MethodExtractor:
         last_line = len(meth_lines) - 1
 
         # Remove any trailing whitespace and comments
-        while last_line >= 0 and meth_lines[last_line].strip().startswith(("/", "*")):
+        while last_line >= 0 and meth_lines[last_line].strip().startswith(
+            ("/", "*", "@")):
             last_line -= 1
 
         return last_line + 1 + startline_index

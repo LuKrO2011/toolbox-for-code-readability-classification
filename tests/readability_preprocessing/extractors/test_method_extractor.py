@@ -1,8 +1,7 @@
 import os
 
 from src.readability_preprocessing.extractors.method_extractor import extract_methods
-from tests.readability_preprocessing.utils.utils import DirTest, CHECKSTYLED_DIR, \
-    EXTRACTED_DIR, CLASSES_DIR
+from tests.readability_preprocessing.utils.utils import DirTest, EXTRACTED_DIR
 
 
 class TestExtractMethods(DirTest):
@@ -25,11 +24,15 @@ class TestExtractMethods(DirTest):
         # Check the hadoop directory
         assert "hadoop" in os.listdir(self.output_dir)
         hadoop_dir = os.path.join(self.output_dir, "hadoop")
-        assert len(os.listdir(hadoop_dir)) == 1
+        assert len(os.listdir(hadoop_dir)) == 2
         assert os.path.exists(os.path.join(hadoop_dir, "AbstractManifestData.java"))
         abstract_manifest_data_dir = os.path.join(hadoop_dir,
                                                   "AbstractManifestData.java")
         assert len(os.listdir(abstract_manifest_data_dir)) == 3
+        assert os.path.exists(os.path.join(hadoop_dir, "DynoInfraUtils.java"))
+        abstract_manifest_data_dir = os.path.join(hadoop_dir,
+                                                  "DynoInfraUtils.java")
+        assert len(os.listdir(abstract_manifest_data_dir)) == 10
 
     def test_extract_methods_without_comments(self):
         extract_methods(EXTRACTED_DIR.absolute(), self.output_dir,
@@ -51,16 +54,12 @@ class TestExtractMethods(DirTest):
         # Check the hadoop directory
         assert "hadoop" in os.listdir(self.output_dir)
         hadoop_dir = os.path.join(self.output_dir, "hadoop")
-        assert len(os.listdir(hadoop_dir)) == 1
+        assert len(os.listdir(hadoop_dir)) == 2
         assert os.path.exists(os.path.join(hadoop_dir, "AbstractManifestData.java"))
         abstract_manifest_data_dir = os.path.join(hadoop_dir,
                                                   "AbstractManifestData.java")
         assert len(os.listdir(abstract_manifest_data_dir)) == 4
-
-    def test_extract_hadoop_methods(self):
-        input_dir = CLASSES_DIR / "hadoop"
-        extract_methods(input_dir.absolute(), self.output_dir)
-
-    def test_extract_added_friend_event_methods(self):
-        input_dir = CLASSES_DIR / "AddedFriendEvent"
-        extract_methods(input_dir.absolute(), self.output_dir)
+        assert os.path.exists(os.path.join(hadoop_dir, "DynoInfraUtils.java"))
+        abstract_manifest_data_dir = os.path.join(hadoop_dir,
+                                                  "DynoInfraUtils.java")
+        assert len(os.listdir(abstract_manifest_data_dir)) == 12
