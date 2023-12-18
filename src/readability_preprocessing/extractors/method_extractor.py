@@ -134,8 +134,8 @@ class MethodExtractor:
 
     def _iterate_methods(self, file: str) -> dict[str, str]:
         """
-        Iterates over the methods in a file and returns a dictionary containing the method
-        name and the method code.
+        Iterates over the methods in a file and returns a dictionary containing the
+        method name and the method code.
         :param file: The file.
         :return: A dictionary containing the method name and the method code.
         """
@@ -170,25 +170,38 @@ class MethodExtractor:
             logging.warning(e)
             return {}
 
-        for _, method_node in parse_tree.filter(MethodDeclaration):
-            startpos, endpos, startline, endline = self._get_method_start_end(
-                parse_tree, method_node
-            )
-            method_text, startline, endline, lex = self._get_method_text(
-                codelines, startpos, endpos, startline, endline
-            )
+        # Iterate over the classes in the parse tree
+        for _, class_node in parse_tree.filter(javalang.tree.ClassDeclaration):
 
-            # Get the first line of the method text
-            first_line = method_text.split("\n")[0].strip()
+            # Get all children that are methods
+            method_nodes = class_node.methods
 
-            # Check if COMMENTS_REQUIRED is True and the method has a comment
-            if self.config.comments_required and not first_line.startswith("/"):
-                logging.info(
-                    "Skipping method %s, because it has no comment.", method_node.name
+            # Iterate over the methods
+            for method_node in method_nodes:
+
+                # Check if the method has a body
+                if method_node.body is None:
+                    continue
+
+                startpos, endpos, startline, endline = self._get_method_start_end(
+                    parse_tree, method_node
                 )
-                continue
+                method_text, startline, endline, lex = self._get_method_text(
+                    codelines, startpos, endpos, startline, endline
+                )
 
-            methods[method_node.name] = method_text
+                # Get the first line of the method text
+                first_line = method_text.split("\n")[0].strip()
+
+                # Check if COMMENTS_REQUIRED is True and the method has a comment
+                if self.config.comments_required and not first_line.startswith("/"):
+                    logging.info(
+                        "Skipping method %s, because it has no comment.",
+                        method_node.name
+                    )
+                    continue
+
+                methods[method_node.name] = method_text
 
         return methods
 

@@ -29,6 +29,7 @@ METHODS_RDH_ADD_COMMAND_DIR = METHODS_RDH_AREA_SHOP_DIR / "AddCommand.java/"
 CHECKSTYLED_DIR = RES_DIR / "checkstyled/"
 
 EXTRACTED_DIR = RES_DIR / "extracted/"
+CLASSES_DIR = RES_DIR / "classes/"
 
 SAMPLED_DIR = RES_DIR / "sampled/"
 SAMPLED_DIR_2_2 = SAMPLED_DIR / "2_stratas_2/"
@@ -41,7 +42,7 @@ CSV_DIR = RES_DIR / "csv/"
 
 
 class DirTest(unittest.TestCase):
-    output_dir_name = None  # Set to "output" to generate output
+    output_dir_name = "output"  # Set to "output" to generate output
 
     def setUp(self):
         # Create temporary directories for testing if output directory is None
