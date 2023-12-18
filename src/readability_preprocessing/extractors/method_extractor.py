@@ -8,11 +8,6 @@ import javalang
 from javalang.parser import JavaSyntaxError
 from javalang.tree import MethodDeclaration
 
-# TODO: Fix Abstract methods of interfaces e.g. hadoop\AbfsCounter.java
-
-INPUT_DIR = r"D:\PyCharm_Projects_D\styler2.0\extracted"
-OUTPUT_DIR = r"D:\PyCharm_Projects_D\styler2.0\methods_2"
-
 
 class OverwriteMode(Enum):
     """
@@ -200,8 +195,8 @@ class MethodExtractor:
 
         return methods
 
-    def _get_method_start_end(self,
-                              parse_tree: list, method_node: MethodDeclaration
+    @staticmethod
+    def _get_method_start_end(parse_tree: list, method_node: MethodDeclaration
                               ) -> tuple[str, str, int, int]:
         """
         Get the start and end position of a method in the source code.
@@ -300,7 +295,8 @@ class MethodExtractor:
             last_endline_index,
         )
 
-    def _remove_indentation(self, meth_text: str) -> str:
+    @staticmethod
+    def _remove_indentation(meth_text: str) -> str:
         """
         Remove indentation from the method text there is the same amount of indentation
         on each line.
@@ -333,7 +329,8 @@ class MethodExtractor:
 
         return "\n".join(meth_lines)
 
-    def _calculate_end_line(self, meth_lines: list[str], startline_index: int) -> int:
+    @staticmethod
+    def _calculate_end_line(meth_lines: list[str], startline_index: int) -> int:
         """
         Calculate the end position of the method.
         :param meth_lines: The method lines.
@@ -387,7 +384,3 @@ def extract_methods(input_dir: str, output_dir: str,
         output_subdir = os.path.join(output_dir, directory)
         method_extractor.extract_methods_from_dir(os.path.join(input_dir, directory),
                                                   output_subdir)
-
-
-if __name__ == "__main__":
-    extract_methods(input_dir=INPUT_DIR, output_dir=OUTPUT_DIR)
