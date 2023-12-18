@@ -39,11 +39,12 @@ class MethodExtractorConfig:
     """
 
     def __init__(self, overwrite_mode: OverwriteMode, include_method_comments: bool,
-                 comments_required: bool, remove_indentation: bool):
+                 comments_required: bool, remove_indentation: bool, require_body: bool):
         self.overwrite_mode = overwrite_mode
         self.include_method_comments = include_method_comments
         self.comments_required = comments_required
         self.remove_indentation = remove_indentation
+        self.require_body = require_body
 
 
 class MethodExtractor:
@@ -170,38 +171,32 @@ class MethodExtractor:
             logging.warning(e)
             return {}
 
-        # Iterate over the classes in the parse tree
-        for _, class_node in parse_tree.filter(javalang.tree.ClassDeclaration):
+        # Iterate over the methods in the parse tree
+        for _, method_node in parse_tree.filter(MethodDeclaration):
 
-            # Get all children that are methods
-            method_nodes = class_node.methods
+            # Check if the method has a body
+            if self.config.require_body and method_node.body is None:
+                continue
 
-            # Iterate over the methods
-            for method_node in method_nodes:
+            startpos, endpos, startline, endline = self._get_method_start_end(
+                parse_tree, method_node
+            )
+            method_text, startline, endline, lex = self._get_method_text(
+                codelines, startpos, endpos, startline, endline
+            )
 
-                # Check if the method has a body
-                if method_node.body is None:
-                    continue
+            # Get the first line of the method text
+            first_line = method_text.split("\n")[0].strip()
 
-                startpos, endpos, startline, endline = self._get_method_start_end(
-                    parse_tree, method_node
+            # Check if COMMENTS_REQUIRED is True and the method has a comment
+            if self.config.comments_required and not first_line.startswith("/"):
+                logging.info(
+                    "Skipping method %s, because it has no comment.",
+                    method_node.name
                 )
-                method_text, startline, endline, lex = self._get_method_text(
-                    codelines, startpos, endpos, startline, endline
-                )
+                continue
 
-                # Get the first line of the method text
-                first_line = method_text.split("\n")[0].strip()
-
-                # Check if COMMENTS_REQUIRED is True and the method has a comment
-                if self.config.comments_required and not first_line.startswith("/"):
-                    logging.info(
-                        "Skipping method %s, because it has no comment.",
-                        method_node.name
-                    )
-                    continue
-
-                methods[method_node.name] = method_text
+            methods[method_node.name] = method_text
 
         return methods
 
@@ -341,7 +336,9 @@ def extract_methods(input_dir: str, output_dir: str,
                     overwrite_mode: OverwriteMode = OverwriteMode.OVERWRITE,
                     include_method_comments: bool = True,
                     comments_required: bool = True,
-                    remove_indentation: bool = True) -> None:
+                    remove_indentation: bool = True,
+                    require_body: bool = True
+                    ) -> None:
     """
     Extracts java methods from their classes and stores each in a separate file.
     :param input_dir: The input directory.
@@ -350,6 +347,7 @@ def extract_methods(input_dir: str, output_dir: str,
     :param include_method_comments: Whether to include comments before the method.
     :param comments_required: Whether comments are required.
     :param remove_indentation: Whether to remove indentation.
+    :param require_body: Whether the method must have a body.
     :return: None.
     """
     method_extractor = MethodExtractor(
@@ -357,7 +355,8 @@ def extract_methods(input_dir: str, output_dir: str,
             overwrite_mode=overwrite_mode,
             include_method_comments=include_method_comments,
             comments_required=comments_required,
-            remove_indentation=remove_indentation
+            remove_indentation=remove_indentation,
+            require_body=require_body
         )
     )
 
