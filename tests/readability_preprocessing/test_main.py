@@ -9,8 +9,8 @@ from src.readability_preprocessing.main import _run_stratified_sampling, \
     _run_combine_datasets, _run_download, _run_upload, _run_extract_sampled
 from tests.readability_preprocessing.utils.utils import DirTest, RES_DIR, \
     ENCODED_BW_DIR, METHODS_ORIGINAL_ADD_COMMAND_DIR, \
-    CHECKSTYLED_DIR, EXTRACTED_DIR, RAW_BW_DIR, RAW_KROD_DIR, SAMPLED_DIR_2_2, \
-    METHODS_ORIGINAL_DIR
+    CHECKSTYLED_DIR, RAW_BW_DIR, RAW_KROD_DIR, SAMPLED_DIR_2_2, \
+    METHODS_ORIGINAL_DIR, SELECTED_CLASSES_DIR
 
 
 class TestRunMain(DirTest):
@@ -63,7 +63,7 @@ class TestRunMain(DirTest):
     def test_run_extract_methods(self):
         class MockParsedArgs:
             def __init__(self, save: str = self.output_dir):
-                self.input = EXTRACTED_DIR
+                self.input = SELECTED_CLASSES_DIR
                 self.output = save
                 self.overwrite_mode = OverwriteMode.SKIP
                 self.include_method_comments = True
