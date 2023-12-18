@@ -60,3 +60,7 @@ class TestExtractMethods(DirTest):
     def test_extract_hadoop_methods(self):
         input_dir = CLASSES_DIR / "hadoop"
         extract_methods(input_dir.absolute(), self.output_dir)
+
+    def test_extract_added_friend_event_methods(self):
+        input_dir = CLASSES_DIR / "AddedFriendEvent"
+        extract_methods(input_dir.absolute(), self.output_dir)

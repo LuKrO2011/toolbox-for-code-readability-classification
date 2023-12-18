@@ -216,13 +216,14 @@ class MethodExtractor:
 
         # Iterate over the parse tree and find the method node
         for path, node in parse_tree:
-            if startpos is not None and method_node not in path:
-                endpos = node.position
-                endline = node.position.line if node.position is not None else None
-                break
             if startpos is None and node == method_node:
                 startpos = node.position
                 startline = node.position.line if node.position is not None else None
+            if (startpos is not None and method_node not in path and
+                startpos is not node.position):
+                endpos = node.position
+                endline = node.position.line if node.position is not None else None
+                break
         return startpos, endpos, startline, endline
 
     def _get_method_text(self,
@@ -251,6 +252,8 @@ class MethodExtractor:
         endline_index = endline - 1 if endpos is not None else None
 
         # Fetch the method code
+        endline_index = self._calculate_end_line(
+            codelines[startline_index:endline_index], startline_index)
         meth_text = "<ST>".join(codelines[startline_index:endline_index])
         meth_text = meth_text[: meth_text.rfind("}") + 1]
 
@@ -330,6 +333,21 @@ class MethodExtractor:
                 meth_lines[i] = line[indentation:]
 
         return "\n".join(meth_lines)
+
+    def _calculate_end_line(self, meth_lines: list[str], startline_index: int) -> int:
+        """
+        Calculate the end position of the method.
+        :param meth_lines: The method lines.
+        :param startline_index: The start line of the method.
+        :return: The last line of the method.
+        """
+        last_line = len(meth_lines) - 1
+
+        # Remove any trailing whitespace and comments
+        while last_line >= 0 and meth_lines[last_line].strip().startswith(("/", "*")):
+            last_line -= 1
+
+        return last_line + 1 + startline_index
 
 
 def extract_methods(input_dir: str, output_dir: str,
