@@ -277,8 +277,7 @@ class MethodExtractor:
             comment_lines = []
             comment_index = startline_index - 1
             while comment_index >= 0 and (
-                codelines[comment_index].strip().startswith("/")
-                or codelines[comment_index].strip().startswith("*")
+                codelines[comment_index].strip().startswith(("/", "*", "@"))
             ):
                 comment_lines.insert(0, codelines[comment_index])
                 comment_index -= 1

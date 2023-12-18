@@ -33,7 +33,7 @@ class TestExtractMethods(DirTest):
         assert os.path.exists(os.path.join(hadoop_dir, "DynoInfraUtils.java"))
         abstract_manifest_data_dir = os.path.join(hadoop_dir,
                                                   "DynoInfraUtils.java")
-        assert len(os.listdir(abstract_manifest_data_dir)) == 10
+        assert len(os.listdir(abstract_manifest_data_dir)) == 11
 
     def test_extract_methods_without_comments(self):
         extract_methods(SELECTED_CLASSES_DIR.absolute(), self.output_dir,
@@ -67,3 +67,12 @@ class TestExtractMethods(DirTest):
 
     def test_extract_crafted_methods(self):
         extract_methods(CRAFTED_CLASSES_DIR.absolute(), self.output_dir)
+
+        # Check that the output directory contains the correct files
+        class_dir = os.path.join(self.output_dir, "crafted/Crafted.java")
+        assert len(os.listdir(class_dir)) == 5
+        assert os.path.exists(os.path.join(class_dir, "test2.java"))
+        assert os.path.exists(os.path.join(class_dir, "test3.java"))
+        assert os.path.exists(os.path.join(class_dir, "test4.java"))
+        assert os.path.exists(os.path.join(class_dir, "test8.java"))
+        assert os.path.exists(os.path.join(class_dir, "test10.java"))

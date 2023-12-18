@@ -55,6 +55,19 @@ public class Crafted {
     public void test7();
   }
 
+  /**
+   * Test inner class
+   */
+  public class Test {
+
+    /**
+     * Test method.
+     */
+    public void test8() {
+      System.out.println("Test8");
+    }
+  }
+
 }
 
 /**
@@ -65,5 +78,12 @@ public interface ITest2 {
   /**
    * Test method.
    */
-  public void test8();
+  public void test9();
+
+  /**
+   * Test method.
+   */
+  public default void test10() {
+    System.out.println("Test10");
+  }
 }
