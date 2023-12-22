@@ -1,4 +1,5 @@
 import os
+import unittest
 
 from src.readability_preprocessing.extractors.method_extractor import extract_methods
 from tests.readability_preprocessing.utils.utils import DirTest, SELECTED_CLASSES_DIR, \
@@ -78,11 +79,12 @@ class TestExtractMethods(DirTest):
         assert os.path.exists(os.path.join(class_dir, "test4.java"))
         assert_lines_equal(os.path.join(class_dir, "test4.java"), 7)
         assert os.path.exists(os.path.join(class_dir, "test8.java"))
-        assert_lines_equal(os.path.join(class_dir, "test8.java"), 6)
+        assert_lines_equal(os.path.join(class_dir, "test8.java"), 7)
         assert os.path.exists(os.path.join(class_dir, "test10.java"))
         assert_lines_equal(os.path.join(class_dir, "test10.java"), 6)
 
-    def test_extract_temp(self):
+    @unittest.skip("Only used for debugging.")
+    def test_extract_special(self):
         input_dir = CLASSES_DIR / "special"
         extract_methods(input_dir.absolute(), self.output_dir)
 

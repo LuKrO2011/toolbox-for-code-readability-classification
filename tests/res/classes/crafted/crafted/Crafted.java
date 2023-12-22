@@ -63,7 +63,8 @@ public class Crafted {
     /**
      * Test method.
      */
-    public void test8() {
+    public void test8(int param1,
+                      int param2) {
       System.out.println("Test8");
     }
   }

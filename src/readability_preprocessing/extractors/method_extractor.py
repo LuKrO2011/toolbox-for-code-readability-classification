@@ -181,8 +181,14 @@ class MethodExtractor:
 
             # Find the endline of the method, as the parser failed to find it
             if endline is None:
-                endline = self._calculate_end_line_from_start(codelines, startline)
-                endpos = Position(endline, 0)
+                try:
+                    endline = self._calculate_end_line_from_start(codelines, startline)
+                    endpos = Position(endline, 0)
+                except InvalidBraceCountException as e:
+                    logging.warning("Could not find end line of method %s in file %s.",
+                                    method_node.name, file)
+                    logging.warning(e)
+                    continue
 
             # Get the text of the method
             method_text, startline, endline, lex = self._get_method_text(
@@ -352,9 +358,17 @@ class MethodExtractor:
         last_line_index = start_line_index
         brace_count = 0
 
-        # Count the opening braces in the first line
-        brace_count += meth_lines[last_line_index].count("{")
-        last_line_index += 1
+        # Count until the first opening brace
+        while last_line_index < len(meth_lines) and brace_count == 0:
+            line = meth_lines[last_line_index]
+            brace_count += line.count("{")
+            brace_count -= line.count("}")
+
+            if brace_count < 0:
+                raise InvalidBraceCountException(
+                    "Invalid brace count: %d" % brace_count)
+
+            last_line_index += 1
 
         # Iterate over the lines of the method
         while last_line_index < len(meth_lines) and brace_count > 0:
@@ -423,3 +437,12 @@ def extract_methods(input_dir: str, output_dir: str,
         output_subdir = os.path.join(output_dir, directory)
         method_extractor.extract_methods_from_dir(os.path.join(input_dir, directory),
                                                   output_subdir)
+
+
+class InvalidBraceCountException(Exception):
+    """
+    An exception class for invalid brace counts.
+    """
+
+    def __init__(self, message: str):
+        self.message = message
