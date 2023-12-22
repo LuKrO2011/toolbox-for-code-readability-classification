@@ -6,6 +6,7 @@ from typing import Any
 
 import javalang
 from javalang.parser import JavaSyntaxError
+from javalang.tokenizer import Position
 from javalang.tree import MethodDeclaration
 
 
@@ -173,9 +174,19 @@ class MethodExtractor:
             if self.config.require_body and method_node.body is None:
                 continue
 
+            # Get the start and end position of the method
             startpos, endpos, startline, endline = self._get_method_start_end(
                 parse_tree, method_node
             )
+
+            # Find the endline of the method, as the parser failed to find it
+            if endline is None:
+                # Adding 1 to the endline, because the endline is the line after the
+                # method according to the parser
+                endline = self._calculate_end_line_from_start(codelines, startline) + 1
+                endpos = Position(endline, 0)
+
+            # Get the text of the method
             method_text, startline, endline, lex = self._get_method_text(
                 codelines, startpos, endpos, startline, endline
             )
@@ -247,7 +258,7 @@ class MethodExtractor:
         endline_index = endline - 1 if endpos is not None else None
 
         # Fetch the method code
-        endline_index = self._calculate_end_line(
+        endline_index = self._calculate_actual_end_line(
             codelines[startline_index:endline_index], startline_index)
         meth_text = "<ST>".join(codelines[startline_index:endline_index])
         meth_text = meth_text[: meth_text.rfind("}") + 1]
@@ -330,7 +341,29 @@ class MethodExtractor:
         return "\n".join(meth_lines)
 
     @staticmethod
-    def _calculate_end_line(meth_lines: list[str], startline_index: int) -> int:
+    def _calculate_end_line_from_start(meth_lines: list[str],
+                                       startline_index: int) -> int:
+        """
+        Calculate the end position of the method from the start position by counting
+        the braces.
+        :param meth_lines: The method lines.
+        :param startline_index: The start line of the method.
+        :return: The last line of the method.
+        """
+        last_line = startline_index + 1
+        brace_count = 1
+
+        # Iterate over the lines of the method
+        while last_line < len(meth_lines) and brace_count > 0:
+            line = meth_lines[last_line]
+            brace_count += line.count("{")
+            brace_count -= line.count("}")
+            last_line += 1
+
+        return last_line
+
+    @staticmethod
+    def _calculate_actual_end_line(meth_lines: list[str], startline_index: int) -> int:
         """
         Calculate the end position of the method.
         :param meth_lines: The method lines.

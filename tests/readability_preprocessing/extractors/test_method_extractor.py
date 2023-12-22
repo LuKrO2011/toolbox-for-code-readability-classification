@@ -2,7 +2,7 @@ import os
 
 from src.readability_preprocessing.extractors.method_extractor import extract_methods
 from tests.readability_preprocessing.utils.utils import DirTest, SELECTED_CLASSES_DIR, \
-    CRAFTED_CLASSES_DIR
+    CRAFTED_CLASSES_DIR, assert_lines_equal, CLASSES_DIR
 
 
 class TestExtractMethods(DirTest):
@@ -72,7 +72,21 @@ class TestExtractMethods(DirTest):
         class_dir = os.path.join(self.output_dir, "crafted/Crafted.java")
         assert len(os.listdir(class_dir)) == 5
         assert os.path.exists(os.path.join(class_dir, "test2.java"))
+        assert_lines_equal(os.path.join(class_dir, "test2.java"), 7)
         assert os.path.exists(os.path.join(class_dir, "test3.java"))
+        assert_lines_equal(os.path.join(class_dir, "test3.java"), 6)
         assert os.path.exists(os.path.join(class_dir, "test4.java"))
+        assert_lines_equal(os.path.join(class_dir, "test4.java"), 7)
         assert os.path.exists(os.path.join(class_dir, "test8.java"))
+        assert_lines_equal(os.path.join(class_dir, "test8.java"), 6)
         assert os.path.exists(os.path.join(class_dir, "test10.java"))
+        assert_lines_equal(os.path.join(class_dir, "test10.java"), 6)
+
+    def test_extract_temp(self):
+        input_dir = CLASSES_DIR / "special"
+        extract_methods(input_dir.absolute(), self.output_dir)
+
+        # Check that the output directory contains the correct files
+        class_dir = os.path.join(self.output_dir, "special/InnerExtendsClass.java")
+        assert len(os.listdir(class_dir)) == 1
+        assert_lines_equal(os.path.join(class_dir, "test.java"), 6)

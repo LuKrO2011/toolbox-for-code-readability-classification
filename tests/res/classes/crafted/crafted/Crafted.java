@@ -58,7 +58,7 @@ public class Crafted {
   /**
    * Test inner class
    */
-  public class Test {
+  public class Test extends Other {
 
     /**
      * Test method.
