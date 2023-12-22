@@ -181,9 +181,7 @@ class MethodExtractor:
 
             # Find the endline of the method, as the parser failed to find it
             if endline is None:
-                # Adding 1 to the endline, because the endline is the line after the
-                # method according to the parser
-                endline = self._calculate_end_line_from_start(codelines, startline) + 1
+                endline = self._calculate_end_line_from_start(codelines, startline)
                 endpos = Position(endline, 0)
 
             # Get the text of the method
@@ -342,24 +340,32 @@ class MethodExtractor:
 
     @staticmethod
     def _calculate_end_line_from_start(meth_lines: list[str],
-                                       startline_index: int) -> int:
+                                       start_line: int) -> int:
         """
         Calculate the end position of the method from the start position by counting
         the braces.
         :param meth_lines: The method lines.
-        :param startline_index: The start line of the method.
+        :param start_line: The start line of the method.
         :return: The last line of the method.
         """
-        last_line = startline_index + 1
-        brace_count = 1
+        start_line_index = start_line - 1
+        last_line_index = start_line_index
+        brace_count = 0
+
+        # Count the opening braces in the first line
+        brace_count += meth_lines[last_line_index].count("{")
+        last_line_index += 1
 
         # Iterate over the lines of the method
-        while last_line < len(meth_lines) and brace_count > 0:
-            line = meth_lines[last_line]
+        while last_line_index < len(meth_lines) and brace_count > 0:
+            line = meth_lines[last_line_index]
             brace_count += line.count("{")
             brace_count -= line.count("}")
-            last_line += 1
+            last_line_index += 1
 
+        # The last line is the line after the last line with a brace
+        # because the parser also always overshoots the end of the method
+        last_line = last_line_index + 1
         return last_line
 
     @staticmethod
