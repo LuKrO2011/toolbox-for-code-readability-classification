@@ -66,9 +66,9 @@ class TestRunMain(DirTest):
                 self.input = SELECTED_CLASSES_DIR
                 self.output = save
                 self.overwrite_mode = OverwriteMode.SKIP
-                self.include_method_comments = True
-                self.comments_required = False
-                self.remove_indentation = True
+                self.not_include_comments = False
+                self.comments_not_required = True
+                self.not_remove_indentation = False
 
         parsed_args = MockParsedArgs()
 

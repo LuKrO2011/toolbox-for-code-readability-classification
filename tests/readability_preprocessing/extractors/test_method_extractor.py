@@ -86,9 +86,9 @@ class TestExtractMethods(DirTest):
     @unittest.skip("Only used for debugging.")
     def test_extract_special(self):
         input_dir = CLASSES_DIR / "special"
-        extract_methods(input_dir.absolute(), self.output_dir)
+        extract_methods(input_dir.absolute(), self.output_dir, comments_required=False)
 
         # Check that the output directory contains the correct files
-        class_dir = os.path.join(self.output_dir, "special/InnerExtendsClass.java")
+        class_dir = os.path.join(self.output_dir, "special/RegionFeature.java")
         assert len(os.listdir(class_dir)) == 1
         assert_lines_equal(os.path.join(class_dir, "test.java"), 6)

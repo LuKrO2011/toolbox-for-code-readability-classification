@@ -1,102 +1,102 @@
 [
     {
         "new_num_stratas": 20,
-        "merge_distance": 0.40367344488972456,
+        "merge_distance": 0.29773006970419186,
         "diff_to_prev": 0.0
     },
     {
         "new_num_stratas": 19,
-        "merge_distance": 0.42236540110581217,
-        "diff_to_prev": -0.018691956216087602
+        "merge_distance": 0.3055544701016012,
+        "diff_to_prev": -0.007824400397409337
     },
     {
         "new_num_stratas": 18,
-        "merge_distance": 0.43374659069336696,
-        "diff_to_prev": -0.011381189587554796
+        "merge_distance": 0.31612088192628174,
+        "diff_to_prev": -0.010566411824680544
     },
     {
         "new_num_stratas": 17,
-        "merge_distance": 0.4340856006018444,
-        "diff_to_prev": -0.00033900990847746115
+        "merge_distance": 0.32087612504849067,
+        "diff_to_prev": -0.00475524312220893
     },
     {
         "new_num_stratas": 16,
-        "merge_distance": 0.4456189361438871,
-        "diff_to_prev": -0.011533335542042666
+        "merge_distance": 0.3561051578312606,
+        "diff_to_prev": -0.03522903278276995
     },
     {
         "new_num_stratas": 15,
-        "merge_distance": 0.46126267027620266,
-        "diff_to_prev": -0.015643734132315568
+        "merge_distance": 0.36173081512339667,
+        "diff_to_prev": -0.005625657292136044
     },
     {
         "new_num_stratas": 14,
-        "merge_distance": 0.5608032425013053,
-        "diff_to_prev": -0.09954057222510265
+        "merge_distance": 0.394054149172285,
+        "diff_to_prev": -0.03232333404888832
     },
     {
         "new_num_stratas": 13,
-        "merge_distance": 0.6214137196049905,
-        "diff_to_prev": -0.06061047710368517
+        "merge_distance": 0.42813500150656897,
+        "diff_to_prev": -0.034080852334283984
     },
     {
         "new_num_stratas": 12,
-        "merge_distance": 0.6222524653375973,
-        "diff_to_prev": -0.0008387457326067826
+        "merge_distance": 0.4807842200010357,
+        "diff_to_prev": -0.05264921849446674
     },
     {
         "new_num_stratas": 11,
-        "merge_distance": 0.7033101982646609,
-        "diff_to_prev": -0.08105773292706364
+        "merge_distance": 0.5079914985811643,
+        "diff_to_prev": -0.027207278580128613
     },
     {
         "new_num_stratas": 10,
-        "merge_distance": 0.7077676328813852,
-        "diff_to_prev": -0.004457434616724321
+        "merge_distance": 0.5730718971189829,
+        "diff_to_prev": -0.06508039853781855
     },
     {
         "new_num_stratas": 9,
-        "merge_distance": 0.7777774912141846,
-        "diff_to_prev": -0.07000985833279938
+        "merge_distance": 0.6647942434482579,
+        "diff_to_prev": -0.091722346329275
     },
     {
         "new_num_stratas": 8,
-        "merge_distance": 0.8748659584488794,
-        "diff_to_prev": -0.09708846723469478
+        "merge_distance": 0.716696954422497,
+        "diff_to_prev": -0.05190271097423915
     },
     {
         "new_num_stratas": 7,
-        "merge_distance": 1.0584240752855856,
-        "diff_to_prev": -0.1835581168367062
+        "merge_distance": 0.8155599396813653,
+        "diff_to_prev": -0.09886298525886827
     },
     {
         "new_num_stratas": 6,
-        "merge_distance": 1.1203353688200688,
-        "diff_to_prev": -0.061911293534483214
+        "merge_distance": 0.846840864881017,
+        "diff_to_prev": -0.031280925199651644
     },
     {
         "new_num_stratas": 5,
-        "merge_distance": 1.388636744067954,
-        "diff_to_prev": -0.2683013752478851
+        "merge_distance": 1.0120776828017908,
+        "diff_to_prev": -0.16523681792077383
     },
     {
         "new_num_stratas": 4,
-        "merge_distance": 1.3971542477052055,
-        "diff_to_prev": -0.008517503637251567
+        "merge_distance": 1.0227889901742906,
+        "diff_to_prev": -0.010711307372499812
     },
     {
         "new_num_stratas": 3,
-        "merge_distance": 2.469818993177077,
-        "diff_to_prev": -1.0726647454718716
+        "merge_distance": 1.2135024988428817,
+        "diff_to_prev": -0.19071350866859116
     },
     {
         "new_num_stratas": 2,
-        "merge_distance": 3.8899175833684576,
-        "diff_to_prev": -1.4200985901913805
+        "merge_distance": 2.304594833504716,
+        "diff_to_prev": -1.0910923346618344
     },
     {
         "new_num_stratas": 1,
-        "merge_distance": 52.577369576510726,
-        "diff_to_prev": -48.68745199314227
+        "merge_distance": 5.417302210241622,
+        "diff_to_prev": -3.1127073767369056
     }
 ]

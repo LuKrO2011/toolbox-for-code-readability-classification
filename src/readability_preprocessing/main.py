@@ -210,28 +210,28 @@ def _set_up_arg_parser() -> ArgumentParser:
         help="Overwrite mode for the method extraction.",
     )
     extract_methods_parser.add_argument(
-        "--include-method-comments",
-        "-imc",
+        "--not-include-comments",
+        "-nic",
         required=False,
-        type=bool,
-        default=True,
-        help="Whether to include the comments of the method.",
+        default=False,
+        action='store_true',
+        help="Whether to remove the comments from the methods.",
     )
     extract_methods_parser.add_argument(
-        "--comments-required",
-        "-cr",
+        "--comments-not-required",
+        "-cnr",
         required=False,
-        type=bool,
-        default=True,
-        help="Whether to only extract methods with comments.",
+        default=False,
+        action='store_true',
+        help="Whether to include methods that do not have comments.",
     )
     extract_methods_parser.add_argument(
-        "--remove-indentation",
-        "-ri",
+        "--not-remove-indentation",
+        "-nri",
         required=False,
-        type=bool,
-        default=True,
-        help="Whether to remove the indentation of the code.",
+        default=False,
+        action='store_true',
+        help="Whether to not remove the indentation from the methods.",
     )
 
     # Parser for converting csv datasets
@@ -395,6 +395,12 @@ def _run_stratified_sampling(args: Any) -> None:
     num_stratas = args.num_stratas
     num_snippets = args.num_snippets
 
+    # Log the arguments
+    logging.info(f"Input directory: {input_dir}")
+    logging.info(f"Output directory: {output_dir}")
+    logging.info(f"Number of stratas: {num_stratas}")
+    logging.info(f"Number of snippets: {num_snippets}")
+
     # Create the save directory, if it does not exist
     if output_dir is not None:
         if not os.path.isdir(output_dir):
@@ -424,6 +430,11 @@ def _run_extract_sampled(parsed_args: Any) -> None:
     sampling_dir = Path(parsed_args.sampling)
     output_dir = Path(parsed_args.output)
 
+    # Log the arguments
+    logging.info(f"Input directories: {input_dirs}")
+    logging.info(f"Sampling directory: {sampling_dir}")
+    logging.info(f"Output directory: {output_dir}")
+
     # Create the output directory, if it does not exist
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
@@ -444,6 +455,11 @@ def _run_extract_files(parsed_args: Any) -> None:
     output_dir = parsed_args.output
     non_violated_subdir = parsed_args.non_violated_subdir
 
+    # Log the arguments
+    logging.info(f"Input directory: {input_dir}")
+    logging.info(f"Output directory: {output_dir}")
+    logging.info(f"Non-violated subdirectory: {non_violated_subdir}")
+
     # Create the output directory, if it does not exist
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
@@ -463,9 +479,17 @@ def _run_extract_methods(parsed_args: Any) -> None:
     input_dir = parsed_args.input
     output_dir = parsed_args.output
     overwrite_mode = parsed_args.overwrite_mode
-    include_method_comments = parsed_args.include_method_comments
-    comments_required = parsed_args.comments_required
-    remove_indentation = parsed_args.remove_indentation
+    include_method_comments = not parsed_args.not_include_comments
+    comments_required = not parsed_args.comments_not_required
+    remove_indentation = not parsed_args.not_remove_indentation
+
+    # Log the arguments
+    logging.info(f"Input directory: {input_dir}")
+    logging.info(f"Output directory: {output_dir}")
+    logging.info(f"Overwrite mode: {overwrite_mode}")
+    logging.info(f"Include method comments: {include_method_comments}")
+    logging.info(f"Comments required: {comments_required}")
+    logging.info(f"Remove indentation: {remove_indentation}")
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -489,6 +513,12 @@ def _run_convert_csv(parsed_args: Any) -> None:
     output_path = parsed_args.output
     dataset_type = DatasetType(parsed_args.dataset_type)
 
+    # Log the arguments
+    logging.info(f"Snippets directory: {snippets_dir}")
+    logging.info(f"CSV file: {csv}")
+    logging.info(f"Output path: {output_path}")
+    logging.info(f"Dataset type: {dataset_type}")
+
     convert_dataset_csv(snippets_dir=snippets_dir, csv=csv, output_path=output_path,
                         dataset_type=dataset_type)
 
@@ -504,6 +534,13 @@ def _run_convert_two_folders(parsed_args: Any) -> None:
     not_readable_snippets_dir = parsed_args.not_readable
     not_readable_score = parsed_args.not_readable_score
     output_path = parsed_args.output
+
+    # Log the arguments
+    logging.info(f"Readable snippets directory: {readable_snippets_dir}")
+    logging.info(f"Readable score: {readable_score}")
+    logging.info(f"Not readable snippets directory: {not_readable_snippets_dir}")
+    logging.info(f"Not readable score: {not_readable_score}")
+    logging.info(f"Output path: {output_path}")
 
     convert_dataset_two_folders(original=readable_snippets_dir,
                                 rdh=not_readable_snippets_dir,
@@ -521,6 +558,11 @@ def _run_combine_datasets(parsed_args: Any) -> None:
     input_paths = parsed_args.input
     output_dir = parsed_args.output
     percent_to_remove = parsed_args.percent_to_remove
+
+    # Log the arguments
+    logging.info(f"Input paths: {input_paths}")
+    logging.info(f"Output directory: {output_dir}")
+    logging.info(f"Percentage of ambiguous samples to remove: {percent_to_remove}")
 
     # Create the output directory, if it does not exist
     if not os.path.isdir(output_dir):
@@ -540,6 +582,11 @@ def _run_download(parsed_args: Any) -> None:
     dataset_dir = parsed_args.output
     token_file = parsed_args.token_file
 
+    # Log the arguments
+    logging.info(f"Dataset name: {dataset_name}")
+    logging.info(f"Dataset directory: {dataset_dir}")
+    logging.info(f"Token file: {token_file}")
+
     download_dataset(dataset_name=dataset_name,
                      dataset_dir=dataset_dir,
                      token_file=token_file)
@@ -554,6 +601,11 @@ def _run_upload(parsed_args: Any) -> None:
     dataset_dir = parsed_args.input
     dataset_name = parsed_args.name
     token_file = parsed_args.token_file
+
+    # Log the arguments
+    logging.info(f"Dataset directory: {dataset_dir}")
+    logging.info(f"Dataset name: {dataset_name}")
+    logging.info(f"Token file: {token_file}")
 
     upload_dataset(dataset_dir=dataset_dir,
                    dataset_name=dataset_name,
