@@ -11,7 +11,7 @@ plt.figure(figsize=(6, 8))
 plt.boxplot(time_in_minutes)
 plt.xticks([1], ['Overall'])
 plt.ylabel('Time (minutes)')
-plt.title('Time Requirement for completing the survey')
+plt.title('Time required to complete the survey')
 
 # Update y-axis labels
 plt.yticks(plt.yticks()[0], ['{}:{:02d}'.format(int(minutes // 60), int(minutes % 60)) for minutes in plt.yticks()[0]])
