@@ -227,7 +227,8 @@ class SurveyCrafter:
             for rdh in stratum.rdhs:
                 rdh.used_snippets = len(rdh.unused_snippets)
                 logging.info(f"Strata: RDH {rdh.name}: Number of used snippets: "
-                             f"{rdh.used_snippets}")
+                             f"{rdh.used_snippets}/"
+                             f"{rdh.used_snippets + len(rdh.unused_snippets)}")
 
         self._write_output(surveys)
 

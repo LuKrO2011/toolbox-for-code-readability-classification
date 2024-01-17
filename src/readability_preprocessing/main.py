@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from readability_preprocessing.extractors.sampled_extractor import extract_sampled
-from readability_preprocessing.sampling.survey_crafting import craft_surveys
+from readability_preprocessing.sampling.survey_crafting import SurveyCrafter
 from src.readability_preprocessing.dataset.dataset_combiner import combine_datasets
 from src.readability_preprocessing.dataset.dataset_converter import convert_dataset_csv, \
     convert_dataset_two_folders, DatasetType
@@ -670,10 +670,11 @@ def _run_craft_surveys(parsed_args: Any) -> None:
         os.makedirs(output_dir)
 
     # Craft the survey sheets
-    craft_surveys(input_dir=input_dir,
-                  output_dir=output_dir,
-                  snippets_per_sheet=snippets_per_sheet,
-                  num_sheets=num_sheets)
+    survey_crafter = SurveyCrafter(input_dir=input_dir,
+                                   output_dir=output_dir,
+                                   snippets_per_sheet=snippets_per_sheet,
+                                   num_sheets=num_sheets)
+    survey_crafter.craft_surveys()
 
 
 def main(args: list[str]) -> int:

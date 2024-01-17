@@ -6,11 +6,12 @@ from src.readability_preprocessing.extractors.method_extractor import OverwriteM
 from src.readability_preprocessing.main import _run_stratified_sampling, \
     _run_extract_files, _run_extract_methods, _run_convert_csv, \
     _run_convert_two_folders, \
-    _run_combine_datasets, _run_download, _run_upload, _run_extract_sampled
+    _run_combine_datasets, _run_download, _run_upload, _run_extract_sampled, \
+    _run_craft_surveys
 from tests.readability_preprocessing.utils.utils import DirTest, RES_DIR, \
     ENCODED_BW_DIR, METHODS_ORIGINAL_ADD_COMMAND_DIR, \
     CHECKSTYLED_DIR, RAW_BW_DIR, RAW_KROD_DIR, SAMPLED_DIR_2_2, \
-    METHODS_ORIGINAL_DIR, SELECTED_CLASSES_DIR
+    METHODS_ORIGINAL_DIR, SELECTED_CLASSES_DIR, EXTRACTED_DIR
 
 
 class TestRunMain(DirTest):
@@ -156,3 +157,19 @@ class TestRunMain(DirTest):
 
         # Downloading the dataset within the test
         _run_upload(parsed_args)
+
+    def test_run_craft_surveys(self):
+        class MockParsedArgs:
+            def __init__(self, temp_dir_name: str = self.output_dir):
+                self.input = EXTRACTED_DIR
+                self.output = temp_dir_name
+                self.snippets_per_sheet = 2
+                self.num_sheets = 2
+
+        parsed_args = MockParsedArgs()
+
+        # Craft surveys within the test
+        _run_craft_surveys(parsed_args)
+
+        # Assert that the surveys have been crafted successfully
+        self.assertNotEqual(len(os.listdir(self.output_dir)), 0)
