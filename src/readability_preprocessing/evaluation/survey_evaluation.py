@@ -3,7 +3,7 @@ from pathlib import Path
 
 from matplotlib import pyplot as plt
 
-from readability_preprocessing.evaluation.utils import DEFAULT_SURVEY_DIR
+from readability_preprocessing.evaluation.utils import DEFAULT_SURVEY_DIR, SURVEYS_DIR
 
 
 class Rate:
@@ -22,6 +22,53 @@ class Rate:
                 f"solutions={self.solutions})")
 
 
+class RDH:
+
+    def __init__(self, name: str):
+        """
+        Initialize the RDH.
+        :param name: The name of the RDH.
+        """
+        self.name = name
+        self.stratum = None
+        self.snippets = []
+
+    def set_stratum(self, stratum):
+        """
+        Set the stratum the RDH belongs to.
+        :param stratum: The stratum the RDH belongs to.
+        :return: None
+        """
+        self.stratum = stratum
+
+    def add_snippet(self, snippet):
+        """
+        Add a snippet to the RDH.
+        :param snippet: The snippet to add.
+        :return: None
+        """
+        self.snippets.append(snippet)
+
+
+class Stratum:
+
+    def __init__(self, name: str):
+        """
+        Initialize the stratum.
+        :param name: The name of the stratum.
+        """
+        self.name = name
+        self.rdhs = []
+
+    def add_rdh(self, rdh: RDH):
+        """
+        Add an RDH to the stratum.
+        :param rdh: The RDH to add.
+        :return: None
+        """
+        self.rdhs.append(rdh)
+
+
 class SnippetData:
     """
     A class representing the data from a single JSON file containing the survey data
@@ -35,6 +82,8 @@ class SnippetData:
         self.questions = questions
         self.rates = [Rate(**rate_data) for rate_data in rates if
                       rate_data.get('rate') is not None]
+        self.stratum = None
+        self.rdh = None
 
     def __str__(self):
         return (f"JsonData(path={self.path}, from_line={self.from_line}, "
@@ -125,7 +174,25 @@ def load_snippet_datas(input_path: Path = DEFAULT_SURVEY_DIR) -> list[SnippetDat
     json_objects = [SnippetData.from_json(**load_json_file(file_path)) for file_path in
                     file_paths]
 
-    return json_objects
+    # Split the paths of the snippets by "_"
+    for json_object in json_objects:
+        split_path = json_object.path.split('_')
+        json_object.stratum = split_path[0]
+        json_object.rdh = split_path[1]
+
+    # Create stratas and rdhs from the json objects
+    stratas = {}
+    rdhs = {}
+    for json_object in json_objects:
+        if json_object.stratum not in stratas:
+            stratas[json_object.stratum] = Stratum(json_object.stratum)
+        if json_object.rdh not in rdhs:
+            rdhs[json_object.rdh] = RDH(json_object.rdh)
+        stratas[json_object.stratum].add_rdh(rdhs[json_object.rdh])
+        rdhs[json_object.rdh].set_stratum(stratas[json_object.stratum])
+        rdhs[json_object.rdh].add_snippet(json_object)
+
+    return json_objects, stratas
 
 
 def create_combined_box_plot(snippet_datas: list[SnippetData]) -> None:
@@ -212,7 +279,8 @@ def create_mean_plot(snippet_datas: list[SnippetData]) -> None:
     plt.show()
 
 
-snippet_datas = load_snippet_datas()
+survey_dir = SURVEYS_DIR / "test_survey"
+snippet_datas, stratas = load_snippet_datas(survey_dir)
 # create_mean_plot(snippet_datas)
 for snippet_data in snippet_datas:
     print(snippet_data.path)

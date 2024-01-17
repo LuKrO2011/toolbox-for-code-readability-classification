@@ -8,28 +8,28 @@ import numpy as np
 from readability_preprocessing.utils.utils import list_non_hidden
 
 default_strata_distributions = {
-    "stratum_0": 0.2,
-    "stratum_1": 0.4,
-    "stratum_2": 0.1,
-    "stratum_3": 0.3,
+    "stratum0": 0.2,
+    "stratum1": 0.4,
+    "stratum2": 0.1,
+    "stratum3": 0.3,
 }
 
 default_rdh_distributions = {
     "all": 0.0,
-    "all_weak": 0.0,
-    "all_weak_2": 0.0,
-    "all_weak_3": 0.0,
-    "comments_remove": 0.06,
+    "allweak": 0.0,
+    "allweak2": 0.0,
+    "allweak3": 0.0,
+    "commentsremove": 0.06,
     "methods": 0.4,
     "misc": 0.06,
-    "newlines_few": 0.06,
-    "newlines_many": 0.06,
+    "newlinesfew": 0.06,
+    "newlinesmany": 0.06,
     "realistic": 0.06,
     "rename": 0.06,
-    "spaces_few": 0.06,
-    "spaces_many": 0.06,
-    "tabs_few": 0.06,
-    "tabs_many": 0.06,
+    "spacesfew": 0.06,
+    "spacesmany": 0.06,
+    "tabsfew": 0.06,
+    "tabsmany": 0.06,
 }
 
 
