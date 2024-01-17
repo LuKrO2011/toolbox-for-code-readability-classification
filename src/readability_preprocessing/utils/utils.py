@@ -77,3 +77,14 @@ def copy_files(from_dir: str, to_dir: str) -> None:
         if os.path.isfile(from_file):
             shutil.copy2(from_file, to_file)
 
+
+def num_files(dir: str) -> int:
+    """
+    Counts the number of files in a directory and all its subdirectories.
+    :param dir: The directory to count the files in.
+    :return: The number of files.
+    """
+    num_files = 0
+    for root, dirs, files in os.walk(dir):
+        num_files += len(files)
+    return num_files

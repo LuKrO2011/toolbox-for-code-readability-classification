@@ -124,6 +124,20 @@ class Survey:
         self.snippets = snippets
 
 
+def fix_probabilities(probabilities: list[float]) -> list[float]:
+    """
+    Fix the probabilities so that they sum to 1 by adding the difference equally
+    to all probabilities. This might be necessary after deleting one or more strata or
+    rdh.
+    :param probabilities: The probabilities to fix.
+    :return: The fixed probabilities.
+    """
+    if sum(probabilities) != 1:
+        difference = 1 - sum(probabilities)
+        probabilities = [p + difference / len(probabilities) for p in probabilities]
+    return probabilities
+
+
 def select_stratum(strata: list[Stratum]) -> Stratum:
     """
     Select a stratum according to the probabilities.
@@ -131,6 +145,11 @@ def select_stratum(strata: list[Stratum]) -> Stratum:
     :return: The selected stratum.
     """
     stratum_probabilities = [stratum.probability for stratum in strata]
+    stratum_probabilities = fix_probabilities(stratum_probabilities)
+
+    if len(strata) == 0:
+        raise ValueError("No strata left to sample from.")
+
     stratum = np.random.choice(strata, p=stratum_probabilities)
     return stratum
 
@@ -142,6 +161,7 @@ def select_rdh(rdhs: list[RDH]) -> RDH:
     :return: The selected rdh.
     """
     rdh_probabilities = [rdh.probability for rdh in rdhs]
+    rdh_probabilities = fix_probabilities(rdh_probabilities)
     rdh = np.random.choice(rdhs, p=rdh_probabilities)
     return rdh
 
@@ -152,7 +172,7 @@ def select_snippet(snippets: list[Snippet]) -> Snippet:
     :param snippets: The list of snippets to select from.
     :return: The selected snippet.
     """
-    snippet_probabilities = [1 / len(snippets) for snippet in snippets]
+    snippet_probabilities = [1 / len(snippets) for _ in snippets]
     snippet = np.random.choice(snippets, p=snippet_probabilities)
     return snippet
 
@@ -248,8 +268,16 @@ def craft_surveys(input_dir, output_dir, snippets_per_sheet=20, num_sheets=20):
             if len(stratum.rdhs) == 0:
                 strata.remove(stratum)
 
+            # If there are no more strata, stop
+            if len(strata) == 0:
+                break
+
         # Add the survey to the list of surveys
         surveys.append(Survey(snippets))
+
+        # If there are no more strata, stop
+        if len(strata) == 0:
+            break
 
     # Create num_sheets output subdirectories
     for i in range(num_sheets):
