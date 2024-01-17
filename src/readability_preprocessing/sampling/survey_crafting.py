@@ -128,19 +128,18 @@ class Survey:
 
 def _fix_probabilities(probabilities: list[float]) -> list[float]:
     """
-    Fix the probabilities so that they sum to 1 by adding the difference equally
-    to all probabilities except the ones that are 0.
-    This might be necessary after deleting one or more strata or
-    rdh.
+    Fix the probabilities so that they sum to 1 by adding the difference equally.
+    This might be necessary after deleting one or more strata or rdh.
     :param probabilities: The probabilities to fix.
     :return: The fixed probabilities.
     """
-    if sum(probabilities) != 1:
-        not_0_probabilities = [p for p in probabilities if p != 0]
+    if sum(probabilities) == 1:
+        return probabilities
+    else:
         difference = 1 - sum(probabilities)
-        probabilities = [p + difference / len(not_0_probabilities) for p in
-                         not_0_probabilities]
-    return probabilities
+        probabilities = [probability + difference / len(probabilities) for probability
+                         in probabilities]
+        return probabilities
 
 
 def _select_stratum(strata: list[Stratum]) -> Stratum:
@@ -218,10 +217,11 @@ class SurveyCrafter:
         # Log information about the stratas
         logging.info(f"Strata: Number of stratas: {len(strata)}")
         for stratum in strata:
-            logging.info(f"Stratum {stratum.name}: Number of rdhs: {len(stratum.rdhs)}")
+            logging.info(f"{stratum.name}: Number of rdhs: {len(stratum.rdhs)}")
             for rdh in stratum.rdhs:
-                logging.info(f"Strata: RDH {rdh.name}: Number of snippets: "
-                             f"{len(rdh.unused_snippets)}")
+                logging.info(
+                    f"{stratum.name} - {rdh.name}: Number of snippets: "
+                    f"{len(rdh.unused_snippets)}")
 
         surveys = self.sample_sheets(strata)
 
@@ -229,9 +229,9 @@ class SurveyCrafter:
         for stratum in strata:
             for rdh in stratum.rdhs:
                 rdh.used_snippets = len(rdh.unused_snippets)
-                logging.info(f"Strata: RDH {rdh.name}: Number of used snippets: "
-                             f"{rdh.used_snippets}/"
-                             f"{rdh.used_snippets + len(rdh.unused_snippets)}")
+                logging.info(
+                    f"{stratum.name} - {rdh.name}: Number of used snippets: "
+                    f"{rdh.used_snippets}")
 
         self._write_output(surveys)
 
@@ -376,9 +376,9 @@ class SurveyCrafter:
         # If it was the last snippet, remove the rdh
         if len(rdh.unused_snippets) == 0:
             stratum.rdhs.remove(rdh)
-            logging.info(f"Strata: Removed RDH {rdh.name} from stratum {stratum.name}")
+            logging.info(f"Removed {rdh.name} from {stratum.name}")
 
         # If it was the last rdh, remove the stratum
         if len(stratum.rdhs) == 0:
             strata.remove(stratum)
-            logging.info(f"Strata: Removed stratum {stratum.name}")
+            logging.info(f"Removed {stratum.name}")
