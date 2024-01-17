@@ -88,3 +88,13 @@ def num_files(dir: str) -> int:
     for root, dirs, files in os.walk(dir):
         num_files += len(files)
     return num_files
+
+
+def list_non_hidden(dir: str) -> list[str]:
+    """
+    List the non-hidden files in the given directory. Also ignores .log files.
+    :param dir: The directory to list the files from.
+    :return: The list of non-hidden files.
+    """
+    return [f for f in os.listdir(dir) if
+            not f.startswith(".") and not f.endswith(".log")]

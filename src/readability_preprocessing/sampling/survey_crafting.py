@@ -3,15 +3,16 @@ import shutil
 
 import numpy as np
 
-# TODO: Load the distributions from a config file
-strata_distributions = {
+from readability_preprocessing.utils.utils import list_non_hidden
+
+default_strata_distributions = {
     "stratum_0": 0.2,
     "stratum_1": 0.4,
     "stratum_2": 0.1,
     "stratum_3": 0.3,
 }
 
-rdh_distributions = {
+default_rdh_distributions = {
     "all": 0.0,
     "all_weak": 0.0,
     "all_weak_2": 0.0,
@@ -124,7 +125,7 @@ class Survey:
         self.snippets = snippets
 
 
-def fix_probabilities(probabilities: list[float]) -> list[float]:
+def _fix_probabilities(probabilities: list[float]) -> list[float]:
     """
     Fix the probabilities so that they sum to 1 by adding the difference equally
     to all probabilities. This might be necessary after deleting one or more strata or
@@ -138,35 +139,31 @@ def fix_probabilities(probabilities: list[float]) -> list[float]:
     return probabilities
 
 
-def select_stratum(strata: list[Stratum]) -> Stratum:
+def _select_stratum(strata: list[Stratum]) -> Stratum:
     """
     Select a stratum according to the probabilities.
     :param strata: The list of strata to select from.
     :return: The selected stratum.
     """
     stratum_probabilities = [stratum.probability for stratum in strata]
-    stratum_probabilities = fix_probabilities(stratum_probabilities)
-
-    if len(strata) == 0:
-        raise ValueError("No strata left to sample from.")
-
+    stratum_probabilities = _fix_probabilities(stratum_probabilities)
     stratum = np.random.choice(strata, p=stratum_probabilities)
     return stratum
 
 
-def select_rdh(rdhs: list[RDH]) -> RDH:
+def _select_rdh(rdhs: list[RDH]) -> RDH:
     """
     Select a rdh according to the probabilities.
     :param rdhs: The list of rdhs to select from.
     :return: The selected rdh.
     """
     rdh_probabilities = [rdh.probability for rdh in rdhs]
-    rdh_probabilities = fix_probabilities(rdh_probabilities)
+    rdh_probabilities = _fix_probabilities(rdh_probabilities)
     rdh = np.random.choice(rdhs, p=rdh_probabilities)
     return rdh
 
 
-def select_snippet(snippets: list[Snippet]) -> Snippet:
+def _select_snippet(snippets: list[Snippet]) -> Snippet:
     """
     Select a snippet according to the probabilities.
     :param snippets: The list of snippets to select from.
@@ -177,35 +174,34 @@ def select_snippet(snippets: list[Snippet]) -> Snippet:
     return snippet
 
 
-def list_non_hidden(dir: str) -> list[str]:
-    """
-    List the non-hidden files in the given directory. Also ignores .log files.
-    :param dir: The directory to list the files from.
-    :return: The list of non-hidden files.
-    """
-    return [f for f in os.listdir(dir) if
-            not f.startswith(".") and not f.endswith(".log")]
-
-
 class SurveyCrafter:
     """
     A class for crafting surveys from the given input directory and save them to the
     given output directory.
     """
 
-    def __init__(self, input_dir: str, output_dir: str, snippets_per_sheet: int = 20,
-                 num_sheets: int = 20):
+    def __init__(self, input_dir: str,
+                 output_dir: str,
+                 snippets_per_sheet: int = 20,
+                 num_sheets: int = 20,
+                 strata_distributions: dict[str, float] = None,
+                 rdh_distributions: dict[str, float] = None):
         """
         Initialize the survey crafter.
         :param input_dir: The input directory with the stratas, rdhs and snippets.
         :param output_dir: The output directory to save the surveys to.
         :param snippets_per_sheet: How many snippets per sheet.
         :param num_sheets: How many sheets.
+        :param strata_distributions: The strata distributions.
+        :param rdh_distributions: The rdh distributions.
         """
         self.input_dir = input_dir
         self.output_dir = output_dir
         self.snippets_per_sheet = snippets_per_sheet
         self.num_sheets = num_sheets
+        self.strata_distributions = (strata_distributions or
+                                     default_strata_distributions.copy())
+        self.rdh_distributions = rdh_distributions or default_rdh_distributions.copy()
 
     def craft_surveys(self) -> None:
         """
@@ -215,7 +211,7 @@ class SurveyCrafter:
         """
         strata = self.craft_stratas()
         surveys = self.sample_sheets(strata)
-        self.write_output(surveys)
+        self._write_output(surveys)
 
     def craft_stratas(self) -> list[Stratum]:
         """
@@ -223,8 +219,8 @@ class SurveyCrafter:
         :return: The stratas.
         """
         # Load the stratas and rdhs
-        strata_names, strata_probabilities = self.load_stratas()
-        rdh_names, rdh_probabilities = self.load_rdhs(strata_names)
+        strata_names, strata_probabilities = self._load_stratas()
+        rdh_names, rdh_probabilities = self._load_rdhs(strata_names)
 
         # Convert the strats and rdhs to objects with probabilities
         # If no probability is specified, the probability is 0
@@ -247,7 +243,7 @@ class SurveyCrafter:
 
         return strata
 
-    def load_rdhs(self, strata_names: list[str]) -> tuple[dict[str, list[str]],
+    def _load_rdhs(self, strata_names: list[str]) -> tuple[dict[str, list[str]],
     dict[str, list[float]]]:
         """
         Load the rdhs from the input directory.
@@ -265,11 +261,12 @@ class SurveyCrafter:
         for strata_name in strata_names:
             rdh_probabilities[strata_name] = []
             for rdh_name in rdh_names[strata_name]:
-                rdh_probabilities[strata_name].append(rdh_distributions[rdh_name])
+                rdh_probabilities[strata_name].append(
+                    self.rdh_distributions[rdh_name])
 
         return rdh_names, rdh_probabilities
 
-    def load_stratas(self) -> tuple[list[str], list[float]]:
+    def _load_stratas(self) -> tuple[list[str], list[float]]:
         """
         Load the stratas from the input directory.
         :return: The strata names and probabilities.
@@ -280,11 +277,11 @@ class SurveyCrafter:
         # Assign each stratum a probability distribution
         strata_probabilities = []
         for strata_name in strata_names:
-            strata_probabilities.append(strata_distributions[strata_name])
+            strata_probabilities.append(self.strata_distributions[strata_name])
 
         return strata_names, strata_probabilities
 
-    def write_output(self, surveys: list[Survey]) -> None:
+    def _write_output(self, surveys: list[Survey]) -> None:
         """
         Write the output to the output directory.
         :param surveys: The surveys to write to the output directory.
@@ -319,16 +316,16 @@ class SurveyCrafter:
             for j in range(self.snippets_per_sheet):
 
                 # Select a stratum, a rdh and a snippet
-                stratum = select_stratum(strata)
-                rdh = select_rdh(stratum.rdhs)
-                snippet = select_snippet(rdh.unused_snippets)
+                stratum = _select_stratum(strata)
+                rdh = _select_rdh(stratum.rdhs)
+                snippet = _select_snippet(rdh.unused_snippets)
 
                 # Add the snippet to the list of snippets
                 snippets.append(snippet)
                 rdh.unused_snippets.remove(snippet)
 
                 # Remove the rdh or stratum if there are no more snippets
-                self.clean_up(rdh, strata, stratum)
+                self._clean_up(rdh, strata, stratum)
 
                 # If there are no more strata, stop
                 if len(strata) == 0:
@@ -344,7 +341,7 @@ class SurveyCrafter:
         return surveys
 
     @staticmethod
-    def clean_up(rdh: RDH, strata: list[Stratum], stratum: Stratum) -> None:
+    def _clean_up(rdh: RDH, strata: list[Stratum], stratum: Stratum) -> None:
         """
         Clean up the rdh and stratum if there are no more snippets.
         :param rdh: The rdh to clean up.
