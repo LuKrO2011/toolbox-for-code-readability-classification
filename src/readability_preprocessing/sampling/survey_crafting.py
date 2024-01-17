@@ -1,4 +1,5 @@
 import logging
+import math
 import os
 import shutil
 
@@ -133,13 +134,16 @@ def _fix_probabilities(probabilities: list[float]) -> list[float]:
     :param probabilities: The probabilities to fix.
     :return: The fixed probabilities.
     """
-    if sum(probabilities) == 1:
-        return probabilities
-    else:
-        difference = 1 - sum(probabilities)
+    difference = 1 - sum(probabilities)
+    epsilon = 1e-10
+
+    if abs(difference) > epsilon:
         probabilities = [probability + difference / len(probabilities) for probability
                          in probabilities]
-        return probabilities
+        probabilities = [max(probability, 0) for probability in
+                         probabilities]
+
+    return probabilities
 
 
 def _select_stratum(strata: list[Stratum]) -> Stratum:
@@ -162,6 +166,12 @@ def _select_rdh(rdhs: list[RDH]) -> RDH:
     """
     rdh_probabilities = [rdh.probability for rdh in rdhs]
     rdh_probabilities = _fix_probabilities(rdh_probabilities)
+
+    # Check if any probability is smaller than 0
+    for rdh_probability in rdh_probabilities:
+        if rdh_probability < 0:
+            logging.info(f"RDH: Probability smaller than 0: {rdh_probability}")
+
     rdh = np.random.choice(rdhs, p=rdh_probabilities)
     return rdh
 
