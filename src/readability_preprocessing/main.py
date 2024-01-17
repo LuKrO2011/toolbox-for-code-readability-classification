@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from readability_preprocessing.extractors.sampled_extractor import extract_sampled
+from readability_preprocessing.sampling.survey_crafting import craft_surveys
 from src.readability_preprocessing.dataset.dataset_combiner import combine_datasets
 from src.readability_preprocessing.dataset.dataset_converter import convert_dataset_csv, \
     convert_dataset_two_folders, DatasetType
@@ -82,6 +83,7 @@ class Tasks(Enum):
     COMBINE = "COMBINE"
     DOWNLOAD = "DOWNLOAD"
     UPLOAD = "UPLOAD"
+    CRAFT_SURVEYS = "CRAFT_SURVEYS"
 
     @classmethod
     def _missing_(cls, value: object) -> Any:
@@ -381,6 +383,40 @@ def _set_up_arg_parser() -> ArgumentParser:
              "the dataset must be public.",
     )
 
+    # Parser for crafting survey sheets from the stratas/rdh/method files
+    craft_surveys_parser = sub_parser.add_parser(str(Tasks.CRAFT_SURVEYS))
+    craft_surveys_parser.add_argument(
+        "--input",
+        "-i",
+        required=True,
+        type=str,
+        help="Path to the folder containing the stratas/rdh/method files.",
+    )
+    craft_surveys_parser.add_argument(
+        "--output",
+        "-o",
+        required=True,
+        type=str,
+        help="Path to the folder where the survey sheets should be stored.",
+    )
+    craft_surveys_parser.add_argument(
+        "--snippets-per-sheet",
+        "-sps",
+        required=False,
+        type=int,
+        default=20,
+        help="Number of snippets per survey sheet.",
+    )
+    craft_surveys_parser.add_argument(
+        "--num-sheets",
+        "-ns",
+        required=False,
+        type=int,
+        default=20,
+        help="Number of survey sheets to create.",
+    )
+    # TODO: Sample mode?, probabilities?
+
     return arg_parser
 
 
@@ -612,6 +648,34 @@ def _run_upload(parsed_args: Any) -> None:
                    token_file=token_file)
 
 
+def _run_craft_surveys(parsed_args: Any) -> None:
+    """
+    Crafts survey sheets from the stratas/rdh/method files.
+    :param parsed_args: Parsed arguments.
+    :return: None
+    """
+    input_dir = parsed_args.input
+    output_dir = parsed_args.output
+    snippets_per_sheet = parsed_args.snippets_per_sheet
+    num_sheets = parsed_args.num_sheets
+
+    # Log the arguments
+    logging.info(f"Input directory: {input_dir}")
+    logging.info(f"Output directory: {output_dir}")
+    logging.info(f"Snippets per sheet: {snippets_per_sheet}")
+    logging.info(f"Number of sheets: {num_sheets}")
+
+    # Create the output directory, if it does not exist
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+
+    # Craft the survey sheets
+    craft_surveys(input_dir=input_dir,
+                  output_dir=output_dir,
+                  snippets_per_sheet=snippets_per_sheet,
+                  num_sheets=num_sheets)
+
+
 def main(args: list[str]) -> int:
     """
     Main function of the readability classifier.
@@ -655,6 +719,8 @@ def main(args: list[str]) -> int:
             _run_download(parsed_args)
         case Tasks.UPLOAD:
             _run_upload(parsed_args)
+        case Tasks.CRAFT_SURVEYS:
+            _run_craft_surveys(parsed_args)
 
     return 0
 
