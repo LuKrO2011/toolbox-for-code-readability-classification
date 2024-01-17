@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 
@@ -210,7 +211,24 @@ class SurveyCrafter:
         :return: None
         """
         strata = self.craft_stratas()
+
+        # Log information about the stratas
+        logging.info(f"Strata: Number of stratas: {len(strata)}")
+        for stratum in strata:
+            logging.info(f"Stratum {stratum.name}: Number of rdhs: {len(stratum.rdhs)}")
+            for rdh in stratum.rdhs:
+                logging.info(f"Strata: RDH {rdh.name}: Number of snippets: "
+                             f"{len(rdh.unused_snippets)}")
+
         surveys = self.sample_sheets(strata)
+
+        # Calculate for each rdh how many snippets were used
+        for stratum in strata:
+            for rdh in stratum.rdhs:
+                rdh.used_snippets = len(rdh.unused_snippets)
+                logging.info(f"Strata: RDH {rdh.name}: Number of used snippets: "
+                             f"{rdh.used_snippets}")
+
         self._write_output(surveys)
 
     def craft_stratas(self) -> list[Stratum]:
@@ -329,6 +347,7 @@ class SurveyCrafter:
 
                 # If there are no more strata, stop
                 if len(strata) == 0:
+                    logging.info(f"Strata: No more strata left.")
                     break
 
             # Add the survey to the list of surveys
@@ -336,6 +355,7 @@ class SurveyCrafter:
 
             # If there are no more strata, stop
             if len(strata) == 0:
+                logging.info(f"Strata: No more strata left.")
                 break
 
         return surveys
@@ -352,7 +372,9 @@ class SurveyCrafter:
         # If it was the last snippet, remove the rdh
         if len(rdh.unused_snippets) == 0:
             stratum.rdhs.remove(rdh)
+            logging.info(f"Strata: Removed RDH {rdh.name} from stratum {stratum.name}")
 
         # If it was the last rdh, remove the stratum
         if len(stratum.rdhs) == 0:
             strata.remove(stratum)
+            logging.info(f"Strata: Removed stratum {stratum.name}")
