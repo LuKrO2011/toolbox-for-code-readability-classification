@@ -187,174 +187,175 @@ def list_non_hidden(dir: str) -> list[str]:
             not f.startswith(".") and not f.endswith(".log")]
 
 
-def craft_surveys(input_dir, output_dir, snippets_per_sheet=20, num_sheets=20):
+class SurveyCrafter:
     """
-    Craft surveys from the given input directory and save them to the given
-    output directory.
-    :param input_dir: The input directory with the stratas, rdhs and snippets.
-    :param output_dir: The output directory to save the surveys to.
-    :param snippets_per_sheet: How many snippets per sheet.
-    :param num_sheets: How many sheets.
-    :return: None
+    A class for crafting surveys from the given input directory and save them to the
+    given output directory.
     """
-    strata = craft_stratas(input_dir)
 
-    surveys = sample_sheets(num_sheets, snippets_per_sheet, strata)
-    write_output(input_dir, num_sheets, output_dir, surveys)
+    def __init__(self, input_dir: str, output_dir: str, snippets_per_sheet: int = 20,
+                 num_sheets: int = 20):
+        """
+        Initialize the survey crafter.
+        :param input_dir: The input directory with the stratas, rdhs and snippets.
+        :param output_dir: The output directory to save the surveys to.
+        :param snippets_per_sheet: How many snippets per sheet.
+        :param num_sheets: How many sheets.
+        """
+        self.input_dir = input_dir
+        self.output_dir = output_dir
+        self.snippets_per_sheet = snippets_per_sheet
+        self.num_sheets = num_sheets
 
+    def craft_surveys(self) -> None:
+        """
+        Craft surveys from the given input directory and save them to the given
+        output directory.
+        :return: None
+        """
+        strata = self.craft_stratas()
+        surveys = self.sample_sheets(strata)
+        self.write_output(surveys)
 
-def craft_stratas(input_dir: str) -> list[Stratum]:
-    """
-    Craft the stratas from the input directory.
-    :param input_dir: The input directory with the stratas, rdhs and snippets.
-    :return: The stratas.
-    """
-    # Load the stratas and rdhs
-    strata_names, strata_probabilities = load_stratas(input_dir)
-    rdh_names, rdh_probabilities = load_rdhs(input_dir, strata_names)
+    def craft_stratas(self) -> list[Stratum]:
+        """
+        Craft the stratas from the input directory.
+        :return: The stratas.
+        """
+        # Load the stratas and rdhs
+        strata_names, strata_probabilities = self.load_stratas()
+        rdh_names, rdh_probabilities = self.load_rdhs(strata_names)
 
-    # Convert the strats and rdhs to objects with probabilities
-    # If no probability is specified, the probability is 0
-    strata = []
-    for strata_name, strata_probability in zip(strata_names, strata_probabilities):
-        rdhs = []
-        for rdh_name, rdh_probability in zip(rdh_names[strata_name],
-                                             rdh_probabilities[strata_name]):
-            unused_snippet_names = list_non_hidden(os.path.join(input_dir, strata_name,
-                                                                rdh_name))
-            unused_snippets = [Snippet(snippet_name) for snippet_name in
-                               unused_snippet_names]
-            rdhs.append(RDH(rdh_name, rdh_probability, unused_snippets))
-        strata.append(Stratum(strata_name, strata_probability, rdhs))
+        # Convert the strats and rdhs to objects with probabilities
+        # If no probability is specified, the probability is 0
+        strata = []
+        for strata_name, strata_probability in zip(strata_names, strata_probabilities):
+            rdhs = []
+            for rdh_name, rdh_probability in zip(rdh_names[strata_name],
+                                                 rdh_probabilities[strata_name]):
+                unused_snippet_names = list_non_hidden(
+                    os.path.join(self.input_dir, strata_name, rdh_name))
+                unused_snippets = [Snippet(snippet_name) for snippet_name in
+                                   unused_snippet_names]
+                rdhs.append(RDH(rdh_name, rdh_probability, unused_snippets))
+            strata.append(Stratum(strata_name, strata_probability, rdhs))
 
-    # Remove empty rdhs and stratas
-    for stratum in strata:
-        stratum.rdhs = [rdh for rdh in stratum.rdhs if len(rdh.unused_snippets) > 0]
-    strata = [stratum for stratum in strata if len(stratum.rdhs) > 0]
+        # Remove empty rdhs and stratas
+        for stratum in strata:
+            stratum.rdhs = [rdh for rdh in stratum.rdhs if len(rdh.unused_snippets) > 0]
+        strata = [stratum for stratum in strata if len(stratum.rdhs) > 0]
 
-    return strata
+        return strata
 
+    def load_rdhs(self, strata_names: list[str]) -> tuple[dict[str, list[str]],
+    dict[str, list[float]]]:
+        """
+        Load the rdhs from the input directory.
+        :param strata_names: The names of the stratas.
+        :return: The rdh names and probabilities.
+        """
+        # Load the rdh names as the names of the subdirectories
+        rdh_names = {}
+        for strata_name in strata_names:
+            rdh_names[strata_name] = list_non_hidden(os.path.join(self.input_dir,
+                                                                  strata_name))
 
-def load_rdhs(input_dir: str, strata_names: list[str]) -> tuple[dict[str, list[str]],
-dict[str, list[float]]]:
-    """
-    Load the rdhs from the input directory.
-    :param input_dir: The input directory with the stratas, rdhs and snippets.
-    :param strata_names: The names of the stratas.
-    :return: The rdh names and probabilities.
-    """
-    # Load the rdh names as the names of the subdirectories
-    rdh_names = {}
-    for strata_name in strata_names:
-        rdh_names[strata_name] = list_non_hidden(os.path.join(input_dir, strata_name))
+        # Assign each rdh a probability distribution
+        rdh_probabilities = {}
+        for strata_name in strata_names:
+            rdh_probabilities[strata_name] = []
+            for rdh_name in rdh_names[strata_name]:
+                rdh_probabilities[strata_name].append(rdh_distributions[rdh_name])
 
-    # Assign each rdh a probability distribution
-    rdh_probabilities = {}
-    for strata_name in strata_names:
-        rdh_probabilities[strata_name] = []
-        for rdh_name in rdh_names[strata_name]:
-            rdh_probabilities[strata_name].append(rdh_distributions[rdh_name])
+        return rdh_names, rdh_probabilities
 
-    return rdh_names, rdh_probabilities
+    def load_stratas(self) -> tuple[list[str], list[float]]:
+        """
+        Load the stratas from the input directory.
+        :return: The strata names and probabilities.
+        """
+        # Load the strata names as the names of the subdirectories
+        strata_names = list_non_hidden(self.input_dir)
 
+        # Assign each stratum a probability distribution
+        strata_probabilities = []
+        for strata_name in strata_names:
+            strata_probabilities.append(strata_distributions[strata_name])
 
-def load_stratas(input_dir: str) -> tuple[list[str], list[float]]:
-    """
-    Load the stratas from the input directory.
-    :param input_dir: The input directory with the stratas, rdhs and snippets.
-    :return: The strata names and probabilities.
-    """
-    # Load the strata names as the names of the subdirectories
-    strata_names = list_non_hidden(input_dir)
+        return strata_names, strata_probabilities
 
-    # Assign each stratum a probability distribution
-    strata_probabilities = []
-    for strata_name in strata_names:
-        strata_probabilities.append(strata_distributions[strata_name])
+    def write_output(self, surveys: list[Survey]) -> None:
+        """
+        Write the output to the output directory.
+        :param surveys: The surveys to write to the output directory.
+        :return: The surveys.
+        """
+        # Create num_sheets output subdirectories
+        for i in range(self.num_sheets):
+            os.makedirs(os.path.join(self.output_dir, f"sheet_{i}"), exist_ok=True)
 
-    return strata_names, strata_probabilities
+        # Copy the snippets to the output subdirectories with name "stratum_rdh_oldName"
+        for i, survey in enumerate(surveys):
+            for j, snippet in enumerate(survey.snippets):
+                stratum = snippet.stratum.name
+                rdh = snippet.rdh.name
+                old_name = snippet.name
+                new_name = f"{stratum}_{rdh}_{old_name}"
+                shutil.copy(
+                    os.path.join(self.input_dir, stratum, rdh, old_name),
+                    os.path.join(self.output_dir, f"sheet_{i}", new_name),
+                )
 
+    def sample_sheets(self, strata: list[Stratum]) -> list[Survey]:
+        """
+        Sample the surveys.
+        :param strata: The strata to sample from.
+        :return: The sampled surveys.
+        """
+        # Create num_sheet surveys with different snippets according to the probs
+        surveys = []
+        for i in range(self.num_sheets):
+            snippets = []
+            for j in range(self.snippets_per_sheet):
 
-def write_output(input_dir: str, num_sheets: int, output_dir: str,
-                 surveys: list[Survey]) -> None:
-    """
-    Write the output to the output directory.
-    :param input_dir: The input directory with the stratas, rdhs and snippets.
-    :param num_sheets: The number of sheets.
-    :param output_dir: The output directory to save the surveys to.
-    :param surveys: The surveys to write to the output directory.
-    :return: The surveys.
-    """
-    # Create num_sheets output subdirectories
-    for i in range(num_sheets):
-        os.makedirs(os.path.join(output_dir, f"sheet_{i}"), exist_ok=True)
+                # Select a stratum, a rdh and a snippet
+                stratum = select_stratum(strata)
+                rdh = select_rdh(stratum.rdhs)
+                snippet = select_snippet(rdh.unused_snippets)
 
-    # Copy the snippets to the output subdirectories with name "stratum_rdh_oldName"
-    for i, survey in enumerate(surveys):
-        for j, snippet in enumerate(survey.snippets):
-            stratum = snippet.stratum.name
-            rdh = snippet.rdh.name
-            old_name = snippet.name
-            new_name = f"{stratum}_{rdh}_{old_name}"
-            shutil.copy(
-                os.path.join(input_dir, stratum, rdh, old_name),
-                os.path.join(output_dir, f"sheet_{i}", new_name),
-            )
+                # Add the snippet to the list of snippets
+                snippets.append(snippet)
+                rdh.unused_snippets.remove(snippet)
 
+                # Remove the rdh or stratum if there are no more snippets
+                self.clean_up(rdh, strata, stratum)
 
-def sample_sheets(num_sheets: int, snippets_per_sheet: int,
-                  strata: list[Stratum]) -> list[Survey]:
-    """
-    Sample the surveys.
-    :param num_sheets: The number of sheets to sample.
-    :param snippets_per_sheet: The number of snippets per sheet.
-    :param strata: The strata to sample from.
-    :return: The sampled surveys.
-    """
-    # Create num_sheet surveys with different snippets according to the probabilities
-    surveys = []
-    for i in range(num_sheets):
-        snippets = []
-        for j in range(snippets_per_sheet):
+                # If there are no more strata, stop
+                if len(strata) == 0:
+                    break
 
-            # Select a stratum, a rdh and a snippet
-            stratum = select_stratum(strata)
-            rdh = select_rdh(stratum.rdhs)
-            snippet = select_snippet(rdh.unused_snippets)
-
-            # Add the snippet to the list of snippets
-            snippets.append(snippet)
-            rdh.unused_snippets.remove(snippet)
-
-            # Remove the rdh or stratum if there are no more snippets
-            clean_up(rdh, strata, stratum)
+            # Add the survey to the list of surveys
+            surveys.append(Survey(snippets))
 
             # If there are no more strata, stop
             if len(strata) == 0:
                 break
 
-        # Add the survey to the list of surveys
-        surveys.append(Survey(snippets))
+        return surveys
 
-        # If there are no more strata, stop
-        if len(strata) == 0:
-            break
+    @staticmethod
+    def clean_up(rdh: RDH, strata: list[Stratum], stratum: Stratum) -> None:
+        """
+        Clean up the rdh and stratum if there are no more snippets.
+        :param rdh: The rdh to clean up.
+        :param strata: The strata to clean up.
+        :param stratum: The stratum to clean up.
+        :return: None
+        """
+        # If it was the last snippet, remove the rdh
+        if len(rdh.unused_snippets) == 0:
+            stratum.rdhs.remove(rdh)
 
-    return surveys
-
-
-def clean_up(rdh: RDH, strata: list[Stratum], stratum: Stratum) -> None:
-    """
-    Clean up the rdh and stratum if there are no more snippets.
-    :param rdh: The rdh to clean up.
-    :param strata: The strata to clean up.
-    :param stratum: The stratum to clean up.
-    :return: None
-    """
-    # If it was the last snippet, remove the rdh
-    if len(rdh.unused_snippets) == 0:
-        stratum.rdhs.remove(rdh)
-
-    # If it was the last rdh, remove the stratum
-    if len(stratum.rdhs) == 0:
-        strata.remove(stratum)
+        # If it was the last rdh, remove the stratum
+        if len(stratum.rdhs) == 0:
+            strata.remove(stratum)
