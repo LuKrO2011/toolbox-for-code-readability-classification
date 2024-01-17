@@ -129,14 +129,17 @@ class Survey:
 def _fix_probabilities(probabilities: list[float]) -> list[float]:
     """
     Fix the probabilities so that they sum to 1 by adding the difference equally
-    to all probabilities. This might be necessary after deleting one or more strata or
+    to all probabilities except the ones that are 0.
+    This might be necessary after deleting one or more strata or
     rdh.
     :param probabilities: The probabilities to fix.
     :return: The fixed probabilities.
     """
     if sum(probabilities) != 1:
+        not_0_probabilities = [p for p in probabilities if p != 0]
         difference = 1 - sum(probabilities)
-        probabilities = [p + difference / len(probabilities) for p in probabilities]
+        probabilities = [p + difference / len(not_0_probabilities) for p in
+                         not_0_probabilities]
     return probabilities
 
 
