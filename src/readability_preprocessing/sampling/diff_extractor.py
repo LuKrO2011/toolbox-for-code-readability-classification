@@ -14,12 +14,15 @@ def _read_file(file_path: str) -> List[str]:
 
 def _normalize_lines(lines):
     """
-    TODO: Adjust this method for newlines at the end of files.
-    Normalize lines by stripping whitespaces at the end of lines.
+    Normalize lines by stripping whitespaces at the end of lines and removing empty
+    lines at the end.
     :param lines: The lines to normalize
     :return: The normalized lines
     """
-    return [line.rstrip() for line in lines]
+    stripped = [line.rstrip() for line in lines]
+    while stripped[-1] == "":
+        stripped.pop()
+    return stripped
 
 
 def compare_java_files(file1_path: str, file2_path: str) -> bool:
@@ -44,9 +47,6 @@ def compare_java_files(file1_path: str, file2_path: str) -> bool:
     changed_lines = []
     for idx, line in enumerate(diff):
         if line.startswith('-') or line.startswith('+') or line.startswith('?'):
-            if idx == len(diff) - 1 and line == '+ ':  # Ignore newline at the end
-                continue
-            else:
-                changed_lines.append(line)
+            changed_lines.append(line)
 
     return True if len(changed_lines) > 0 else False
