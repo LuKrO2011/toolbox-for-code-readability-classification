@@ -7,6 +7,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from readability_preprocessing.extractors.diff_extractor import compare_to_methods
 from readability_preprocessing.extractors.sampled_extractor import extract_sampled
 from readability_preprocessing.sampling.survey_crafting import SurveyCrafter
 from src.readability_preprocessing.dataset.dataset_combiner import combine_datasets
@@ -78,6 +79,7 @@ class Tasks(Enum):
     EXTRACT_SAMPLED = "EXTRACT_SAMPLED"
     EXTRACT_FILES = "EXTRACT_FILES"
     EXTRACT_METHODS = "EXTRACT_METHODS"
+    EXTRACT_DIFF = "EXTRACT_DIFF"
     CONVERT_CSV = "CONVERT_CSV"
     CONVERT_TWO_FOLDERS = "CONVERT_TWO_FOLDERS"
     COMBINE = "COMBINE"
@@ -417,6 +419,25 @@ def _set_up_arg_parser() -> ArgumentParser:
     )
     # TODO: Sample mode?, probabilities?
 
+    # Parser for extracting diffs
+    extract_diff_parser = sub_parser.add_parser(str(Tasks.EXTRACT_DIFF))
+    extract_diff_parser.add_argument(
+        "--input",
+        "-i",
+        required=True,
+        type=str,
+        nargs="+",
+        help="Path to the folder containing the stratas (with rdhs and methods)."
+    )
+    extract_diff_parser.add_argument(
+        "--methods-dir-name",
+        "-mdn",
+        required=False,
+        type=str,
+        default="methods",
+        help="Name of the directory containing the original methods to compare against."
+    )
+
     return arg_parser
 
 
@@ -677,6 +698,29 @@ def _run_craft_surveys(parsed_args: Any) -> None:
     survey_crafter.craft_surveys()
 
 
+def _run_extract_diff(parsed_args: Any) -> None:
+    """
+    Extracts the diffs between the methods and the original methods.
+    :param parsed_args: Parsed arguments.
+    :return: None
+    """
+    input_dir = parsed_args.input
+    methods_dir_name = parsed_args.methods_dir_name
+
+    # Log the arguments
+    logging.info(f"Input directory: {input_dir}")
+    logging.info(f"Methods directory name: {methods_dir_name}")
+
+    # Extract the diffs
+    no_diff_files = compare_to_methods(input_path=input_dir,
+                                       methods_dir_name=methods_dir_name)
+
+    # Log the results
+    logging.info("The following files are not different from their original methods:")
+    for file in no_diff_files:
+        logging.info(file)
+
+
 def main(args: list[str]) -> int:
     """
     Main function of the readability classifier.
@@ -722,6 +766,8 @@ def main(args: list[str]) -> int:
             _run_upload(parsed_args)
         case Tasks.CRAFT_SURVEYS:
             _run_craft_surveys(parsed_args)
+        case Tasks.EXTRACT_DIFF:
+            _run_extract_diff(parsed_args)
 
     return 0
 

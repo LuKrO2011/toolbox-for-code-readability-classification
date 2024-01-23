@@ -7,11 +7,11 @@ from src.readability_preprocessing.main import _run_stratified_sampling, \
     _run_extract_files, _run_extract_methods, _run_convert_csv, \
     _run_convert_two_folders, \
     _run_combine_datasets, _run_download, _run_upload, _run_extract_sampled, \
-    _run_craft_surveys
+    _run_craft_surveys, _run_extract_diff
 from tests.readability_preprocessing.utils.utils import DirTest, RES_DIR, \
     ENCODED_BW_DIR, METHODS_ORIGINAL_ADD_COMMAND_DIR, \
     CHECKSTYLED_DIR, RAW_BW_DIR, RAW_KROD_DIR, SAMPLED_DIR_2_2, \
-    METHODS_ORIGINAL_DIR, SELECTED_CLASSES_DIR, EXTRACTED_DIR
+    METHODS_ORIGINAL_DIR, SELECTED_CLASSES_DIR, EXTRACTED_DIR, EXTRACTED_2_DIR
 
 
 class TestRunMain(DirTest):
@@ -173,3 +173,14 @@ class TestRunMain(DirTest):
 
         # Assert that the surveys have been crafted successfully
         self.assertNotEqual(len(os.listdir(self.output_dir)), 0)
+
+    def test_run_extract_diff(self):
+        class MockParsedArgs:
+            def __init__(self):
+                self.input = EXTRACTED_2_DIR
+                self.methods_dir_name = "methods"
+
+        parsed_args = MockParsedArgs()
+
+        # Find the files with no diff to the original methods
+        _run_extract_diff(parsed_args)
