@@ -41,6 +41,8 @@ CSV_DIR = RES_DIR / "csv/"
 
 EXTRACTED_DIR = RES_DIR / "extracted/"
 
+DIFF_EXTRACTOR_DIR = RES_DIR / "diff_extractor/"
+
 
 class DirTest(unittest.TestCase):
     output_dir_name = None  # Set to "output" to generate output
