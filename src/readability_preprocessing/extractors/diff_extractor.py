@@ -110,6 +110,40 @@ class Stratum:
         self.methods_dir = methods
 
 
+def _load(input_path: Path, methods_dir_name: str) -> List[Stratum]:
+    """
+    Load the stratas from the input path. Adds the rdhs and methods to the stratas.
+    :param input_path: The path to the input directory (stratas)
+    :param methods_dir_name: The name of the directory containing the methods
+    :return: The stratas
+    """
+    stratas: List[Stratum] = []
+
+    # Load the stratas
+    for stratum_path in input_path.iterdir():
+        if stratum_path.is_dir():
+            stratum = Stratum(stratum_path.name)
+
+            # Load the rdhs
+            for rdh_path in stratum_path.iterdir():
+                if rdh_path.is_dir():
+                    rdh = RDH(rdh_path.name)
+
+                    # Load the snippets
+                    for snippet_path in rdh_path.iterdir():
+                        if snippet_path.is_file():
+                            snippet = Snippet(snippet_path.name)
+                            rdh.add_snippet(snippet)
+
+                    # Check if the rdh is the methods directory
+                    if rdh.name == methods_dir_name:
+                        stratum.set_methods(rdh)
+                    else:
+                        stratum.add_rdh(rdh)
+            stratas.append(stratum)
+    return stratas
+
+
 def compare_to_methods(input_path: Path,
                        methods_dir_name: str = "methods") -> List[Path]:
     """
@@ -120,24 +154,7 @@ def compare_to_methods(input_path: Path,
     :param methods_dir_name: The name of the directory containing the methods
     :return: The paths to the methods that are not different
     """
-    # Get the paths to the stratas, rdhs and snippets
-    stratas: List[Stratum] = []
-    for stratum_path in input_path.iterdir():
-        if stratum_path.is_dir():
-            stratum = Stratum(stratum_path.name)
-            for rdh_path in stratum_path.iterdir():
-                if rdh_path.is_dir():
-                    rdh = RDH(rdh_path.name)
-                    for snippet_path in rdh_path.iterdir():
-                        if snippet_path.is_file():
-                            snippet = Snippet(snippet_path.name)
-                            rdh.add_snippet(snippet)
-
-                    if rdh.name == methods_dir_name:
-                        stratum.set_methods(rdh)
-                    else:
-                        stratum.add_rdh(rdh)
-            stratas.append(stratum)
+    stratas = _load(input_path, methods_dir_name)
 
     # Get the paths to the methods that are not different
     not_different_paths = []
