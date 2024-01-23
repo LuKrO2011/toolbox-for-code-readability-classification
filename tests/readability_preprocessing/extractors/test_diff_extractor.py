@@ -1,4 +1,4 @@
-from readability_preprocessing.sampling.diff_extractor import compare_java_files
+from readability_preprocessing.extractors.diff_extractor import compare_java_files
 from tests.readability_preprocessing.utils.utils import DIFF_EXTRACTOR_DIR
 
 
