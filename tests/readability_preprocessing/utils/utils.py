@@ -41,6 +41,8 @@ CSV_DIR = RES_DIR / "csv/"
 
 EXTRACTED_DIR = RES_DIR / "extracted/"
 
+EXTRACTED_2_DIR = RES_DIR / "extracted_2/"  # The methods for all rdh files exist
+
 DIFF_EXTRACTOR_DIR = RES_DIR / "diff_extractor/"
 
 

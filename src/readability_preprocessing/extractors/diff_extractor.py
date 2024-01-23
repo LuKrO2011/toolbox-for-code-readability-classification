@@ -1,8 +1,9 @@
 import difflib
+from pathlib import Path
 from typing import List
 
 
-def _read_file(file_path: str) -> List[str]:
+def _read_file(file_path: Path) -> List[str]:
     """
     Read the contents of a file.
     :param file_path: The path to the file
@@ -25,7 +26,7 @@ def _normalize_lines(lines):
     return stripped
 
 
-def compare_java_files(file1_path: str, file2_path: str) -> bool:
+def compare_java_files(file1_path: Path, file2_path: Path) -> bool:
     """
     Compare two Java files. If the files are different, return True, otherwise False.
     :param file1_path: The path to the first Java file
@@ -50,3 +51,104 @@ def compare_java_files(file1_path: str, file2_path: str) -> bool:
             changed_lines.append(line)
 
     return True if len(changed_lines) > 0 else False
+
+
+class Snippet:
+
+    def __init__(self, name: str):
+        """
+        Initialize the snippet.
+        :param name: The name of the snippet.
+        """
+        self.name: str = name
+
+
+class RDH:
+
+    def __init__(self, name: str):
+        """
+        Initialize the RDH.
+        :param name: The name of the RDH.
+        """
+        self.name: str = name
+        self.snippets: dict[str, Snippet] = {}
+
+    def add_snippet(self, snippet: Snippet):
+        """
+        Add a snippet to the RDH.
+        :param snippet: The snippet to add.
+        :return: None
+        """
+        self.snippets[snippet.name] = snippet
+
+
+class Stratum:
+
+    def __init__(self, name: str):
+        """
+        Initialize the stratum.
+        :param name: The name of the stratum.
+        """
+        self.methods_dir: RDH | None = None
+        self.name: str = name
+        self.rdhs: dict[str, RDH] = {}
+
+    def add_rdh(self, rdh: RDH):
+        """
+        Add an RDH to the stratum.
+        :param rdh: The RDH to add.
+        :return: None
+        """
+        self.rdhs[rdh.name] = rdh
+
+    def set_methods(self, methods: RDH):
+        """
+        Set the methods directory.
+        :param methods: The methods directory.
+        :return: None
+        """
+        self.methods_dir = methods
+
+
+def compare_to_methods(input_path: Path,
+                       methods_dir_name: str = "methods") -> List[Path]:
+    """
+    The input path consists of stratas. In each stratum, there are rdh folders.
+    In reach rdh folder each method is compared to the corresponding method in the
+    "methods"-rdh folder.
+    :param input_path: The path to the input directory (stratas)
+    :param methods_dir_name: The name of the directory containing the methods
+    :return: The paths to the methods that are not different
+    """
+    # Get the paths to the stratas, rdhs and snippets
+    stratas: List[Stratum] = []
+    for stratum_path in input_path.iterdir():
+        if stratum_path.is_dir():
+            stratum = Stratum(stratum_path.name)
+            for rdh_path in stratum_path.iterdir():
+                if rdh_path.is_dir():
+                    rdh = RDH(rdh_path.name)
+                    for snippet_path in rdh_path.iterdir():
+                        if snippet_path.is_file():
+                            snippet = Snippet(snippet_path.name)
+                            rdh.add_snippet(snippet)
+
+                    if rdh.name == methods_dir_name:
+                        stratum.set_methods(rdh)
+                    else:
+                        stratum.add_rdh(rdh)
+            stratas.append(stratum)
+
+    # Get the paths to the methods that are not different
+    not_different_paths = []
+    for stratum in stratas:
+        for rdh in stratum.rdhs.values():
+            for snippet in rdh.snippets:
+                methods_dir = stratum.methods_dir
+                assert methods_dir is not None
+                method_path = input_path / stratum.name / methods_dir.name / snippet
+                snippet_path = input_path / stratum.name / rdh.name / snippet
+                if not compare_java_files(method_path, snippet_path):
+                    not_different_paths.append(snippet_path)
+
+    return not_different_paths

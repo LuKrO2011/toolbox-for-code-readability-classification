@@ -1,5 +1,7 @@
-from readability_preprocessing.extractors.diff_extractor import compare_java_files
-from tests.readability_preprocessing.utils.utils import DIFF_EXTRACTOR_DIR
+from readability_preprocessing.extractors.diff_extractor import compare_java_files, \
+    compare_to_methods
+from tests.readability_preprocessing.utils.utils import DIFF_EXTRACTOR_DIR, \
+    EXTRACTED_2_DIR
 
 
 class TestCompareJavaFiles:
@@ -45,3 +47,10 @@ class TestCompareJavaFiles:
 
         has_diff = compare_java_files(file1_path, file2_path)
         assert has_diff is False
+
+
+class TestCompareMethods:
+
+    def test_compare_to_methods(self):
+        no_diff_files = compare_to_methods(input_path=EXTRACTED_2_DIR)
+        assert len(no_diff_files) == 0
