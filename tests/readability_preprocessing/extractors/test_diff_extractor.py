@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 from readability_preprocessing.extractors.diff_extractor import compare_java_files, \
-    compare_to_folder, get_diff_paths
+    compare_to_folder, get_diffs
 from tests.readability_preprocessing.utils.utils import DIFF_EXTRACTOR_DIR, \
     EXTRACTED_2_DIR, DirTest, assert_lines_equal
 
@@ -52,12 +52,12 @@ class TestCompareJavaFiles:
         assert has_diff is False
 
 
-def test_get_diff_paths():
-    diff_paths, not_diff_paths = get_diff_paths(input_path=EXTRACTED_2_DIR)
-    assert len(not_diff_paths) == 1
-    assert not_diff_paths[0] == Path(
+def test_get_diffs():
+    different, not_different = get_diffs(input_path=EXTRACTED_2_DIR)
+    assert len(not_different) == 1
+    assert not_different[0].get_path(EXTRACTED_2_DIR) == Path(
         "res/extracted_2/stratum0/commentsRemove/flink_AbstractStreamOperatorV2.java_snapshotState.java")
-    assert len(diff_paths) == 3
+    assert len(different) == 3
 
 
 class TestCompareToFolder(DirTest):

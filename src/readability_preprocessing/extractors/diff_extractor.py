@@ -63,6 +63,32 @@ class Snippet:
         :param name: The name of the snippet.
         """
         self.name: str = name
+        self.rdh: RDH | None = None
+        self.stratum: Stratum | None = None
+
+    def set_rdh(self, rdh):
+        """
+        Set the RDH of the snippet.
+        :param rdh: The RDH of the snippet.
+        :return: None
+        """
+        self.rdh = rdh
+
+    def set_stratum(self, stratum):
+        """
+        Set the stratum of the snippet.
+        :param stratum: The stratum of the snippet.
+        :return: None
+        """
+        self.stratum = stratum
+
+    def get_path(self, input_path: Path) -> Path:
+        """
+        Return the path to the snippet.
+        :param input_path: The path to the input directory.
+        :return: The path to the snippet.
+        """
+        return input_path / self.stratum.name / self.rdh.name / self.name
 
 
 class RDH:
@@ -73,7 +99,16 @@ class RDH:
         :param name: The name of the RDH.
         """
         self.name: str = name
+        self.stratum: Stratum | None = None
         self.snippets: dict[str, Snippet] = {}
+
+    def set_stratum(self, stratum):
+        """
+        Set the stratum of the RDH.
+        :param stratum: The stratum of the RDH.
+        :return: None
+        """
+        self.stratum = stratum
 
     def add_snippet(self, snippet: Snippet):
         """
@@ -130,11 +165,14 @@ def _load(input_path: Path, methods_dir_name: str) -> List[Stratum]:
             for rdh_path in stratum_path.iterdir():
                 if rdh_path.is_dir():
                     rdh = RDH(rdh_path.name)
+                    rdh.set_stratum(stratum)
 
                     # Load the snippets
                     for snippet_path in rdh_path.iterdir():
                         if snippet_path.is_file():
                             snippet = Snippet(snippet_path.name)
+                            snippet.set_rdh(rdh)
+                            snippet.set_stratum(stratum)
                             rdh.add_snippet(snippet)
 
                     # Check if the rdh is the methods directory
@@ -154,29 +192,30 @@ def _load(input_path: Path, methods_dir_name: str) -> List[Stratum]:
     return stratas
 
 
-def get_diff_paths(input_path: Path, methods_dir_name: str = "methods") -> tuple[
-    list[Path], list[Path]]:
+def get_diffs(input_path: Path, methods_dir_name: str = "methods") -> tuple[
+    list[Snippet], list[Snippet]]:
     """
-    Get the paths of the files that are different from their original methods and the
-    paths of the files that are not different from their original methods.
+    Get the snippets that are different from their original methods and the snippets
+    that are not different from their original methods.
     The input path consists of stratas. In each stratum, there are rdh folders.
     In reach rdh folder each method is compared to the corresponding method in the
     "methods"-rdh folder.
     :param input_path: The path to the input directory (stratas)
     :param methods_dir_name: The name of the directory containing the methods
-    :return: The paths of the different and not different files
+    :return: The snippets that are different from their original methods and the
+    snippets that are not different from their original methods.
     """
     stratas = _load(input_path, methods_dir_name)
 
-    not_different_paths = []
-    different_paths = []
+    not_different = []
+    different = []
     for stratum in stratas:
         for rdh in stratum.rdhs.values():
-            for snippet in rdh.snippets:
+            for snippet in rdh.snippets.values():
                 methods_dir = stratum.methods_dir
                 assert methods_dir is not None
-                method_path = input_path / stratum.name / methods_dir.name / snippet
-                snippet_path = input_path / stratum.name / rdh.name / snippet
+                method_path = input_path / stratum.name / methods_dir.name / snippet.name
+                snippet_path = snippet.get_path(input_path)
 
                 # Check if the method exists
                 if not method_path.exists():
@@ -184,11 +223,11 @@ def get_diff_paths(input_path: Path, methods_dir_name: str = "methods") -> tuple
                     raise FileNotFoundError(f"The method {method_path} does not exist.")
 
                 if not compare_java_files(method_path, snippet_path):
-                    not_different_paths.append(snippet_path)
+                    not_different.append(snippet)
                 else:
-                    different_paths.append(snippet_path)
+                    different.append(snippet)
 
-    return different_paths, not_different_paths
+    return different, not_different
 
 
 def compare_to_folder(input_path: Path,
@@ -203,15 +242,15 @@ def compare_to_folder(input_path: Path,
     :param methods_dir_name: The name of the directory containing the methods
     :return: None
     """
-    different_paths, not_different_paths = get_diff_paths(input_path, methods_dir_name)
+    different, not_different = get_diffs(input_path, methods_dir_name)
 
     # Log the results
     logging.info("The following files are not different from their original methods:")
-    for file in not_different_paths:
-        logging.info(file)
+    for snippet in not_different:
+        logging.info(snippet.get_path(input_path))
 
-    percentage = len(not_different_paths) / (
-        len(not_different_paths) + len(different_paths)) * 100
+    percentage = len(not_different) / (
+        len(not_different) + len(different)) * 100
     logging.info(f"{percentage}% of the files are not different from their original "
                  f"methods.")
 
@@ -223,10 +262,10 @@ def compare_to_folder(input_path: Path,
         # Store the results in two txt files
         no_diff_file = output_path / Path("no_diff.txt")
         with open(no_diff_file, "w") as f:
-            for file in not_different_paths:
-                f.write(f"{file}\n")
+            for snippet in not_different:
+                f.write(f"{snippet.get_path(input_path)}\n")
 
         diff_file = output_path / Path("diff.txt")
         with open(diff_file, "w") as f:
-            for file in different_paths:
-                f.write(f"{file}\n")
+            for snippet in different:
+                f.write(f"{snippet.get_path(input_path)}\n")
