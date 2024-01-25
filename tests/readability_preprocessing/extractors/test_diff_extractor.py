@@ -65,9 +65,10 @@ class TestCompareToFolder(DirTest):
     def test_compare_to_methods(self):
         compare_to_folder(input_path=EXTRACTED_2_DIR, output_path=self.output_dir)
 
-        assert len(os.listdir(self.output_dir)) == 2
+        assert len(os.listdir(self.output_dir)) == 3
         assert "no_diff.txt" in os.listdir(self.output_dir)
         assert "diff.txt" in os.listdir(self.output_dir)
+        assert "statistics.json" in os.listdir(self.output_dir)
         assert_lines_equal(os.path.join(self.output_dir, "diff.txt"), 3)
         assert_lines_equal(os.path.join(self.output_dir, "no_diff.txt"), 1)
 

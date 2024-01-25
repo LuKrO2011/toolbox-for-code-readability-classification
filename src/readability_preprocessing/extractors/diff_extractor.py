@@ -3,6 +3,7 @@ import logging
 import os
 from pathlib import Path
 from typing import List
+import json
 
 
 def _read_file(file_path: Path) -> List[str]:
@@ -240,10 +241,71 @@ def _percentage(different: list[Snippet], not_different: list[Snippet]) -> float
     return len(not_different) / (len(not_different) + len(different)) * 100
 
 
-def _store_outputs(different: list[Snippet], input_path: Path,
-                   not_different: list[Snippet], output_path: Path | None) -> None:
+class Statistic:
     """
-    Store the results in two txt files.
+    A statistic for a stratum.
+    """
+
+    def __init__(self, stratum: str, different: int, not_different: int):
+        """
+        Initialize the statistic.
+        :param stratum: The stratum
+        :param different: The number of snippets that are different from their original
+        :param not_different: The number of snippets that are not different from their
+        original
+        """
+        self.stratum = stratum
+        self.different = different
+        self.not_different = not_different
+
+    def json(self):
+        """
+        Return the statistic as a json.
+        :return: The statistic as a json.
+        """
+        return {
+            "stratum": self.stratum,
+            "total": self.different + self.not_different,
+            "not_different_abs": self.not_different,
+            "different_abs": self.different,
+            "not_different_rel": self.not_different / (
+                self.different + self.not_different),
+            "different_rel": self.different / (self.different + self.not_different),
+        }
+
+
+def _store_statistics(output_path: Path, different: dict[str, list[Snippet]],
+                      not_different: dict[str, list[Snippet]]) -> None:
+    """
+    Store the statistics in a json file.
+    :param different: The snippets that are different from their original
+    :param not_different: The snippets that are not different from their original
+    :return: None
+    """
+    # Create a list of statistics
+    statistics = []
+    for stratum in different:
+        statistics.append(Statistic(stratum, len(different[stratum]),
+                                    len(not_different[stratum])))
+    statistics.sort(key=lambda x: x.stratum)
+
+    # Store the statistics in a json file
+    statistics_file = output_path / Path("statistics.json")
+    with open(statistics_file, "w") as f:
+        f.write("[\n")
+        for idx, statistic in enumerate(statistics):
+            f.write(f"  {statistic.json()}")
+            if idx != len(statistics) - 1:
+                f.write(",")
+            f.write("\n")
+        f.write("]\n")
+
+
+def _store_paths(input_path: Path, output_path: Path | None, different: list[Snippet],
+                 not_different: list[Snippet]) -> None:
+    """
+    Store the paths of the snippets that are different from their original methods and
+    the snippets that are not different from their original methods in two txt files.
     :param different: The snippets that are different from their original methods
     :param input_path: The path to the input directory (stratas)
     :param not_different: The snippets that are not different from their original
@@ -266,18 +328,25 @@ def _store_outputs(different: list[Snippet], input_path: Path,
                 f.write(f"{snippet.get_path(input_path)}\n")
 
 
-def _group_by_stratum(snippets: list[Snippet]) -> dict[str, list[Snippet]]:
+def _group_by_stratum(snippets: list[Snippet], strata_names: list[str] = None) -> dict[
+    str, list[Snippet]]:
     """
     Group the snippets by their strata.
     :param snippets: The snippets that are not different from their original
+    :param strata_names: The names of the strata
     :return: The snippets grouped by their strata
     """
     grouped_snippets = {}
     for snippet in snippets:
-        stratum_name = snippet.stratum.name
-        if stratum_name not in grouped_snippets:
-            grouped_snippets[stratum_name] = []
-        grouped_snippets[stratum_name].append(snippet)
+        if snippet.stratum.name not in grouped_snippets:
+            grouped_snippets[snippet.stratum.name] = []
+        grouped_snippets[snippet.stratum.name].append(snippet)
+
+    if strata_names is not None:
+        for stratum in strata_names:
+            if stratum not in grouped_snippets:
+                grouped_snippets[stratum] = []
+
     return grouped_snippets
 
 
@@ -307,8 +376,10 @@ def compare_to_folder(input_path: Path,
     logging.info(f"{percentage}% of the files are not different from their original "
                  f"methods.")
 
-    s_not_different = _group_by_stratum(not_different)
-    s_different = _group_by_stratum(different)
+    strata_names = list(
+        set([snippet.stratum.name for snippet in different + not_different]))
+    s_not_different = _group_by_stratum(not_different, strata_names)
+    s_different = _group_by_stratum(different, strata_names)
 
     # Log the results for each stratum
     for stratum in s_not_different:
@@ -319,4 +390,7 @@ def compare_to_folder(input_path: Path,
         logging.info(f"{percentage}% of the files in {stratum} are not different "
                      f"from their original methods.")
 
-    _store_outputs(different, input_path, not_different, output_path)
+    if output_path is not None:
+        os.makedirs(output_path, exist_ok=True)
+        _store_statistics(output_path, s_different, s_not_different)
+        _store_paths(input_path, output_path, different, not_different)
