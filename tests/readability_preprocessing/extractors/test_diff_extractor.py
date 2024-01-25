@@ -4,7 +4,7 @@ from pathlib import Path
 from readability_preprocessing.extractors.diff_extractor import compare_java_files, \
     compare_to_folder, get_diffs
 from tests.readability_preprocessing.utils.utils import DIFF_EXTRACTOR_DIR, \
-    EXTRACTED_2_DIR, DirTest, assert_lines_equal
+    EXTRACTED_2_DIR, DirTest, assert_lines_equal, assert_content_equal
 
 
 class TestCompareJavaFiles:
@@ -71,4 +71,6 @@ class TestCompareToFolder(DirTest):
         assert "statistics.json" in os.listdir(self.output_dir)
         assert_lines_equal(os.path.join(self.output_dir, "diff.txt"), 3)
         assert_lines_equal(os.path.join(self.output_dir, "no_diff.txt"), 1)
+        assert_content_equal(os.path.join(self.output_dir, "statistics.json"),
+                             os.path.join(EXTRACTED_2_DIR, "statistics.json"))
 

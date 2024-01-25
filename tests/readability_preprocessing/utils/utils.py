@@ -77,3 +77,11 @@ def assert_lines_equal(file: str, num_expected_lines: int):
     with open(file, "r") as f:
         lines = f.readlines()
     assert len(lines) == num_expected_lines
+
+
+def assert_content_equal(file1: str, file2: str):
+    with open(file1, "r") as f:
+        lines1 = f.readlines()
+    with open(file2, "r") as f:
+        lines2 = f.readlines()
+    assert lines1 == lines2

@@ -231,16 +231,6 @@ def get_diffs(input_path: Path, methods_dir_name: str = "methods") -> tuple[
     return different, not_different
 
 
-def _percentage(different: list[Snippet], not_different: list[Snippet]) -> float:
-    """
-    Calculate the percentage of files that are not different from their original
-    :param different: The snippets that are different from their original
-    :param not_different: The snippets that are not different from their original
-    :return: The percentage of files that are not different from their original
-    """
-    return len(not_different) / (len(not_different) + len(different)) * 100
-
-
 class Statistic:
     """
     A statistic for a stratum.
@@ -274,19 +264,32 @@ class Statistic:
         }
 
 
-def _store_statistics(output_path: Path, different: dict[str, list[Snippet]],
-                      not_different: dict[str, list[Snippet]]) -> None:
-    # Create a list of statistics
+def _store_statistics(output_path: Path, statistics: list[Statistic]) -> None:
+    """
+    Store the statistics in a json file.
+    :param output_path: The path to the output directory
+    :param statistics: The statistics
+    :return: The snippets that are not different from their original methods
+    """
+    statistics_file = output_path / Path("statistics.json")
+    with open(statistics_file, "w") as f:
+        json.dump([statistic.json() for statistic in statistics], f, indent=2)
+
+
+def _create_statistics(different: dict[str, list[Snippet]],
+                       not_different: dict[str, list[Snippet]]) -> list[Statistic]:
+    """
+    Create a list of statistics.
+    :param different: The snippets that are different from their original
+    :param not_different: The snippets that are not different from their original
+    :return: The snippets that are not different from their original methods
+    """
     statistics = []
     for stratum in different:
         statistics.append(Statistic(stratum, len(different[stratum]),
                                     len(not_different[stratum])))
     statistics.sort(key=lambda x: x.stratum)
-
-    # Store the statistics in a json file
-    statistics_file = output_path / Path("statistics.json")
-    with open(statistics_file, "w") as f:
-        json.dump([statistic.json() for statistic in statistics], f, indent=2)
+    return statistics
 
 
 def _store_paths(input_path: Path, output_path: Path | None, different: list[Snippet],
@@ -357,28 +360,22 @@ def compare_to_folder(input_path: Path,
     for snippet in not_different:
         logging.info(snippet.get_path(input_path))
 
-    # Log the absolute and percentage of different files
-    logging.info(f"{len(not_different)} of {len(not_different) + len(different)} "
-                 f"files are not different from their original methods.")
-    percentage = _percentage(different, not_different)
-    logging.info(f"{percentage}% of the files are not different from their original "
-                 f"methods.")
+    # Create overall statistics
+    statistics = [Statistic("overall", len(different), len(not_different))]
 
+    # Create statistics for each stratum
     strata_names = list(
         set([snippet.stratum.name for snippet in different + not_different]))
     s_not_different = _group_by_stratum(not_different, strata_names)
     s_different = _group_by_stratum(different, strata_names)
+    statistics += _create_statistics(s_different, s_not_different)
 
-    # Log the results for each stratum
-    for stratum in s_not_different:
-        logging.info(f"{len(s_not_different[stratum])} of "
-                     f"{len(s_not_different[stratum]) + len(s_different[stratum])} "
-                     f"files in {stratum} are not different from their original methods.")
-        percentage = _percentage(s_different[stratum], s_not_different[stratum])
-        logging.info(f"{percentage}% of the files in {stratum} are not different "
-                     f"from their original methods.")
+    # Log the statistics
+    logging.info("The following statistics were calculated:")
+    for statistic in statistics:
+        logging.info(statistic.json())
 
     if output_path is not None:
         os.makedirs(output_path, exist_ok=True)
-        _store_statistics(output_path, s_different, s_not_different)
+        _store_statistics(output_path, statistics)
         _store_paths(input_path, output_path, different, not_different)
