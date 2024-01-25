@@ -276,12 +276,6 @@ class Statistic:
 
 def _store_statistics(output_path: Path, different: dict[str, list[Snippet]],
                       not_different: dict[str, list[Snippet]]) -> None:
-    """
-    Store the statistics in a json file.
-    :param different: The snippets that are different from their original
-    :param not_different: The snippets that are not different from their original
-    :return: None
-    """
     # Create a list of statistics
     statistics = []
     for stratum in different:
@@ -292,13 +286,7 @@ def _store_statistics(output_path: Path, different: dict[str, list[Snippet]],
     # Store the statistics in a json file
     statistics_file = output_path / Path("statistics.json")
     with open(statistics_file, "w") as f:
-        f.write("[\n")
-        for idx, statistic in enumerate(statistics):
-            f.write(f"  {statistic.json()}")
-            if idx != len(statistics) - 1:
-                f.write(",")
-            f.write("\n")
-        f.write("]\n")
+        json.dump([statistic.json() for statistic in statistics], f, indent=2)
 
 
 def _store_paths(input_path: Path, output_path: Path | None, different: list[Snippet],
