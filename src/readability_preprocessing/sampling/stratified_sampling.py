@@ -279,7 +279,7 @@ class StratifiedSampler:
 
         # Save the clusters
         for stratum_idx, stratum in enumerate(stratas):
-            save_path = os.path.join(stratas_dir, f"stratum_{stratum_idx}.txt")
+            save_path = os.path.join(stratas_dir, f"stratum{stratum_idx}.txt")
             with open(save_path, "w") as f:
                 for snippet in stratum:
                     f.write(snippet + "\n")
