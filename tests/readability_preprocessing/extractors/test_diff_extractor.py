@@ -56,7 +56,7 @@ def test_get_diff_paths():
     diff_paths, not_diff_paths = get_diff_paths(input_path=EXTRACTED_2_DIR)
     assert len(not_diff_paths) == 1
     assert not_diff_paths[0] == Path(
-        "res/extracted_2/stratum_0/comments_remove/flink_AbstractStreamOperatorV2.java_snapshotState.java")
+        "res/extracted_2/stratum0/commentsRemove/flink_AbstractStreamOperatorV2.java_snapshotState.java")
     assert len(diff_paths) == 3
 
 
