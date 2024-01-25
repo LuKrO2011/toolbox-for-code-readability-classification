@@ -123,7 +123,7 @@ def _load(input_path: Path, methods_dir_name: str) -> List[Stratum]:
 
     # Load the stratas
     for stratum_path in input_path.iterdir():
-        if stratum_path.is_dir():
+        if stratum_path.is_dir() and stratum_path.name.startswith("stratum"):
             stratum = Stratum(stratum_path.name)
 
             # Load the rdhs
@@ -177,6 +177,12 @@ def get_diff_paths(input_path: Path, methods_dir_name: str = "methods") -> tuple
                 assert methods_dir is not None
                 method_path = input_path / stratum.name / methods_dir.name / snippet
                 snippet_path = input_path / stratum.name / rdh.name / snippet
+
+                # Check if the method exists
+                if not method_path.exists():
+                    logging.error(f"The method {method_path} does not exist.")
+                    raise FileNotFoundError(f"The method {method_path} does not exist.")
+
                 if not compare_java_files(method_path, snippet_path):
                     not_different_paths.append(snippet_path)
                 else:
