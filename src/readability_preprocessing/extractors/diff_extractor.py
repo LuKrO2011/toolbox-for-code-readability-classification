@@ -230,48 +230,26 @@ def get_diffs(input_path: Path, methods_dir_name: str = "methods") -> tuple[
     return different, not_different
 
 
-def compare_to_folder(input_path: Path,
-                      output_path: Path | None = None,
-                      methods_dir_name: str = "methods") -> None:
+def _percentage(different: list[Snippet], not_different: list[Snippet]) -> float:
     """
-    Compare the files of all rdhs in the stratas of the input directory to the files in
-    the methods directory.
-    Stores the results in two txt files if an output directory is specified.
+    Calculate the percentage of files that are not different from their original
+    :param different: The snippets that are different from their original
+    :param not_different: The snippets that are not different from their original
+    :return: The percentage of files that are not different from their original
+    """
+    return len(not_different) / (len(not_different) + len(different)) * 100
+
+
+def _store_outputs(different: list[Snippet], input_path: Path,
+                   not_different: list[Snippet], output_path: Path | None) -> None:
+    """
+    Store the results in two txt files.
+    :param different: The snippets that are different from their original methods
     :param input_path: The path to the input directory (stratas)
+    :param not_different: The snippets that are not different from their original
     :param output_path: The path to the output directory
-    :param methods_dir_name: The name of the directory containing the methods
-    :return: None
+    :return: The snippets that are not different from their original methods
     """
-    different, not_different = get_diffs(input_path, methods_dir_name)
-
-    # Log the results
-    logging.info("The following files are not different from their original methods:")
-    for snippet in not_different:
-        logging.info(snippet.get_path(input_path))
-
-    # Log the absolute and percentage of different files
-    logging.info(f"{len(not_different)} of {len(not_different) + len(different)} "
-                 f"files are not different from their original methods.")
-    percentage = len(not_different) / (
-        len(not_different) + len(different)) * 100
-    logging.info(f"{percentage}% of the files are not different from their original "
-                 f"methods.")
-
-    strata_not_different = _group_by_stratum(not_different)
-    strata_different = _group_by_stratum(different)
-
-    # Log the results for each stratum
-    for stratum_name in strata_not_different:
-        logging.info(f"{len(strata_not_different[stratum_name])} of "
-                     f"{len(strata_not_different[stratum_name]) + len(strata_different[stratum_name])} "
-                     f"files in {stratum_name} are not different from their original methods.")
-        percentage = len(strata_not_different[stratum_name]) / (
-            len(strata_not_different[stratum_name]) + len(
-            strata_different[stratum_name])) * 100
-        logging.info(f"{percentage}% of the files in {stratum_name} are not different "
-                     f"from their original methods.")
-
-    # Create the output directory, if it does not exist
     if output_path is not None:
         if not os.path.isdir(output_path):
             os.makedirs(output_path)
@@ -301,3 +279,44 @@ def _group_by_stratum(snippets: list[Snippet]) -> dict[str, list[Snippet]]:
             grouped_snippets[stratum_name] = []
         grouped_snippets[stratum_name].append(snippet)
     return grouped_snippets
+
+
+def compare_to_folder(input_path: Path,
+                      output_path: Path | None = None,
+                      methods_dir_name: str = "methods") -> None:
+    """
+    Compare the files of all rdhs in the stratas of the input directory to the files in
+    the methods directory.
+    Stores the results in two txt files if an output directory is specified.
+    :param input_path: The path to the input directory (stratas)
+    :param output_path: The path to the output directory
+    :param methods_dir_name: The name of the directory containing the methods
+    :return: None
+    """
+    different, not_different = get_diffs(input_path, methods_dir_name)
+
+    # Log the results
+    logging.info("The following files are not different from their original methods:")
+    for snippet in not_different:
+        logging.info(snippet.get_path(input_path))
+
+    # Log the absolute and percentage of different files
+    logging.info(f"{len(not_different)} of {len(not_different) + len(different)} "
+                 f"files are not different from their original methods.")
+    percentage = _percentage(different, not_different)
+    logging.info(f"{percentage}% of the files are not different from their original "
+                 f"methods.")
+
+    s_not_different = _group_by_stratum(not_different)
+    s_different = _group_by_stratum(different)
+
+    # Log the results for each stratum
+    for stratum in s_not_different:
+        logging.info(f"{len(s_not_different[stratum])} of "
+                     f"{len(s_not_different[stratum]) + len(s_different[stratum])} "
+                     f"files in {stratum} are not different from their original methods.")
+        percentage = _percentage(s_different[stratum], s_not_different[stratum])
+        logging.info(f"{percentage}% of the files in {stratum} are not different "
+                     f"from their original methods.")
+
+    _store_outputs(different, input_path, not_different, output_path)
