@@ -710,8 +710,8 @@ def _run_extract_diff(parsed_args: Any) -> None:
     :param parsed_args: Parsed arguments.
     :return: None
     """
-    input_dir = parsed_args.input
-    output_dir = parsed_args.output
+    input_dir = Path(parsed_args.input)
+    output_dir = Path(parsed_args.output) if parsed_args.output is not None else None
     methods_dir_name = parsed_args.methods_dir_name
 
     # Log the arguments
