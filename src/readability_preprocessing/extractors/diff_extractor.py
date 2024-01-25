@@ -249,10 +249,39 @@ def compare_to_folder(input_path: Path,
     for snippet in not_different:
         logging.info(snippet.get_path(input_path))
 
+    # Log the absolute and percentage of different files
+    logging.info(f"{len(not_different)} of {len(not_different) + len(different)} "
+                 f"files are not different from their original methods.")
     percentage = len(not_different) / (
         len(not_different) + len(different)) * 100
     logging.info(f"{percentage}% of the files are not different from their original "
                  f"methods.")
+
+    # Group the snippets by their strata
+    strata_not_different = {}
+    for snippet in not_different:
+        stratum_name = snippet.stratum.name
+        if stratum_name not in strata_not_different:
+            strata_not_different[stratum_name] = []
+        strata_not_different[stratum_name].append(snippet)
+
+    strata_different = {}
+    for snippet in different:
+        stratum_name = snippet.stratum.name
+        if stratum_name not in strata_different:
+            strata_different[stratum_name] = []
+        strata_different[stratum_name].append(snippet)
+
+    # Log the results for each stratum
+    for stratum_name in strata_not_different:
+        logging.info(f"{len(strata_not_different[stratum_name])} of "
+                     f"{len(strata_not_different[stratum_name]) + len(strata_different[stratum_name])} "
+                     f"files in {stratum_name} are not different from their original methods.")
+        percentage = len(strata_not_different[stratum_name]) / (
+            len(strata_not_different[stratum_name]) + len(
+            strata_different[stratum_name])) * 100
+        logging.info(f"{percentage}% of the files in {stratum_name} are not different "
+                     f"from their original methods.")
 
     # Create the output directory, if it does not exist
     if output_path is not None:
