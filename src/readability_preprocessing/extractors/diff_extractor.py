@@ -143,6 +143,14 @@ def _load(input_path: Path, methods_dir_name: str) -> List[Stratum]:
                     else:
                         stratum.add_rdh(rdh)
             stratas.append(stratum)
+
+    # Log the loaded stratas
+    logging.info("The following stratas were loaded:")
+    for stratum in stratas:
+        logging.info(stratum.name)
+        logging.info(f"  methods: {stratum.methods_dir.name}")
+        logging.info(f"  rdhs: {stratum.rdhs.keys()}")
+
     return stratas
 
 
