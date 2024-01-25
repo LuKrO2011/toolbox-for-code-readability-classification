@@ -712,13 +712,17 @@ def _run_extract_diff(parsed_args: Any) -> None:
     logging.info(f"Methods directory name: {methods_dir_name}")
 
     # Extract the diffs
-    no_diff_files = compare_to_methods(input_path=input_dir,
-                                       methods_dir_name=methods_dir_name)
+    no_diff_files, diff_files = compare_to_methods(input_path=input_dir,
+                                                   methods_dir_name=methods_dir_name)
 
     # Log the results
     logging.info("The following files are not different from their original methods:")
     for file in no_diff_files:
         logging.info(file)
+
+    percentage = len(no_diff_files) / (len(no_diff_files) + len(diff_files)) * 100
+    logging.info(f"{percentage}% of the files are not different from their original "
+                 f"methods.")
 
 
 def main(args: list[str]) -> int:

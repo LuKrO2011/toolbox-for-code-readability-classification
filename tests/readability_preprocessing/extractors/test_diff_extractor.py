@@ -54,7 +54,8 @@ class TestCompareJavaFiles:
 class TestCompareMethods:
 
     def test_compare_to_methods(self):
-        no_diff_files = compare_to_methods(input_path=EXTRACTED_2_DIR)
+        no_diff_files, diff_files = compare_to_methods(input_path=EXTRACTED_2_DIR)
         assert len(no_diff_files) == 1
         assert no_diff_files[0] == Path(
             "res/extracted_2/stratum_0/comments_remove/flink_AbstractStreamOperatorV2.java_snapshotState.java")
+        assert len(diff_files) == 3

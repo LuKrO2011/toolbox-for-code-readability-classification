@@ -145,19 +145,22 @@ def _load(input_path: Path, methods_dir_name: str) -> List[Stratum]:
 
 
 def compare_to_methods(input_path: Path,
-                       methods_dir_name: str = "methods") -> List[Path]:
+                       methods_dir_name: str = "methods") -> tuple[
+    list[Path], list[Path]]:
     """
     The input path consists of stratas. In each stratum, there are rdh folders.
     In reach rdh folder each method is compared to the corresponding method in the
     "methods"-rdh folder.
     :param input_path: The path to the input directory (stratas)
     :param methods_dir_name: The name of the directory containing the methods
-    :return: The paths to the methods that are not different
+    :return: The paths to the methods that are not different and the paths to the
+    methods that are different
     """
     stratas = _load(input_path, methods_dir_name)
 
     # Get the paths to the methods that are not different
     not_different_paths = []
+    different_paths = []
     for stratum in stratas:
         for rdh in stratum.rdhs.values():
             for snippet in rdh.snippets:
@@ -167,5 +170,7 @@ def compare_to_methods(input_path: Path,
                 snippet_path = input_path / stratum.name / rdh.name / snippet
                 if not compare_java_files(method_path, snippet_path):
                     not_different_paths.append(snippet_path)
+                else:
+                    different_paths.append(snippet_path)
 
-    return not_different_paths
+    return not_different_paths, different_paths
