@@ -7,7 +7,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from readability_preprocessing.extractors.diff_extractor import compare_to_methods
+from readability_preprocessing.extractors.diff_extractor import compare_to_folder
 from readability_preprocessing.extractors.sampled_extractor import extract_sampled
 from readability_preprocessing.sampling.survey_crafting import SurveyCrafter
 from src.readability_preprocessing.dataset.dataset_combiner import combine_datasets
@@ -426,8 +426,14 @@ def _set_up_arg_parser() -> ArgumentParser:
         "-i",
         required=True,
         type=str,
-        nargs="+",
         help="Path to the folder containing the stratas (with rdhs and methods)."
+    )
+    extract_diff_parser.add_argument(
+        "--output",
+        "-o",
+        required=False,
+        type=str,
+        help="Path to the folder where the diffs should be stored."
     )
     extract_diff_parser.add_argument(
         "--methods-dir-name",
@@ -705,24 +711,17 @@ def _run_extract_diff(parsed_args: Any) -> None:
     :return: None
     """
     input_dir = parsed_args.input
+    output_dir = parsed_args.output
     methods_dir_name = parsed_args.methods_dir_name
 
     # Log the arguments
     logging.info(f"Input directory: {input_dir}")
+    logging.info(f"Output directory: {output_dir}")
     logging.info(f"Methods directory name: {methods_dir_name}")
 
     # Extract the diffs
-    no_diff_files, diff_files = compare_to_methods(input_path=input_dir,
-                                                   methods_dir_name=methods_dir_name)
-
-    # Log the results
-    logging.info("The following files are not different from their original methods:")
-    for file in no_diff_files:
-        logging.info(file)
-
-    percentage = len(no_diff_files) / (len(no_diff_files) + len(diff_files)) * 100
-    logging.info(f"{percentage}% of the files are not different from their original "
-                 f"methods.")
+    compare_to_folder(input_path=input_dir, output_path=output_dir,
+                      methods_dir_name=methods_dir_name)
 
 
 def main(args: list[str]) -> int:

@@ -178,6 +178,7 @@ class TestRunMain(DirTest):
         class MockParsedArgs:
             def __init__(self):
                 self.input = EXTRACTED_2_DIR
+                self.output = None
                 self.methods_dir_name = "methods"
 
         parsed_args = MockParsedArgs()

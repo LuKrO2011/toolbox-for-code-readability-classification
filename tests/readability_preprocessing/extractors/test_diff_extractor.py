@@ -1,9 +1,10 @@
+import os
 from pathlib import Path
 
 from readability_preprocessing.extractors.diff_extractor import compare_java_files, \
-    compare_to_methods
+    compare_to_folder, get_diff_paths
 from tests.readability_preprocessing.utils.utils import DIFF_EXTRACTOR_DIR, \
-    EXTRACTED_2_DIR
+    EXTRACTED_2_DIR, DirTest, assert_lines_equal
 
 
 class TestCompareJavaFiles:
@@ -51,11 +52,22 @@ class TestCompareJavaFiles:
         assert has_diff is False
 
 
-class TestCompareMethods:
+def test_get_diff_paths():
+    diff_paths, not_diff_paths = get_diff_paths(input_path=EXTRACTED_2_DIR)
+    assert len(not_diff_paths) == 1
+    assert not_diff_paths[0] == Path(
+        "res/extracted_2/stratum_0/comments_remove/flink_AbstractStreamOperatorV2.java_snapshotState.java")
+    assert len(diff_paths) == 3
+
+
+class TestCompareToFolder(DirTest):
 
     def test_compare_to_methods(self):
-        no_diff_files, diff_files = compare_to_methods(input_path=EXTRACTED_2_DIR)
-        assert len(no_diff_files) == 1
-        assert no_diff_files[0] == Path(
-            "res/extracted_2/stratum_0/comments_remove/flink_AbstractStreamOperatorV2.java_snapshotState.java")
-        assert len(diff_files) == 3
+        compare_to_folder(input_path=EXTRACTED_2_DIR, output_path=self.output_dir)
+
+        assert len(os.listdir(self.output_dir)) == 2
+        assert "no_diff.txt" in os.listdir(self.output_dir)
+        assert "diff.txt" in os.listdir(self.output_dir)
+        assert_lines_equal(os.path.join(self.output_dir, "diff.txt"), 3)
+        assert_lines_equal(os.path.join(self.output_dir, "no_diff.txt"), 1)
+

@@ -1,4 +1,6 @@
 import difflib
+import logging
+import os
 from pathlib import Path
 from typing import List
 
@@ -144,21 +146,20 @@ def _load(input_path: Path, methods_dir_name: str) -> List[Stratum]:
     return stratas
 
 
-def compare_to_methods(input_path: Path,
-                       methods_dir_name: str = "methods") -> tuple[
+def get_diff_paths(input_path: Path, methods_dir_name: str = "methods") -> tuple[
     list[Path], list[Path]]:
     """
+    Get the paths of the files that are different from their original methods and the
+    paths of the files that are not different from their original methods.
     The input path consists of stratas. In each stratum, there are rdh folders.
     In reach rdh folder each method is compared to the corresponding method in the
     "methods"-rdh folder.
     :param input_path: The path to the input directory (stratas)
     :param methods_dir_name: The name of the directory containing the methods
-    :return: The paths to the methods that are not different and the paths to the
-    methods that are different
+    :return: The paths of the different and not different files
     """
     stratas = _load(input_path, methods_dir_name)
 
-    # Get the paths to the methods that are not different
     not_different_paths = []
     different_paths = []
     for stratum in stratas:
@@ -173,4 +174,45 @@ def compare_to_methods(input_path: Path,
                 else:
                     different_paths.append(snippet_path)
 
-    return not_different_paths, different_paths
+    return different_paths, not_different_paths
+
+
+def compare_to_folder(input_path: Path,
+                      output_path: Path | None = None,
+                      methods_dir_name: str = "methods") -> None:
+    """
+    Compare the files of all rdhs in the stratas of the input directory to the files in
+    the methods directory.
+    Stores the results in two txt files if an output directory is specified.
+    :param input_path: The path to the input directory (stratas)
+    :param output_path: The path to the output directory
+    :param methods_dir_name: The name of the directory containing the methods
+    :return: None
+    """
+    different_paths, not_different_paths = get_diff_paths(input_path, methods_dir_name)
+
+    # Log the results
+    logging.info("The following files are not different from their original methods:")
+    for file in not_different_paths:
+        logging.info(file)
+
+    percentage = len(not_different_paths) / (
+        len(not_different_paths) + len(different_paths)) * 100
+    logging.info(f"{percentage}% of the files are not different from their original "
+                 f"methods.")
+
+    # Create the output directory, if it does not exist
+    if output_path is not None:
+        if not os.path.isdir(output_path):
+            os.makedirs(output_path)
+
+        # Store the results in two txt files
+        no_diff_file = output_path / Path("no_diff.txt")
+        with open(no_diff_file, "w") as f:
+            for file in not_different_paths:
+                f.write(f"{file}\n")
+
+        diff_file = output_path / Path("diff.txt")
+        with open(diff_file, "w") as f:
+            for file in different_paths:
+                f.write(f"{file}\n")
