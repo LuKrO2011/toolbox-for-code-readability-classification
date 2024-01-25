@@ -257,20 +257,8 @@ def compare_to_folder(input_path: Path,
     logging.info(f"{percentage}% of the files are not different from their original "
                  f"methods.")
 
-    # Group the snippets by their strata
-    strata_not_different = {}
-    for snippet in not_different:
-        stratum_name = snippet.stratum.name
-        if stratum_name not in strata_not_different:
-            strata_not_different[stratum_name] = []
-        strata_not_different[stratum_name].append(snippet)
-
-    strata_different = {}
-    for snippet in different:
-        stratum_name = snippet.stratum.name
-        if stratum_name not in strata_different:
-            strata_different[stratum_name] = []
-        strata_different[stratum_name].append(snippet)
+    strata_not_different = _group_by_stratum(not_different)
+    strata_different = _group_by_stratum(different)
 
     # Log the results for each stratum
     for stratum_name in strata_not_different:
@@ -298,3 +286,18 @@ def compare_to_folder(input_path: Path,
         with open(diff_file, "w") as f:
             for snippet in different:
                 f.write(f"{snippet.get_path(input_path)}\n")
+
+
+def _group_by_stratum(snippets: list[Snippet]) -> dict[str, list[Snippet]]:
+    """
+    Group the snippets by their strata.
+    :param snippets: The snippets that are not different from their original
+    :return: The snippets grouped by their strata
+    """
+    grouped_snippets = {}
+    for snippet in snippets:
+        stratum_name = snippet.stratum.name
+        if stratum_name not in grouped_snippets:
+            grouped_snippets[stratum_name] = []
+        grouped_snippets[stratum_name].append(snippet)
+    return grouped_snippets
