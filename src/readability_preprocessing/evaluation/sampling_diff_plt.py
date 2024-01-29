@@ -15,22 +15,23 @@ def generate_bar_chart(data: list) -> None:
     not_different = [entry["not_different_rel"] for entry in data]
 
     # Create a bar chart for 'different' cases
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(10, 8))  # Increase the height of the plot
     plt.bar(strata_labels, not_different, color='lightcoral', edgecolor='black')
 
     # Adding labels, title, and legend
-    plt.xlabel('Stratum')
+    plt.xlabel('Stratum and RDH')
     plt.ylabel('Relative Frequency')
-    plt.title('Relative Frequency of Not Different Cases')
+    plt.title("Relative Frequency of 'Not Different' Cases Compared To 'None'")
 
-    # Display the percentage values on top of the bars
+    # Display the percentage values on top of the bars with smaller font size
     for i, v in enumerate(not_different):
-        plt.text(i, v, f'{v:.2%}', ha='center', va='bottom', color='black',
-                 fontweight='bold')
+        plt.text(i, v, f'{v:.1%}', ha='center', va='bottom', color='black',
+                 fontweight='bold', fontsize=6)
 
     # Show the plot
     plt.tight_layout()
     plt.xticks(rotation=45, ha='right')  # Rotate x-axis labels for better readability
+    plt.subplots_adjust(bottom=0.3)  # Increase space at the bottom
     plt.show()
 
 
