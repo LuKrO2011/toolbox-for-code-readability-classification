@@ -255,7 +255,7 @@ class Statistic:
         :return: The statistic as a json.
         """
         return {
-            "stratum": self.stratum,
+            "stratum": self.stratum,  # Can also be the name of the rdh
             "total": self.different + self.not_different,
             "not_different_abs": self.not_different,
             "different_abs": self.different,
