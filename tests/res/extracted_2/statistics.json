@@ -38,5 +38,37 @@
     "different_abs": 1,
     "not_different_rel": 0.0,
     "different_rel": 1.0
+  },
+  {
+    "stratum": "stratum0/commentsRemove",
+    "total": 1,
+    "not_different_abs": 1,
+    "different_abs": 0,
+    "not_different_rel": 1.0,
+    "different_rel": 0.0
+  },
+  {
+    "stratum": "stratum1/commentsRemove",
+    "total": 1,
+    "not_different_abs": 0,
+    "different_abs": 1,
+    "not_different_rel": 0.0,
+    "different_rel": 1.0
+  },
+  {
+    "stratum": "stratum2/commentsRemove",
+    "total": 1,
+    "not_different_abs": 0,
+    "different_abs": 1,
+    "not_different_rel": 0.0,
+    "different_rel": 1.0
+  },
+  {
+    "stratum": "stratum3/commentsRemove",
+    "total": 1,
+    "not_different_abs": 0,
+    "different_abs": 1,
+    "not_different_rel": 0.0,
+    "different_rel": 1.0
   }
 ]

@@ -341,6 +341,52 @@ def _group_by_stratum(snippets: list[Snippet], strata_names: list[str] = None) -
     return grouped_snippets
 
 
+def _group_by_rdh(stratas: dict[str, list[Snippet]], rdh_names: list[str] = None) -> \
+    dict[str, dict[str, list[Snippet]]]:
+    """
+    Group the snippets (grouped by their strata) additionally by their rdhs.
+    :param stratas: The snippets grouped by their strata
+    :param rdh_names: The names of the rdhs
+    :return: The snippets grouped by stratas and rdhs.
+    """
+    grouped_snippets = {}
+    for stratum in stratas:
+        if stratum not in grouped_snippets:
+            grouped_snippets[stratum] = {}
+        for snippet in stratas[stratum]:
+            if snippet.rdh.name not in grouped_snippets[stratum]:
+                grouped_snippets[stratum][snippet.rdh.name] = []
+            grouped_snippets[stratum][snippet.rdh.name].append(snippet)
+
+    if rdh_names is not None:
+        for stratum in grouped_snippets:
+            for rdh in rdh_names:
+                if rdh not in grouped_snippets[stratum]:
+                    grouped_snippets[stratum][rdh] = []
+
+    return grouped_snippets
+
+
+def _create_rdh_statistics(different: dict[str, dict[str, list[Snippet]]],
+                           not_different: dict[str, dict[str, list[Snippet]]]) -> \
+    list[Statistic]:
+    """
+    Create a list of statistics for each rdh in each stratum.
+    :param different: The snippets that are different from their original
+    :param not_different: The snippets that are not different from their original
+    :return: A list of statistics for each rdh in each stratum.
+    """
+    statistics = []
+    for stratum in different:
+        for rdh in different[stratum]:
+            statistics.append(
+                Statistic(f"{stratum}/{rdh}", len(different[stratum][rdh]),
+                          len(not_different[stratum][rdh])))
+
+    statistics.sort(key=lambda x: x.stratum)
+    return statistics
+
+
 def compare_to_folder(input_path: Path,
                       output_path: Path | None = None,
                       methods_dir_name: str = "methods") -> None:
@@ -369,6 +415,13 @@ def compare_to_folder(input_path: Path,
     s_not_different = _group_by_stratum(not_different, strata_names)
     s_different = _group_by_stratum(different, strata_names)
     statistics += _create_statistics(s_different, s_not_different)
+
+    # Create statistics for each rdh
+    rdh_names = list(
+        set([snippet.rdh.name for snippet in different + not_different]))
+    rdh_not_different = _group_by_rdh(s_not_different, rdh_names)
+    rdh_different = _group_by_rdh(s_different, rdh_names)
+    statistics += _create_rdh_statistics(rdh_different, rdh_not_different)
 
     # Log the statistics
     logging.info("The following statistics were calculated:")
