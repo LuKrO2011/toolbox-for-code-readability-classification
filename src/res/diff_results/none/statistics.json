@@ -5,7 +5,8 @@
     "not_different_abs": 544,
     "different_abs": 2563,
     "not_different_rel": 0.17508850981654328,
-    "different_rel": 0.8249114901834567
+    "different_rel": 0.8249114901834567,
+    "sub_statistics": []
   },
   {
     "stratum": "stratum0",
@@ -13,7 +14,90 @@
     "not_different_abs": 233,
     "different_abs": 584,
     "not_different_rel": 0.28518971848225216,
-    "different_rel": 0.7148102815177478
+    "different_rel": 0.7148102815177478,
+    "sub_statistics": [
+      {
+        "stratum": "all8",
+        "total": 92,
+        "not_different_abs": 0,
+        "different_abs": 92,
+        "not_different_rel": 0.0,
+        "different_rel": 1.0,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "commentsRemove",
+        "total": 98,
+        "not_different_abs": 3,
+        "different_abs": 95,
+        "not_different_rel": 0.030612244897959183,
+        "different_rel": 0.9693877551020408,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "newlineInsteadOfSpace",
+        "total": 98,
+        "not_different_abs": 35,
+        "different_abs": 63,
+        "not_different_rel": 0.35714285714285715,
+        "different_rel": 0.6428571428571429,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "newlinesFew",
+        "total": 94,
+        "not_different_abs": 22,
+        "different_abs": 72,
+        "not_different_rel": 0.23404255319148937,
+        "different_rel": 0.7659574468085106,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "newlinesMany",
+        "total": 98,
+        "not_different_abs": 41,
+        "different_abs": 57,
+        "not_different_rel": 0.41836734693877553,
+        "different_rel": 0.5816326530612245,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "realistic",
+        "total": 68,
+        "not_different_abs": 43,
+        "different_abs": 25,
+        "not_different_rel": 0.6323529411764706,
+        "different_rel": 0.36764705882352944,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "rename",
+        "total": 73,
+        "not_different_abs": 59,
+        "different_abs": 14,
+        "not_different_rel": 0.8082191780821918,
+        "different_rel": 0.1917808219178082,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "spacesMany",
+        "total": 98,
+        "not_different_abs": 8,
+        "different_abs": 90,
+        "not_different_rel": 0.08163265306122448,
+        "different_rel": 0.9183673469387755,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "tabs",
+        "total": 98,
+        "not_different_abs": 22,
+        "different_abs": 76,
+        "not_different_rel": 0.22448979591836735,
+        "different_rel": 0.7755102040816326,
+        "sub_statistics": []
+      }
+    ]
   },
   {
     "stratum": "stratum1",
@@ -21,7 +105,90 @@
     "not_different_abs": 19,
     "different_abs": 808,
     "not_different_rel": 0.022974607013301087,
-    "different_rel": 0.9770253929866989
+    "different_rel": 0.9770253929866989,
+    "sub_statistics": [
+      {
+        "stratum": "all8",
+        "total": 92,
+        "not_different_abs": 0,
+        "different_abs": 92,
+        "not_different_rel": 0.0,
+        "different_rel": 1.0,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "commentsRemove",
+        "total": 99,
+        "not_different_abs": 2,
+        "different_abs": 97,
+        "not_different_rel": 0.020202020202020204,
+        "different_rel": 0.9797979797979798,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "newlineInsteadOfSpace",
+        "total": 99,
+        "not_different_abs": 1,
+        "different_abs": 98,
+        "not_different_rel": 0.010101010101010102,
+        "different_rel": 0.98989898989899,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "newlinesFew",
+        "total": 90,
+        "not_different_abs": 1,
+        "different_abs": 89,
+        "not_different_rel": 0.011111111111111112,
+        "different_rel": 0.9888888888888889,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "newlinesMany",
+        "total": 99,
+        "not_different_abs": 1,
+        "different_abs": 98,
+        "not_different_rel": 0.010101010101010102,
+        "different_rel": 0.98989898989899,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "realistic",
+        "total": 72,
+        "not_different_abs": 7,
+        "different_abs": 65,
+        "not_different_rel": 0.09722222222222222,
+        "different_rel": 0.9027777777777778,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "rename",
+        "total": 78,
+        "not_different_abs": 6,
+        "different_abs": 72,
+        "not_different_rel": 0.07692307692307693,
+        "different_rel": 0.9230769230769231,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "spacesMany",
+        "total": 99,
+        "not_different_abs": 0,
+        "different_abs": 99,
+        "not_different_rel": 0.0,
+        "different_rel": 1.0,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "tabs",
+        "total": 99,
+        "not_different_abs": 1,
+        "different_abs": 98,
+        "not_different_rel": 0.010101010101010102,
+        "different_rel": 0.98989898989899,
+        "sub_statistics": []
+      }
+    ]
   },
   {
     "stratum": "stratum2",
@@ -29,7 +196,90 @@
     "not_different_abs": 192,
     "different_abs": 449,
     "not_different_rel": 0.2995319812792512,
-    "different_rel": 0.7004680187207488
+    "different_rel": 0.7004680187207488,
+    "sub_statistics": [
+      {
+        "stratum": "all8",
+        "total": 77,
+        "not_different_abs": 0,
+        "different_abs": 77,
+        "not_different_rel": 0.0,
+        "different_rel": 1.0,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "commentsRemove",
+        "total": 78,
+        "not_different_abs": 1,
+        "different_abs": 77,
+        "not_different_rel": 0.01282051282051282,
+        "different_rel": 0.9871794871794872,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "newlineInsteadOfSpace",
+        "total": 78,
+        "not_different_abs": 32,
+        "different_abs": 46,
+        "not_different_rel": 0.41025641025641024,
+        "different_rel": 0.5897435897435898,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "newlinesFew",
+        "total": 71,
+        "not_different_abs": 21,
+        "different_abs": 50,
+        "not_different_rel": 0.29577464788732394,
+        "different_rel": 0.704225352112676,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "newlinesMany",
+        "total": 78,
+        "not_different_abs": 36,
+        "different_abs": 42,
+        "not_different_rel": 0.46153846153846156,
+        "different_rel": 0.5384615384615384,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "realistic",
+        "total": 55,
+        "not_different_abs": 41,
+        "different_abs": 14,
+        "not_different_rel": 0.7454545454545455,
+        "different_rel": 0.2545454545454545,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "rename",
+        "total": 48,
+        "not_different_abs": 42,
+        "different_abs": 6,
+        "not_different_rel": 0.875,
+        "different_rel": 0.125,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "spacesMany",
+        "total": 78,
+        "not_different_abs": 6,
+        "different_abs": 72,
+        "not_different_rel": 0.07692307692307693,
+        "different_rel": 0.9230769230769231,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "tabs",
+        "total": 78,
+        "not_different_abs": 13,
+        "different_abs": 65,
+        "not_different_rel": 0.16666666666666666,
+        "different_rel": 0.8333333333333334,
+        "sub_statistics": []
+      }
+    ]
   },
   {
     "stratum": "stratum3",
@@ -37,294 +287,89 @@
     "not_different_abs": 100,
     "different_abs": 722,
     "not_different_rel": 0.12165450121654502,
-    "different_rel": 0.878345498783455
-  },
-  {
-    "stratum": "stratum0/all8",
-    "total": 92,
-    "not_different_abs": 0,
-    "different_abs": 92,
-    "not_different_rel": 0.0,
-    "different_rel": 1.0
-  },
-  {
-    "stratum": "stratum0/commentsRemove",
-    "total": 98,
-    "not_different_abs": 3,
-    "different_abs": 95,
-    "not_different_rel": 0.030612244897959183,
-    "different_rel": 0.9693877551020408
-  },
-  {
-    "stratum": "stratum0/newlineInsteadOfSpace",
-    "total": 98,
-    "not_different_abs": 35,
-    "different_abs": 63,
-    "not_different_rel": 0.35714285714285715,
-    "different_rel": 0.6428571428571429
-  },
-  {
-    "stratum": "stratum0/newlinesFew",
-    "total": 94,
-    "not_different_abs": 22,
-    "different_abs": 72,
-    "not_different_rel": 0.23404255319148937,
-    "different_rel": 0.7659574468085106
-  },
-  {
-    "stratum": "stratum0/newlinesMany",
-    "total": 98,
-    "not_different_abs": 41,
-    "different_abs": 57,
-    "not_different_rel": 0.41836734693877553,
-    "different_rel": 0.5816326530612245
-  },
-  {
-    "stratum": "stratum0/realistic",
-    "total": 68,
-    "not_different_abs": 43,
-    "different_abs": 25,
-    "not_different_rel": 0.6323529411764706,
-    "different_rel": 0.36764705882352944
-  },
-  {
-    "stratum": "stratum0/rename",
-    "total": 73,
-    "not_different_abs": 59,
-    "different_abs": 14,
-    "not_different_rel": 0.8082191780821918,
-    "different_rel": 0.1917808219178082
-  },
-  {
-    "stratum": "stratum0/spacesMany",
-    "total": 98,
-    "not_different_abs": 8,
-    "different_abs": 90,
-    "not_different_rel": 0.08163265306122448,
-    "different_rel": 0.9183673469387755
-  },
-  {
-    "stratum": "stratum0/tabs",
-    "total": 98,
-    "not_different_abs": 22,
-    "different_abs": 76,
-    "not_different_rel": 0.22448979591836735,
-    "different_rel": 0.7755102040816326
-  },
-  {
-    "stratum": "stratum1/all8",
-    "total": 92,
-    "not_different_abs": 0,
-    "different_abs": 92,
-    "not_different_rel": 0.0,
-    "different_rel": 1.0
-  },
-  {
-    "stratum": "stratum1/commentsRemove",
-    "total": 99,
-    "not_different_abs": 2,
-    "different_abs": 97,
-    "not_different_rel": 0.020202020202020204,
-    "different_rel": 0.9797979797979798
-  },
-  {
-    "stratum": "stratum1/newlineInsteadOfSpace",
-    "total": 99,
-    "not_different_abs": 1,
-    "different_abs": 98,
-    "not_different_rel": 0.010101010101010102,
-    "different_rel": 0.98989898989899
-  },
-  {
-    "stratum": "stratum1/newlinesFew",
-    "total": 90,
-    "not_different_abs": 1,
-    "different_abs": 89,
-    "not_different_rel": 0.011111111111111112,
-    "different_rel": 0.9888888888888889
-  },
-  {
-    "stratum": "stratum1/newlinesMany",
-    "total": 99,
-    "not_different_abs": 1,
-    "different_abs": 98,
-    "not_different_rel": 0.010101010101010102,
-    "different_rel": 0.98989898989899
-  },
-  {
-    "stratum": "stratum1/realistic",
-    "total": 72,
-    "not_different_abs": 7,
-    "different_abs": 65,
-    "not_different_rel": 0.09722222222222222,
-    "different_rel": 0.9027777777777778
-  },
-  {
-    "stratum": "stratum1/rename",
-    "total": 78,
-    "not_different_abs": 6,
-    "different_abs": 72,
-    "not_different_rel": 0.07692307692307693,
-    "different_rel": 0.9230769230769231
-  },
-  {
-    "stratum": "stratum1/spacesMany",
-    "total": 99,
-    "not_different_abs": 0,
-    "different_abs": 99,
-    "not_different_rel": 0.0,
-    "different_rel": 1.0
-  },
-  {
-    "stratum": "stratum1/tabs",
-    "total": 99,
-    "not_different_abs": 1,
-    "different_abs": 98,
-    "not_different_rel": 0.010101010101010102,
-    "different_rel": 0.98989898989899
-  },
-  {
-    "stratum": "stratum2/all8",
-    "total": 77,
-    "not_different_abs": 0,
-    "different_abs": 77,
-    "not_different_rel": 0.0,
-    "different_rel": 1.0
-  },
-  {
-    "stratum": "stratum2/commentsRemove",
-    "total": 78,
-    "not_different_abs": 1,
-    "different_abs": 77,
-    "not_different_rel": 0.01282051282051282,
-    "different_rel": 0.9871794871794872
-  },
-  {
-    "stratum": "stratum2/newlineInsteadOfSpace",
-    "total": 78,
-    "not_different_abs": 32,
-    "different_abs": 46,
-    "not_different_rel": 0.41025641025641024,
-    "different_rel": 0.5897435897435898
-  },
-  {
-    "stratum": "stratum2/newlinesFew",
-    "total": 71,
-    "not_different_abs": 21,
-    "different_abs": 50,
-    "not_different_rel": 0.29577464788732394,
-    "different_rel": 0.704225352112676
-  },
-  {
-    "stratum": "stratum2/newlinesMany",
-    "total": 78,
-    "not_different_abs": 36,
-    "different_abs": 42,
-    "not_different_rel": 0.46153846153846156,
-    "different_rel": 0.5384615384615384
-  },
-  {
-    "stratum": "stratum2/realistic",
-    "total": 55,
-    "not_different_abs": 41,
-    "different_abs": 14,
-    "not_different_rel": 0.7454545454545455,
-    "different_rel": 0.2545454545454545
-  },
-  {
-    "stratum": "stratum2/rename",
-    "total": 48,
-    "not_different_abs": 42,
-    "different_abs": 6,
-    "not_different_rel": 0.875,
-    "different_rel": 0.125
-  },
-  {
-    "stratum": "stratum2/spacesMany",
-    "total": 78,
-    "not_different_abs": 6,
-    "different_abs": 72,
-    "not_different_rel": 0.07692307692307693,
-    "different_rel": 0.9230769230769231
-  },
-  {
-    "stratum": "stratum2/tabs",
-    "total": 78,
-    "not_different_abs": 13,
-    "different_abs": 65,
-    "not_different_rel": 0.16666666666666666,
-    "different_rel": 0.8333333333333334
-  },
-  {
-    "stratum": "stratum3/all8",
-    "total": 92,
-    "not_different_abs": 0,
-    "different_abs": 92,
-    "not_different_rel": 0.0,
-    "different_rel": 1.0
-  },
-  {
-    "stratum": "stratum3/commentsRemove",
-    "total": 100,
-    "not_different_abs": 1,
-    "different_abs": 99,
-    "not_different_rel": 0.01,
-    "different_rel": 0.99
-  },
-  {
-    "stratum": "stratum3/newlineInsteadOfSpace",
-    "total": 100,
-    "not_different_abs": 6,
-    "different_abs": 94,
-    "not_different_rel": 0.06,
-    "different_rel": 0.94
-  },
-  {
-    "stratum": "stratum3/newlinesFew",
-    "total": 90,
-    "not_different_abs": 6,
-    "different_abs": 84,
-    "not_different_rel": 0.06666666666666667,
-    "different_rel": 0.9333333333333333
-  },
-  {
-    "stratum": "stratum3/newlinesMany",
-    "total": 100,
-    "not_different_abs": 16,
-    "different_abs": 84,
-    "not_different_rel": 0.16,
-    "different_rel": 0.84
-  },
-  {
-    "stratum": "stratum3/realistic",
-    "total": 71,
-    "not_different_abs": 24,
-    "different_abs": 47,
-    "not_different_rel": 0.3380281690140845,
-    "different_rel": 0.6619718309859155
-  },
-  {
-    "stratum": "stratum3/rename",
-    "total": 69,
-    "not_different_abs": 33,
-    "different_abs": 36,
-    "not_different_rel": 0.4782608695652174,
-    "different_rel": 0.5217391304347826
-  },
-  {
-    "stratum": "stratum3/spacesMany",
-    "total": 100,
-    "not_different_abs": 1,
-    "different_abs": 99,
-    "not_different_rel": 0.01,
-    "different_rel": 0.99
-  },
-  {
-    "stratum": "stratum3/tabs",
-    "total": 100,
-    "not_different_abs": 13,
-    "different_abs": 87,
-    "not_different_rel": 0.13,
-    "different_rel": 0.87
+    "different_rel": 0.878345498783455,
+    "sub_statistics": [
+      {
+        "stratum": "all8",
+        "total": 92,
+        "not_different_abs": 0,
+        "different_abs": 92,
+        "not_different_rel": 0.0,
+        "different_rel": 1.0,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "commentsRemove",
+        "total": 100,
+        "not_different_abs": 1,
+        "different_abs": 99,
+        "not_different_rel": 0.01,
+        "different_rel": 0.99,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "newlineInsteadOfSpace",
+        "total": 100,
+        "not_different_abs": 6,
+        "different_abs": 94,
+        "not_different_rel": 0.06,
+        "different_rel": 0.94,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "newlinesFew",
+        "total": 90,
+        "not_different_abs": 6,
+        "different_abs": 84,
+        "not_different_rel": 0.06666666666666667,
+        "different_rel": 0.9333333333333333,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "newlinesMany",
+        "total": 100,
+        "not_different_abs": 16,
+        "different_abs": 84,
+        "not_different_rel": 0.16,
+        "different_rel": 0.84,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "realistic",
+        "total": 71,
+        "not_different_abs": 24,
+        "different_abs": 47,
+        "not_different_rel": 0.3380281690140845,
+        "different_rel": 0.6619718309859155,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "rename",
+        "total": 69,
+        "not_different_abs": 33,
+        "different_abs": 36,
+        "not_different_rel": 0.4782608695652174,
+        "different_rel": 0.5217391304347826,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "spacesMany",
+        "total": 100,
+        "not_different_abs": 1,
+        "different_abs": 99,
+        "not_different_rel": 0.01,
+        "different_rel": 0.99,
+        "sub_statistics": []
+      },
+      {
+        "stratum": "tabs",
+        "total": 100,
+        "not_different_abs": 13,
+        "different_abs": 87,
+        "not_different_rel": 0.13,
+        "different_rel": 0.87,
+        "sub_statistics": []
+      }
+    ]
   }
 ]

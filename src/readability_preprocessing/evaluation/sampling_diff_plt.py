@@ -4,7 +4,7 @@ from readability_preprocessing.evaluation.utils import NONE_DIFF_RESULTS_DIR, \
     load_json_file
 
 
-def generate_bar_chart(data: list) -> None:
+def generate_bar_chart(data: list) -> plt:
     """
     Generates a bar chart for the relative frequency of 'not_different' cases overall,
     for each stratum, and for each stratum and rdh.
@@ -26,15 +26,21 @@ def generate_bar_chart(data: list) -> None:
     # Display the percentage values on top of the bars with smaller font size
     for i, v in enumerate(not_different):
         plt.text(i, v, f'{v:.1%}', ha='center', va='bottom', color='black',
-                 fontweight='bold', fontsize=6)
+                 fontweight='bold', fontsize=10)
+
+    plt.xticks(rotation=45, ha='right')  # Rotate x-axis labels for better readability
+    plt.subplots_adjust(bottom=0.2)  # Increase space at the bottom
 
     # Show the plot
     plt.tight_layout()
-    plt.xticks(rotation=45, ha='right')  # Rotate x-axis labels for better readability
-    plt.subplots_adjust(bottom=0.3)  # Increase space at the bottom
-    plt.show()
+    return plt
 
 
 diff_dir = NONE_DIFF_RESULTS_DIR / "statistics.json"
 diff_data = load_json_file(diff_dir)
-generate_bar_chart(diff_data)
+plt = generate_bar_chart(diff_data)
+plt.show()
+
+for stratum in diff_data[1:]:
+    plt = generate_bar_chart(stratum["sub_statistics"])
+    plt.show()

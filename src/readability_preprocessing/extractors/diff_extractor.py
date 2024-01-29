@@ -244,6 +244,7 @@ class Statistic:
         :param not_different: The number of snippets that are not different from their
         original
         """
+        self.sub_statistics = []
         self.stratum = stratum
         self.different = different
         self.not_different = not_different
@@ -261,10 +262,20 @@ class Statistic:
             "not_different_rel": self.not_different / (
                 self.different + self.not_different),
             "different_rel": self.different / (self.different + self.not_different),
+            "sub_statistics": [sub_statistic.json() for sub_statistic in
+                               self.sub_statistics]
         }
 
+    def add_sub_statistic(self, sub_statistic):
+        """
+        Add a sub-statistic to the statistic.
+        :param sub_statistic: The sub-statistic to add.
+        :return: None
+        """
+        self.sub_statistics.append(sub_statistic)
 
-def _store_statistics(output_path: Path, statistics: list[Statistic]) -> None:
+
+def _store_statistics(output_path: Path, statistics: dict[str, Statistic]) -> None:
     """
     Store the statistics in a json file.
     :param output_path: The path to the output directory
@@ -273,22 +284,22 @@ def _store_statistics(output_path: Path, statistics: list[Statistic]) -> None:
     """
     statistics_file = output_path / Path("statistics.json")
     with open(statistics_file, "w") as f:
-        json.dump([statistic.json() for statistic in statistics], f, indent=2)
+        json.dump([statistic.json() for statistic in statistics.values()], f, indent=2)
 
 
-def _create_statistics(different: dict[str, list[Snippet]],
-                       not_different: dict[str, list[Snippet]]) -> list[Statistic]:
+def _add_stratum_statistics(different: dict[str, list[Snippet]],
+                            not_different: dict[str, list[Snippet]],
+                            statistics: dict[str, Statistic]) -> dict[str, Statistic]:
     """
-    Create a list of statistics.
+    Add a list of statistics for each stratum to the statistics.
     :param different: The snippets that are different from their original
     :param not_different: The snippets that are not different from their original
-    :return: The snippets that are not different from their original methods
+    :param statistics: The statistics without the statistics for each stratum
+    :return: The statistics with the statistics for each stratum
     """
-    statistics = []
     for stratum in different:
-        statistics.append(Statistic(stratum, len(different[stratum]),
-                                    len(not_different[stratum])))
-    statistics.sort(key=lambda x: x.stratum)
+        statistics[stratum] = Statistic(stratum, len(different[stratum]),
+                                        len(not_different[stratum]))
     return statistics
 
 
@@ -367,23 +378,23 @@ def _group_by_rdh(stratas: dict[str, list[Snippet]], rdh_names: list[str] = None
     return grouped_snippets
 
 
-def _create_rdh_statistics(different: dict[str, dict[str, list[Snippet]]],
-                           not_different: dict[str, dict[str, list[Snippet]]]) -> \
-    list[Statistic]:
+def _add_rdh_sub_statistics(statistics: dict[str, Statistic],
+                            different: dict[str, dict[str, list[Snippet]]],
+                            not_different: dict[str, dict[str, list[Snippet]]]) -> \
+    dict[str, Statistic]:
     """
-    Create a list of statistics for each rdh in each stratum.
+    Add a list of statistics for each rdh to the statistic of the stratum.
     :param different: The snippets that are different from their original
     :param not_different: The snippets that are not different from their original
-    :return: A list of statistics for each rdh in each stratum.
+    :param statistics: The statistics without the sub-statistics for each rdh
+    :return: The statistics with the sub-statistics for each rdh
     """
-    statistics = []
     for stratum in different:
         for rdh in different[stratum]:
-            statistics.append(
-                Statistic(f"{stratum}/{rdh}", len(different[stratum][rdh]),
+            statistics[stratum].add_sub_statistic(
+                Statistic(rdh, len(different[stratum][rdh]),
                           len(not_different[stratum][rdh])))
 
-    statistics.sort(key=lambda x: x.stratum)
     return statistics
 
 
@@ -407,25 +418,25 @@ def compare_to_folder(input_path: Path,
         logging.info(snippet.get_path(input_path))
 
     # Create overall statistics
-    statistics = [Statistic("overall", len(different), len(not_different))]
+    statistics = {"overall": Statistic("overall", len(different), len(not_different))}
 
     # Create statistics for each stratum
     strata_names = list(
         set([snippet.stratum.name for snippet in different + not_different]))
     s_not_different = _group_by_stratum(not_different, strata_names)
     s_different = _group_by_stratum(different, strata_names)
-    statistics += _create_statistics(s_different, s_not_different)
+    statistics = _add_stratum_statistics(s_different, s_not_different, statistics)
 
     # Create statistics for each rdh
     rdh_names = list(
         set([snippet.rdh.name for snippet in different + not_different]))
     rdh_not_different = _group_by_rdh(s_not_different, rdh_names)
     rdh_different = _group_by_rdh(s_different, rdh_names)
-    statistics += _create_rdh_statistics(rdh_different, rdh_not_different)
+    statistics = _add_rdh_sub_statistics(statistics, rdh_different, rdh_not_different)
 
     # Log the statistics
     logging.info("The following statistics were calculated:")
-    for statistic in statistics:
+    for statistic in statistics.values():
         logging.info(statistic.json())
 
     if output_path is not None:
