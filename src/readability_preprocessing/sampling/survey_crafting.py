@@ -1,6 +1,7 @@
 import logging
 import os
 import shutil
+from enum import Enum
 from pathlib import Path
 
 import numpy as np
@@ -14,6 +15,35 @@ default_sample_amount: dict[str, int] = {
     "stratum2": 5,
     "stratum3": 10,
 }
+
+default_key_to_int: dict[str, int] = {
+    "all8": 0,
+    "commentsRemove": 1,
+    "newlineInsteadOfSpace": 2,
+    "newlinesMany": 3,
+    "newlinesFew": 4,
+    "realistic": 5,
+    "rename": 6,
+    "spacesMany": 7,
+    "tabs": 8,
+    "none": 9,
+    "methods": 10,
+}
+
+default_int_to_key: dict[int, str] = {value: key for key, value in
+                                      default_key_to_int.items()}
+
+
+def permutation_matrix(start_idx: int = 0, matrix_size: int = 10) -> np.ndarray:
+    """
+    Create a permutation matrix of the given size.
+    :param start_idx: The index to start the permutation matrix at.
+    :param matrix_size: The size of the permutation matrix.
+    :return: The permutation matrix.
+    """
+    matrix = [[(i + start_idx, (i + j) % matrix_size) for j in range(matrix_size)]
+              for i in range(matrix_size)]
+    return np.array(matrix)
 
 
 class Snippet:
@@ -125,6 +155,35 @@ class Method:
                 not_diff.append(rdh)
         return not_diff
 
+    def pick_variant(self, variant: str | int) -> Snippet:
+        """
+        Obtain the variant of the method of the given variant.
+        :param variant: The variant name or index.
+        :return: The picked snippet.
+        """
+        if isinstance(variant, str):
+            if variant == "none":
+                return self.nomod
+            elif variant == "methods":
+                return self.original
+            else:
+                return self.rdhs[variant]
+
+        # variant is an int
+        return self.pick_variant(default_int_to_key[variant])
+
+
+def pick_snippet(methods: list[Method], index: int,
+                 variant: str | int) -> Snippet:
+    """
+    Obtain the variant of the method at the given index.
+    :param methods: The methods to sample from.
+    :param index: The index of the method.
+    :param variant: The variant of the method.
+    :return: The picked snippet.
+    """
+    return methods[index].pick_variant(variant)
+
 
 class Stratum:
     """
@@ -185,6 +244,8 @@ class SurveyCrafter:
                               default_sample_amount.copy())
         self.original_name = original_name
         self.nomod_name = nomod_name
+        self.num_stratas = None
+        self.num_rdhs = None
 
     def craft_surveys(self) -> None:
         """
@@ -199,23 +260,22 @@ class SurveyCrafter:
         for stratum in strata.values():
             logging.info(f"{stratum.name}: Number of methods: {len(stratum.methods)}")
 
-        stratas_with_methods = self.sample_methods(strata)
-        not_diff_snippets = []
-        for statum in stratas_with_methods.values():
-            for method in statum.methods:
-                not_diff_snippets += method.compare_to_nomod(Path(self.input_dir))
+        methods = self.sample_methods(strata)
+        no_mod_methods = []
+        for method in methods:
+            no_mod_methods += method.compare_to_nomod(Path(self.input_dir))
 
         # Log information about the not different snippets
         logging.info(
-            f"Strata: Number of not different snippets: {len(not_diff_snippets)}")
+            f"Strata: Number of not different snippets: {len(no_mod_methods)}")
 
         # TODO: Remove not diff and add new snippets
 
         # Create the surveys
-        surveys = self.craft_sheets(stratas_with_methods)
+        surveys = self.craft_sheets(methods)
 
         # Log information about the methods
-        for stratum in stratas_with_methods.values():
+        for stratum in methods.values():
             logging.info(f"{stratum.name}: Number of methods: {len(stratum.methods)}")
 
         # self._write_output(surveys)
@@ -227,7 +287,9 @@ class SurveyCrafter:
         """
         # Load the stratas and rdhs
         strata_names = self._load_stratas()
+        self.num_stratas = len(strata_names)
         rdh_names = self._load_rdhs(strata_names)
+        self.num_rdhs = len(rdh_names)
 
         # Convert the strats and rdhs to objects
         strata = {}
@@ -337,48 +399,45 @@ class SurveyCrafter:
                     os.path.join(self.output_dir, f"sheet_{i}", new_name),
                 )
 
-    def craft_sheets(self, strata: dict[str, Stratum]) -> list[Survey]:
+    def craft_sheets(self, methods: list[Method]) -> list[Survey]:
         """
         Craft the surveys from the given strata. Each survey contains only one variant
-        of each method. This is done as follows:
-        sheet0 = [stratum0_methods_0, stratum0_none_1, stratum0_rdh0_2, stratum0_rdh1_3
-        sheet1 = [stratum3_rdhx_x, stratum0_methods_1, stratum0_none_2, stratum0_rdh0_3
-        sheet2 = [stratum3_rdhx_x-1, stratum3_rdhx_x, stratum0_methods_2, stratum0_none_3
-        :param strata: The strata to sample from.
+        of each method.
+        :param methods: The methods to sample from.
         :return: The sampled surveys.
         """
-        # Create num_sheet surveys with different snippets according to the probs
         surveys = []
-        for i in range(self.num_sheets):
-            snippets = []
-            for j in range(self.snippets_per_sheet):
 
-                # Select a stratum, a rdh and a snippet
-                stratum = _select_stratum(strata)
-                rdh = _select_rdh(stratum.rdhs)
-                snippet = _select(rdh.snippets)
-
-                # Add the snippet to the list of snippets
-                snippets.append(snippet)
-                rdh.snippets.remove(snippet)
-
-                # If there are no more strata, stop
-                if len(strata) == 0:
-                    logging.info(f"Strata: No more strata left.")
-                    break
-
-            # Add the survey to the list of surveys
-            surveys.append(Survey(snippets))
-
-            # If there are no more strata, stop
-            if len(strata) == 0:
-                logging.info(f"Strata: No more strata left.")
-                break
+        # Craft the sheet parts: list of num_rdhs * num_rdhs
+        num_sheet_parts = (self.num_sheets * self.snippets_per_sheet) // self.num_rdhs
+        for i in range(num_sheet_parts):
+            surveys += self.craft_sheet_parts(methods, i)
 
         return surveys
 
+    def craft_sheet_parts(self, methods: list[Method], idx: int) -> list[list[Snippet]]:
+        """
+        Craft a part of the sheets using the given methods and permutations.
+        :param methods: The methods to sample from.
+        :param idx: The index of the part.
+        :return: The sampled snippets.
+        """
+        start_inx = idx * self.num_rdhs
+        # TODO: Extend permutation matrix to 20*10 instead of 20*20
+        permutations = permutation_matrix(start_inx, self.num_rdhs)
+        sheet_parts = []
+        for i in range(self.num_rdhs):
+            snippets = []
+            for j in range(self.num_rdhs):
+                method_idx, variant_idx = permutations[i, j]
+                snippet = pick_snippet(methods, method_idx, variant_idx)
+                snippets.append(snippet)
+            sheet_parts.append(snippets)
+
+        return sheet_parts
+
     def sample_methods(self, strata: dict[str, Stratum],
-                       sample_amount: dict[str, int] = None) -> dict[str, Stratum]:
+                       sample_amount: dict[str, int] = None) -> list[Method]:
         """
         Sample methods from the given rdh name.
         :param strata: The strata to sample from.
@@ -387,10 +446,7 @@ class SurveyCrafter:
         """
         # Initialize the sample amount
         sample_amount = (sample_amount or self.sample_amount.copy())
-
-        # Create empty sampled dict of strata
-        sampled = {stratum_name: Stratum(stratum_name, []) for stratum_name in
-                   strata.keys()}
+        sampled = []
 
         # Iterate over the strata and sample the methods
         for stratum in strata.values():
@@ -398,6 +454,6 @@ class SurveyCrafter:
             sampled_methods = []
             for i in range(sample_amount[stratum.name]):
                 sampled_methods.append(methods.pop(np.random.randint(len(methods))))
-            sampled[stratum.name].methods = sampled_methods
+            sampled += sampled_methods
 
         return sampled
