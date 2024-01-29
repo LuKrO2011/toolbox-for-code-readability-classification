@@ -1,9 +1,9 @@
-import json
 from pathlib import Path
 
 from matplotlib import pyplot as plt
 
-from readability_preprocessing.evaluation.utils import DEFAULT_SURVEY_DIR, SURVEYS_DIR
+from readability_preprocessing.evaluation.utils import DEFAULT_SURVEY_DIR, SURVEYS_DIR, \
+    load_json_file
 
 
 class Rate:
@@ -138,17 +138,6 @@ class Stratum:
         :return: None
         """
         self.rdhs[rdh.name] = rdh
-
-
-def load_json_file(file_path):
-    """
-    Load and parse JSON content from a file
-    :param file_path: The path to the JSON file
-    :return: A Python object parsed from the JSON file
-    """
-    with open(file_path, 'r') as file:
-        content = json.load(file)
-    return content
 
 
 def load_snippet_datas(input_path: Path = DEFAULT_SURVEY_DIR,

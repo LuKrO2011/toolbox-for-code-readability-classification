@@ -11,6 +11,9 @@ DEFAULT_REPOS_INPUT = PROJECT_DIR / "repos_with_latest_commit.json"
 SURVEYS_DIR = CURR_DIR / "../../res/surveys"
 DEFAULT_SURVEY_DIR = SURVEYS_DIR / "pilot_survey"
 
+DIFF_RESULTS_DIR = CURR_DIR / "../../res/diff_results"
+NONE_DIFF_RESULTS_DIR = DIFF_RESULTS_DIR / "none"
+
 
 def load_repos(input_path: Path = DEFAULT_REPOS_INPUT, top_k: int = None) -> dict:
     """
@@ -31,3 +34,14 @@ def load_repos(input_path: Path = DEFAULT_REPOS_INPUT, top_k: int = None) -> dic
         data = {repo.get('name'): repo for repo in data}
 
     return data
+
+
+def load_json_file(file_path):
+    """
+    Load and parse JSON content from a file
+    :param file_path: The path to the JSON file
+    :return: A Python object parsed from the JSON file
+    """
+    with open(file_path, 'r') as file:
+        content = json.load(file)
+    return content
