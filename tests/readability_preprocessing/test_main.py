@@ -169,6 +169,7 @@ class TestRunMain(DirTest):
                 self.sample_amount_path = SAMPLE_AMOUNT_FILE
                 self.original_name = "methods"
                 self.nomod_name = "none"
+                self.exclude_path = None
 
         parsed_args = MockParsedArgs()
 

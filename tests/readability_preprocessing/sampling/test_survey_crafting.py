@@ -171,7 +171,7 @@ class TestSurveyCrafting(DirTest):
 
         # Check that the output directory contains the correct number of files
         num_files_output = num_files(self.output_dir)
-        assert num_files_output == 9
+        assert num_files_output == 10
         num_files_sheet_0 = num_files(self.output_dir + "/sheet_0")
         assert num_files_sheet_0 == 3
         num_files_sheet_1 = num_files(self.output_dir + "/sheet_1")

@@ -130,3 +130,17 @@ def load_yaml_file(path: Path) -> dict[str, Any]:
     if dic is None:
         return {}
     return dic
+
+
+def load_txt_file(path: Path) -> List[str]:
+    """
+    Loads a txt file line by line to a list of strings.
+    :param path: The path to the txt file.
+    :return: Returns the loaded txt as list of strings.
+    """
+    # Read file
+    with open(path, "r") as file:
+        lines = file.readlines()
+
+    # Return list
+    return [line.strip() for line in lines]

@@ -7,13 +7,14 @@ from pathlib import Path
 import numpy as np
 
 from readability_preprocessing.extractors.diff_extractor import compare_java_files
-from readability_preprocessing.utils.utils import list_non_hidden, load_yaml_file
+from readability_preprocessing.utils.utils import list_non_hidden, load_yaml_file, \
+    load_txt_file
 
 default_sample_amount: dict[str, int] = {
-    "stratum0": 4,
-    "stratum1": 16,
-    "stratum2": 4,
-    "stratum3": 16,
+    "stratum0": 2,
+    "stratum1": 8,
+    "stratum2": 2,
+    "stratum3": 8,
 }
 
 
@@ -294,10 +295,11 @@ class SurveyCrafter:
     def __init__(self, input_dir: str,
                  output_dir: str,
                  snippets_per_sheet: int = 20,
-                 num_sheets: int = 20,
+                 num_sheets: int = 10,
                  sample_amount_path: Path = None,
                  original_name: str = "methods",
-                 nomod_name: str = "none"):
+                 nomod_name: str = "none",
+                 exclude_path: Path = None):
         """
         Initialize the survey crafter.
         :param input_dir: The input directory with the stratas, rdhs and snippets.
@@ -323,6 +325,11 @@ class SurveyCrafter:
             self.sample_amount = load_yaml_file(sample_amount_path)
         if self.sample_amount is None or len(self.sample_amount) == 0:
             self.sample_amount = default_sample_amount
+
+        # Load the exclude list
+        self.exclude: list[str] = []
+        if exclude_path is not None:
+            self.exclude = load_txt_file(exclude_path)
 
     def craft_surveys(self) -> None:
         """
@@ -568,7 +575,10 @@ class SurveyCrafter:
             methods = stratum.methods
             sampled_methods = []
             for i in range(sample_amount[stratum.name]):
-                sampled_methods.append(methods.pop(random.randint(0, len(methods) - 1)))
+                chosen = None
+                while chosen is None or self.in_excluded(chosen):
+                    chosen = methods.pop(random.randint(0, len(methods) - 1))
+                sampled_methods.append(chosen)
             sampled += sampled_methods
 
         return sampled
@@ -600,7 +610,8 @@ class SurveyCrafter:
     def _store_sampled_methods(self, methods: list[Method],
                                filename: str = "chosen_methods.txt") -> None:
         """
-        Store the sampled methods in the output directory.
+        Store the originals of the sampled methods in a txt file in the output
+        directory. The format is stratum/rdh/method.
         :param methods: The methods to store.
         :return: The stored methods.
         """
@@ -609,3 +620,20 @@ class SurveyCrafter:
                 file.write(f"{method.original.stratum.name}/"
                            f"{method.original.rdh.name}/"
                            f"{method.original.name}\n")
+
+    def in_excluded(self, chosen: Method) -> bool:
+        """
+        Check if the chosen method is in the excluded list. This is done by comparing
+        the original method stratum/rdh/name with the excluded list.
+        :param chosen: The chosen method.
+        :return: True if the chosen method is in the excluded list, False otherwise.
+        """
+        in_excluded = f"{chosen.original.stratum.name}/" \
+                      f"{chosen.original.rdh.name}/" \
+                      f"{chosen.original.name}" in self.exclude
+        if in_excluded:
+            logging.info(f"Skipping excluded method: "
+                         f"{chosen.original.stratum.name}/"
+                         f"{chosen.original.rdh.name}/"
+                         f"{chosen.original.name}")
+        return in_excluded

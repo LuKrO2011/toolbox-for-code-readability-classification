@@ -414,7 +414,7 @@ def _set_up_arg_parser() -> ArgumentParser:
         "-ns",
         required=False,
         type=int,
-        default=20,
+        default=10,
         help="Number of survey sheets to create.",
     )
     craft_surveys_parser.add_argument(
@@ -440,6 +440,13 @@ def _set_up_arg_parser() -> ArgumentParser:
         type=str,
         default="none",
         help="Name of the directory containing the rdh-none methods.",
+    )
+    craft_surveys_parser.add_argument(
+        "--exclude-path",
+        "-e",
+        type=str,
+        default=None,
+        help="Path to the file containing the paths of the snippets to exclude.",
     )
 
     # Parser for extracting diffs
@@ -711,6 +718,7 @@ def _run_craft_surveys(parsed_args: Any) -> None:
     sample_amount_path = parsed_args.sample_amount_path
     original_name = parsed_args.original_name
     nomod_name = parsed_args.nomod_name
+    exclude_path = parsed_args.exclude_path
 
     # Log the arguments
     logging.info(f"Input directory: {input_dir}")
@@ -720,6 +728,7 @@ def _run_craft_surveys(parsed_args: Any) -> None:
     logging.info(f"Sample amount path: {sample_amount_path}")
     logging.info(f"Original name: {original_name}")
     logging.info(f"Nomod name: {nomod_name}")
+    logging.info(f"Exclude path: {exclude_path}")
 
     # Create the output directory, if it does not exist
     if not os.path.isdir(output_dir):
@@ -732,7 +741,8 @@ def _run_craft_surveys(parsed_args: Any) -> None:
                                    num_sheets=num_sheets,
                                    sample_amount_path=sample_amount_path,
                                    original_name=original_name,
-                                   nomod_name=nomod_name)
+                                   nomod_name=nomod_name,
+                                   exclude_path=exclude_path)
     survey_crafter.craft_surveys()
 
 
