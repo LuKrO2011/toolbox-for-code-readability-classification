@@ -47,6 +47,8 @@ DIFF_EXTRACTOR_DIR = RES_DIR / "diff_extractor/"
 
 PERMUTATIONS_DIR = RES_DIR / "permutations/"
 
+SAMPLE_AMOUNT_FILE = RES_DIR / "sample_amount.yaml"
+
 
 class DirTest(unittest.TestCase):
     output_dir_name = None  # Set to "output" to generate output

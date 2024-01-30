@@ -11,7 +11,8 @@ from src.readability_preprocessing.main import _run_stratified_sampling, \
 from tests.readability_preprocessing.utils.utils import DirTest, RES_DIR, \
     ENCODED_BW_DIR, METHODS_ORIGINAL_ADD_COMMAND_DIR, \
     CHECKSTYLED_DIR, RAW_BW_DIR, RAW_KROD_DIR, SAMPLED_DIR_2_2, \
-    METHODS_ORIGINAL_DIR, SELECTED_CLASSES_DIR, EXTRACTED_DIR, EXTRACTED_2_DIR
+    METHODS_ORIGINAL_DIR, SELECTED_CLASSES_DIR, EXTRACTED_DIR, EXTRACTED_2_DIR, \
+    SAMPLE_AMOUNT_FILE
 
 
 class TestRunMain(DirTest):
@@ -163,8 +164,11 @@ class TestRunMain(DirTest):
             def __init__(self, temp_dir_name: str = self.output_dir):
                 self.input = EXTRACTED_DIR
                 self.output = temp_dir_name
-                self.snippets_per_sheet = 2
-                self.num_sheets = 2
+                self.snippets_per_sheet = 3
+                self.num_sheets = 3
+                self.sample_amount_path = SAMPLE_AMOUNT_FILE
+                self.original_name = "methods"
+                self.nomod_name = "none"
 
         parsed_args = MockParsedArgs()
 

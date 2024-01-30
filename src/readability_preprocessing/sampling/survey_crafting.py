@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 
 from readability_preprocessing.extractors.diff_extractor import compare_java_files
-from readability_preprocessing.utils.utils import list_non_hidden
+from readability_preprocessing.utils.utils import list_non_hidden, load_yaml_file
 
 default_sample_amount: dict[str, int] = {
     "stratum0": 5,
@@ -234,7 +234,7 @@ class SurveyCrafter:
                  output_dir: str,
                  snippets_per_sheet: int = 20,
                  num_sheets: int = 20,
-                 sample_amount: dict[str, float] = None,
+                 sample_amount_path: Path = None,
                  original_name: str = "methods",
                  nomod_name: str = "none"):
         """
@@ -242,15 +242,16 @@ class SurveyCrafter:
         :param input_dir: The input directory with the stratas, rdhs and snippets.
         :param output_dir: The output directory to save the surveys to.
         :param snippets_per_sheet: How many snippets per sheet.
-        :param sample_amount: How many original snippets per stratum.
+        :param sample_amount_path: The path to the sample amount file.
         :param num_sheets: How many sheets.
         """
         self.input_dir = input_dir
         self.output_dir = output_dir
         self.snippets_per_sheet = snippets_per_sheet
         self.num_sheets = num_sheets
-        self.sample_amount = (sample_amount or
-                              default_sample_amount.copy())
+        self.sample_amount = load_yaml_file(sample_amount_path)
+        if self.sample_amount is None or len(self.sample_amount) == 0:
+            self.sample_amount: dict[str, float] = default_sample_amount
         self.original_name = original_name
         self.nomod_name = nomod_name
         self.num_stratas = None
@@ -300,16 +301,9 @@ class SurveyCrafter:
         rdh_names = self._load_rdhs(strata_names)
         self.num_rdhs = len(rdh_names)
 
-        # Check that the num_sheets and snippets_per_sheet are a multiple of num_rdhs
-        if self.num_sheets % self.num_rdhs != 0:
-            raise ValueError("The number of sheets must be a multiple of the number of "
-                             "rdhs.")
-        if self.snippets_per_sheet % self.num_rdhs != 0:
-            raise ValueError("The number of snippets per sheet must be a multiple of "
-                             "the number of rdhs.")
-
         # Create the int_to_key
         self._set_int_to_key(rdh_names)
+        self._validate_configuration()
 
         # Convert the strats and rdhs to objects
         strata = {}
@@ -341,6 +335,24 @@ class SurveyCrafter:
         #           strata.values() if len(stratum.rdhs) > 0}
 
         return strata
+
+    def _validate_configuration(self):
+        # Check that the num_sheets and snippets_per_sheet are a multiple of num_rdhs
+        if self.num_sheets % self.num_rdhs != 0:
+            raise ValueError("The number of sheets must be a multiple of the number of "
+                             "rdhs.")
+        if self.snippets_per_sheet % self.num_rdhs != 0:
+            raise ValueError("The number of snippets per sheet must be a multiple of "
+                             "the number of rdhs.")
+
+        # Check that the num_stratas length is equal to the sample_amount length
+        if len(self.sample_amount) != self.num_stratas:
+            raise ValueError("The sample amount must be specified for each stratum.")
+
+        # Check that the sample amount summed up is <= num_rdhs * num_stratas
+        if sum(self.sample_amount.values()) > self.num_rdhs * self.num_stratas:
+            raise ValueError("The sample amount summed up must be less than or equal "
+                             "to the number of rdhs times the number of stratas.")
 
     @staticmethod
     def _create_methods(rdhs: dict[str, RDH], original_rdh: RDH,

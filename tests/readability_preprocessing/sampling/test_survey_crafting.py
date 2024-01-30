@@ -6,16 +6,7 @@ from readability_preprocessing.sampling.survey_crafting import SurveyCrafter, St
     Survey, Method, permutation_matrix_3, permutation_matrix, permutation_matrix_2
 from readability_preprocessing.utils.utils import num_files
 from tests.readability_preprocessing.utils.utils import DirTest, EXTRACTED_DIR, \
-    assert_content_equal, PERMUTATIONS_DIR
-
-input_dir = Path("C:/Users/lukas/IdeaProjects/rdh-stratas")
-
-test_sample_amount: dict[str, int] = {
-    "stratum0": 1,
-    "stratum1": 1,
-    "stratum2": 1,
-    "stratum3": 0,
-}
+    assert_content_equal, PERMUTATIONS_DIR, SAMPLE_AMOUNT_FILE
 
 
 def save_permutation_matrix(matrix: np.ndarray, path: str) -> None:
@@ -124,7 +115,7 @@ class TestPermutations(DirTest):
 def test_craft_stratas():
     survey_crafter = SurveyCrafter(input_dir=EXTRACTED_DIR,
                                    output_dir="",
-                                   sample_amount=test_sample_amount,
+                                   sample_amount_path=SAMPLE_AMOUNT_FILE.absolute(),
                                    snippets_per_sheet=3, num_sheets=3)
     stratas: dict[str, Stratum] = survey_crafter.craft_stratas()
     assert len(stratas) == 4
@@ -141,7 +132,7 @@ def test_craft_stratas():
 def test_sample_methods():
     survey_crafter = SurveyCrafter(input_dir=EXTRACTED_DIR,
                                    output_dir="",
-                                   sample_amount=test_sample_amount,
+                                   sample_amount_path=SAMPLE_AMOUNT_FILE,
                                    snippets_per_sheet=3, num_sheets=3)
     stratas: dict[str, Stratum] = survey_crafter.craft_stratas()
     methods: list[Method] = survey_crafter.sample_methods(stratas)
@@ -157,7 +148,7 @@ def test_sample_methods():
 def test_craft_sheets():
     survey_crafter = SurveyCrafter(input_dir=EXTRACTED_DIR,
                                    output_dir="",
-                                   sample_amount=test_sample_amount,
+                                   sample_amount_path=SAMPLE_AMOUNT_FILE,
                                    snippets_per_sheet=3, num_sheets=3)
     stratas: dict[str, Stratum] = survey_crafter.craft_stratas()
     methods: list[Method] = survey_crafter.sample_methods(stratas)
@@ -174,7 +165,7 @@ class TestSurveyCrafting(DirTest):
     def test_sample(self):
         survey_crafter = SurveyCrafter(input_dir=EXTRACTED_DIR,
                                        output_dir=self.output_dir,
-                                       sample_amount=test_sample_amount,
+                                       sample_amount_path=SAMPLE_AMOUNT_FILE,
                                        snippets_per_sheet=3, num_sheets=3)
         survey_crafter.craft_surveys()
 
