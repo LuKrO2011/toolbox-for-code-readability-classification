@@ -45,9 +45,11 @@ EXTRACTED_2_DIR = RES_DIR / "extracted_2/"  # The methods for all rdh files exis
 
 DIFF_EXTRACTOR_DIR = RES_DIR / "diff_extractor/"
 
+PERMUTATIONS_DIR = RES_DIR / "permutations/"
+
 
 class DirTest(unittest.TestCase):
-    output_dir_name = "output"  # Set to "output" to generate output
+    output_dir_name = None  # Set to "output" to generate output
 
     def setUp(self):
         # Create temporary directories for testing if output directory is None

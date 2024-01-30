@@ -5,7 +5,8 @@ import numpy as np
 from readability_preprocessing.sampling.survey_crafting import SurveyCrafter, Stratum, \
     Survey, Method, permutation_matrix_3, permutation_matrix, permutation_matrix_2
 from readability_preprocessing.utils.utils import num_files
-from tests.readability_preprocessing.utils.utils import DirTest, EXTRACTED_DIR
+from tests.readability_preprocessing.utils.utils import DirTest, EXTRACTED_DIR, \
+    assert_content_equal, PERMUTATIONS_DIR
 
 input_dir = Path("C:/Users/lukas/IdeaProjects/rdh-stratas")
 
@@ -50,35 +51,50 @@ class TestPermutations(DirTest):
         assert len(permutations) == 3
         for permutation in permutations:
             assert len(permutation) == 3
-        save_permutation_matrix(permutations, self.output_dir + "/permutations.txt")
+        output_filename = "permutations.txt"
+        output_file = self.output_dir + "/" + output_filename
+        save_permutation_matrix(permutations, output_file)
+        assert_content_equal(PERMUTATIONS_DIR / output_filename, output_file)
 
     def test_permutation_matrix_big(self):
         permutations = permutation_matrix(start_idx=0, matrix_size=10)
         assert len(permutations) == 10
         for permutation in permutations:
             assert len(permutation) == 10
-        save_permutation_matrix(permutations, self.output_dir + "/permutations.txt")
+        output_filename = "permutations_big.txt"
+        output_file = self.output_dir + "/" + output_filename
+        save_permutation_matrix(permutations, output_file)
+        assert_content_equal(PERMUTATIONS_DIR / output_filename, output_file)
 
     def test_permutation_matrix_offset(self):
         permutations = permutation_matrix(start_idx=3, matrix_size=3)
         assert len(permutations) == 3
         for permutation in permutations:
             assert len(permutation) == 3
-        save_permutation_matrix(permutations, self.output_dir + "/permutations.txt")
+        output_filename = "permutations_offset.txt"
+        output_file = self.output_dir + "/" + output_filename
+        save_permutation_matrix(permutations, output_file)
+        assert_content_equal(PERMUTATIONS_DIR / output_filename, output_file)
 
     def test_permutation_matrix_2(self):
         permutations = permutation_matrix_2(start_idx=0, sub_matrix_size=3, width=6)
         assert len(permutations) == 3
         for permutation in permutations:
             assert len(permutation) == 6
-        save_permutation_matrix(permutations, self.output_dir + "/permutations.txt")
+        output_filename = "permutations_2.txt"
+        output_file = self.output_dir + "/" + output_filename
+        save_permutation_matrix(permutations, output_file)
+        assert_content_equal(PERMUTATIONS_DIR / output_filename, output_file)
 
     def test_permutation_matrix_2_big(self):
         permutations = permutation_matrix_2(start_idx=0, sub_matrix_size=10, width=20)
         assert len(permutations) == 10
         for permutation in permutations:
             assert len(permutation) == 20
-        save_permutation_matrix(permutations, self.output_dir + "/permutations.txt")
+        output_filename = "permutations_2_big.txt"
+        output_file = self.output_dir + "/" + output_filename
+        save_permutation_matrix(permutations, output_file)
+        assert_content_equal(PERMUTATIONS_DIR / output_filename, output_file)
 
     def test_permutation_matrix_3(self):
         permutations = permutation_matrix_3(sub_matrix_size=3,
@@ -87,7 +103,10 @@ class TestPermutations(DirTest):
         assert len(permutations) == 6
         for permutation in permutations:
             assert len(permutation) == 6
-        save_permutation_matrix(permutations, self.output_dir + "/permutations.txt")
+        output_filename = "permutations_3.txt"
+        output_file = self.output_dir + "/" + output_filename
+        save_permutation_matrix(permutations, output_file)
+        assert_content_equal(PERMUTATIONS_DIR / output_filename, output_file)
 
     def test_permutation_matrix_3_big(self):
         permutations = permutation_matrix_3(sub_matrix_size=10,
@@ -96,7 +115,10 @@ class TestPermutations(DirTest):
         assert len(permutations) == 20
         for permutation in permutations:
             assert len(permutation) == 20
-        save_permutation_matrix(permutations, self.output_dir + "/permutations.txt")
+        output_filename = "permutations_3_big.txt"
+        output_file = self.output_dir + "/" + output_filename
+        save_permutation_matrix(permutations, output_file)
+        assert_content_equal(PERMUTATIONS_DIR / output_filename, output_file)
 
 
 def test_craft_stratas():
