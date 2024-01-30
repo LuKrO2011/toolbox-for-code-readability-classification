@@ -15,25 +15,8 @@ default_sample_amount: dict[str, int] = {
     "stratum3": 10,
 }
 
-default_key_to_int: dict[str, int] = {
-    "all8": 0,
-    "commentsRemove": 1,
-    "newlineInsteadOfSpace": 2,
-    "newlinesMany": 3,
-    "newlinesFew": 4,
-    "realistic": 5,
-    "rename": 6,
-    "spacesMany": 7,
-    "tabs": 8,
-    "none": 9,
-    "methods": 10,
-}
 
-default_int_to_key: dict[int, str] = {value: key for key, value in
-                                      default_key_to_int.items()}
-
-
-def permutation_matrix(start_idx: int = 0, matrix_size: int = 10) -> np.ndarray:
+def permutation_matrix(start_idx: int, matrix_size: int) -> np.ndarray:
     """
     Create a permutation matrix of the given size.
     :param start_idx: The index to start the permutation matrix at.
@@ -45,8 +28,8 @@ def permutation_matrix(start_idx: int = 0, matrix_size: int = 10) -> np.ndarray:
     return np.array(matrix)
 
 
-def permutation_matrix_2(start_idx: int = 0, sub_matrix_size: int = 10,
-                         width: int = 20) -> np.ndarray:
+def permutation_matrix_2(start_idx: int, sub_matrix_size: int,
+                         width: int) -> np.ndarray:
     """
     Create a permutation matrix of the given size. Therefore, multiple permutation
     matrices are combined.
@@ -64,8 +47,7 @@ def permutation_matrix_2(start_idx: int = 0, sub_matrix_size: int = 10,
     return np.concatenate(sub_matrices, axis=1)
 
 
-def permutation_matrix_3(sub_matrix_size: int = 10, width: int = 20, height: int = 20) \
-    -> np.ndarray:
+def permutation_matrix_3(sub_matrix_size: int, width: int, height: int) -> np.ndarray:
     """
     Create a permutation matrix of the given size. Therefore, multiple permutation
     matrices are combined.
@@ -193,7 +175,7 @@ class Method:
                 not_diff.append(rdh)
         return not_diff
 
-    def pick_variant(self, variant: str | int) -> Snippet:
+    def pick_variant(self, variant: str) -> Snippet:
         """
         Obtain the variant of the method of the given variant.
         :param variant: The variant name or index.
@@ -206,21 +188,6 @@ class Method:
                 return self.original
             else:
                 return self.rdhs[variant]
-
-        # variant is an int
-        return self.pick_variant(default_int_to_key[variant])
-
-
-def pick_snippet(methods: list[Method], index: int,
-                 variant: str | int) -> Snippet:
-    """
-    Obtain the variant of the method at the given index.
-    :param methods: The methods to sample from.
-    :param index: The index of the method.
-    :param variant: The variant of the method.
-    :return: The picked snippet.
-    """
-    return methods[index].pick_variant(variant)
 
 
 class Stratum:
@@ -329,8 +296,16 @@ class SurveyCrafter:
         rdh_names = self._load_rdhs(strata_names)
         self.num_rdhs = len(rdh_names)
 
+        # Check that the num_sheets and snippets_per_sheet are a multiple of num_rdhs
+        if self.num_sheets % self.num_rdhs != 0:
+            raise ValueError("The number of sheets must be a multiple of the number of "
+                             "rdhs.")
+        if self.snippets_per_sheet % self.num_rdhs != 0:
+            raise ValueError("The number of snippets per sheet must be a multiple of "
+                             "the number of rdhs.")
+
         # Create the int_to_key
-        self.set_int_to_key(rdh_names)
+        self._set_int_to_key(rdh_names)
 
         # Convert the strats and rdhs to objects
         strata = {}
@@ -391,9 +366,9 @@ class SurveyCrafter:
         """
         snippet_names = list_non_hidden(
             os.path.join(self.input_dir, strata_name, rdh_name))
-        unused_snippets = {snippet_name: Snippet(snippet_name) for snippet_name in
-                           snippet_names}
-        return RDH(rdh_name, unused_snippets)
+        snippets = {snippet_name: Snippet(snippet_name) for snippet_name in
+                    snippet_names}
+        return RDH(rdh_name, snippets)
 
     def _load_rdhs(self, strata_names: list[str]) -> list[str]:
         """
@@ -451,11 +426,11 @@ class SurveyCrafter:
                                             height=self.num_sheets)
         surveys = []
         for i in range(self.num_sheets):
-            surveys.append(self.craft_sheet(methods, permutations[:, i]))
+            surveys.append(self._craft_sheet(methods, permutations[:, i]))
 
         return surveys
 
-    def craft_sheet(self, methods: list[Method], permutation: np.ndarray) -> Survey:
+    def _craft_sheet(self, methods: list[Method], permutation: np.ndarray) -> Survey:
         """
         Craft a single sheet using the given methods and permutation array.
         :param methods: The methods to sample from.
@@ -465,7 +440,7 @@ class SurveyCrafter:
         snippets = []
         for i in range(self.snippets_per_sheet):
             method_idx, variant_idx = permutation[i]
-            snippet = pick_snippet(methods, method_idx, variant_idx)
+            snippet = self._pick_snippet(methods, method_idx, variant_idx)
             snippets.append(snippet)
 
         return Survey(snippets)
@@ -492,7 +467,7 @@ class SurveyCrafter:
 
         return sampled
 
-    def set_int_to_key(self, rdh_names: list[str]) -> None:
+    def _set_int_to_key(self, rdh_names: list[str]) -> None:
         """
         Calculate the int_to_key dict from the given rdh names and set it.
         :param rdh_names: The rdh names to use.
@@ -502,3 +477,16 @@ class SurveyCrafter:
         for i, rdh_name in enumerate(rdh_names):
             int_to_key[i] = rdh_name
         self.int_to_key = int_to_key
+
+    def _pick_snippet(self, methods: list[Method], index: int,
+                      variant: str | int) -> Snippet:
+        """
+        Obtain the variant of the method at the given index.
+        :param methods: The methods to sample from.
+        :param index: The index of the method.
+        :param variant: The variant of the method.
+        :return: The picked snippet.
+        """
+        if not isinstance(variant, str):
+            variant = self.int_to_key[variant]
+        return methods[index].pick_variant(variant)
