@@ -1,36 +1,100 @@
 import logging
-import math
 import os
+import random
 import shutil
+from pathlib import Path
 
 import numpy as np
 
-from readability_preprocessing.utils.utils import list_non_hidden
+from readability_preprocessing.extractors.diff_extractor import compare_java_files
+from readability_preprocessing.utils.utils import list_non_hidden, load_yaml_file
 
-default_strata_distributions = {
-    "stratum0": 0.2,
-    "stratum1": 0.4,
-    "stratum2": 0.1,
-    "stratum3": 0.3,
+default_sample_amount: dict[str, int] = {
+    "stratum0": 4,
+    "stratum1": 16,
+    "stratum2": 4,
+    "stratum3": 16,
 }
 
-default_rdh_distributions = {
-    "all": 0.0,
-    "allweak": 0.0,
-    "allweak2": 0.0,
-    "allweak3": 0.0,
-    "commentsremove": 0.06,
-    "methods": 0.4,
-    "misc": 0.06,
-    "newlinesfew": 0.06,
-    "newlinesmany": 0.06,
-    "realistic": 0.06,
-    "rename": 0.06,
-    "spacesfew": 0.06,
-    "spacesmany": 0.06,
-    "tabsfew": 0.06,
-    "tabsmany": 0.06,
-}
+
+def permutation_matrix(start_idx: int, matrix_size: int) -> np.ndarray:
+    """
+    Create a permutation matrix of the given size.
+    :param start_idx: The index to start the permutation matrix at.
+    :param matrix_size: The size of the permutation matrix.
+    :return: The permutation matrix.
+    """
+    matrix = [[(i + start_idx, (i + j) % matrix_size) for j in range(matrix_size)]
+              for i in range(matrix_size)]
+
+    # Transpose the matrix to get the desired output
+    matrix = list(map(list, zip(*matrix)))
+
+    return np.array(matrix)
+
+
+def permutation_matrix_2(start_idx: int, sub_matrix_size: int,
+                         width: int) -> np.ndarray:
+    """
+    Create a permutation matrix of the given size. Therefore, multiple permutation
+    matrices are combined.
+    :param start_idx: The index to start the permutation matrix at.
+    :param sub_matrix_size: The size of a sub matrix.
+    :param width: The width of the combined permutation matrix.
+    :return: The combined permutation matrix.
+    """
+    width_matrix_count = width // sub_matrix_size
+    width_end_idx = start_idx + width_matrix_count
+    sub_matrices = []
+    for i in range(start_idx, width_end_idx):
+        sub_matrices.append(permutation_matrix(start_idx=i * sub_matrix_size,
+                                               matrix_size=sub_matrix_size))
+    return np.concatenate(sub_matrices, axis=1)
+
+
+def permutation_matrix_3(sub_matrix_size: int, width: int, height: int) -> np.ndarray:
+    """
+    Create a permutation matrix of the given size. Therefore, multiple permutation
+    matrices are combined.
+    :param sub_matrix_size: The size of a sub matrix.
+    :param width: The width of the combined permutation matrix.
+    :param height: The height of the combined permutation matrix.
+    :return: The combined permutation matrix.
+    """
+    height_matrix_count = height // sub_matrix_size
+    sub_matrices = []
+    for i in range(height_matrix_count):
+        sub_matrices.append(permutation_matrix_2(start_idx=i * 2,
+                                                 sub_matrix_size=sub_matrix_size,
+                                                 width=width))
+
+    return np.concatenate(sub_matrices, axis=0)
+
+
+# def permutation_matrix_3(sub_matrix_size: int, width: int, height: int) -> np.ndarray:
+#     """
+#     Create a permutation matrix of the given size. Therefore, multiple permutation
+#     matrices are combined.
+#     :param sub_matrix_size: The size of a sub matrix.
+#     :param width: The width of the combined permutation matrix.
+#     :param height: The height of the combined permutation matrix.
+#     :return: The combined permutation matrix.
+#     """
+#     width_matrix_count = width // sub_matrix_size
+#     height_matrix_count = height // sub_matrix_size
+#     matrix_count = width_matrix_count * height_matrix_count
+#     sub_matrices = []
+#     for i in range(matrix_count):
+#         sub_matrices.append(
+#             permutation_matrix(
+#                 start_idx=i * sub_matrix_size,
+#                 matrix_size=sub_matrix_size))
+#
+#     # Concat 1 and 4 horizontally and 2 and 3 horizontally and then vertically
+#     sub_matrices = [np.concatenate([sub_matrices[0], sub_matrices[3]], axis=1),
+#                     np.concatenate([sub_matrices[1], sub_matrices[2]], axis=1)]
+#     matrix = np.concatenate(sub_matrices, axis=0)
+#     return matrix
 
 
 class Snippet:
@@ -63,6 +127,33 @@ class Snippet:
         """
         self.stratum = stratum
 
+    def get_path(self, root: Path) -> Path:
+        """
+        Get the path of the snippet.
+        :return: The path of the snippet.
+        """
+        return root / self.stratum.name / self.rdh.name / self.name
+
+
+class NoSnippet(Snippet):
+    """
+    An empty snippet that does not exist.
+    """
+
+    def __init__(self, name: str, rdh):
+        """
+        Initialize the empty snippet.
+        """
+        super().__init__(name)
+        self.rdh = rdh
+
+    def get_path(self, root: Path) -> None:
+        """
+        Get the path of the snippet.
+        :return: The path of the snippet.
+        """
+        return None
+
 
 class RDH:
     """
@@ -70,17 +161,15 @@ class RDH:
     A RDH belongs to a stratum.
     """
 
-    def __init__(self, name: str, probability: float, unused_snippets: list[Snippet]):
+    def __init__(self, name: str, snippets: dict[str, Snippet]):
         """
         Initialize the RDH.
         :param name: The name of the RDH.
-        :param probability: The probability of the RDH for sampling.
-        :param unused_snippets: The list of unused snippets.
+        :param snippets: The list of unused snippets.
         """
         self.name = name
-        self.probability = probability
-        self.unused_snippets = unused_snippets
-        for snippet in unused_snippets:
+        self.snippets = snippets
+        for snippet in snippets.values():
             snippet.set_rdh(self)
         self.stratum = None
 
@@ -92,26 +181,95 @@ class RDH:
         """
         self.stratum = stratum
 
+    def get_snippet(self, name: str) -> Snippet | None:
+        """
+        Get the snippet with the given name, if it exists.
+        Otherwise, return NoSnippet.
+        :param name: The name of the snippet.
+        :return: The snippet or EmptySnippet.
+        """
+        if name in self.snippets:
+            return self.snippets[name]
+        else:
+            logging.warning(f"Snippet {name} not found in rdh {self.name}.")
+            return None
+
+
+class Method:
+    """
+    A method combines an original snippet with a no modification snippet and a dict of
+    rdh snippets. A method belongs to a stratum.
+    """
+
+    def __init__(self, original: Snippet, nomod: Snippet, rdhs: dict[str, Snippet]):
+        """
+        Initialize the method.
+        :param original: The original snippet.
+        :param nomod: The nomod snippet.
+        :param rdhs: The rdh snippets.
+        """
+        self.stratum = None
+        self.original = original
+        self.nomod = nomod
+        self.rdhs = rdhs
+
+    def set_stratum(self, stratum):
+        """
+        Set the stratum the method belongs to.
+        :param stratum: The stratum the method belongs to.
+        :return: None
+        """
+        self.stratum = stratum
+        self.original.set_stratum(stratum)
+        self.nomod.set_stratum(stratum)
+        for rdh in self.rdhs.values():
+            rdh.set_stratum(stratum)
+
+    def compare_to_nomod(self, root: Path) -> list[Snippet]:
+        """
+        Compare each rdh snippet to the nomod snippet and return the not-different
+        snippets.
+        :param root: The root directory.
+        :return: The not-different snippets.
+        """
+        not_diff = []
+        for rdh in self.rdhs.values():
+            if not isinstance(rdh, NoSnippet):
+                is_diff = compare_java_files(self.nomod.get_path(root),
+                                             rdh.get_path(root))
+                if not is_diff:
+                    not_diff.append(rdh)
+        return not_diff
+
+    def pick_variant(self, variant: str) -> Snippet:
+        """
+        Obtain the variant of the method of the given variant.
+        :param variant: The variant name or index.
+        :return: The picked snippet.
+        """
+        if variant == "none":
+            return self.nomod
+        elif variant == "methods":
+            return self.original
+        else:
+            return self.rdhs[variant]
+
 
 class Stratum:
     """
     A stratum is a group of RDHs that are similar according to the stratified sampling.
     """
 
-    def __init__(self, name: str, probability: float, rdhs: list[RDH]):
+    def __init__(self, name: str, methods: list[Method]):
         """
         Initialize the stratum.
         :param name: The name of the stratum.
-        :param probability: The probability of the stratum for sampling.
-        :param rdhs: The list of RDHs.
+        :param methods: The methods belonging to the stratum.
         """
         self.name = name
-        self.probability = probability
-        self.rdhs = rdhs
-        for rdh in rdhs:
-            rdh.set_stratum(self)
-            for snippet in rdh.unused_snippets:
-                snippet.set_stratum(self)
+        self.methods = methods
+        for method in self.methods:
+            method.set_stratum(self)
 
 
 class Survey:
@@ -127,66 +285,6 @@ class Survey:
         self.snippets = snippets
 
 
-def _fix_probabilities(probabilities: list[float]) -> list[float]:
-    """
-    Fix the probabilities so that they sum to 1 by adding the difference equally.
-    This might be necessary after deleting one or more strata or rdh.
-    :param probabilities: The probabilities to fix.
-    :return: The fixed probabilities.
-    """
-    difference = 1 - sum(probabilities)
-    epsilon = 1e-10
-
-    if abs(difference) > epsilon:
-        probabilities = [probability + difference / len(probabilities) for probability
-                         in probabilities]
-        probabilities = [max(probability, 0) for probability in
-                         probabilities]
-
-    return probabilities
-
-
-def _select_stratum(strata: list[Stratum]) -> Stratum:
-    """
-    Select a stratum according to the probabilities.
-    :param strata: The list of strata to select from.
-    :return: The selected stratum.
-    """
-    stratum_probabilities = [stratum.probability for stratum in strata]
-    stratum_probabilities = _fix_probabilities(stratum_probabilities)
-    stratum = np.random.choice(strata, p=stratum_probabilities)
-    return stratum
-
-
-def _select_rdh(rdhs: list[RDH]) -> RDH:
-    """
-    Select a rdh according to the probabilities.
-    :param rdhs: The list of rdhs to select from.
-    :return: The selected rdh.
-    """
-    rdh_probabilities = [rdh.probability for rdh in rdhs]
-    rdh_probabilities = _fix_probabilities(rdh_probabilities)
-
-    # Check if any probability is smaller than 0
-    for rdh_probability in rdh_probabilities:
-        if rdh_probability < 0:
-            logging.info(f"RDH: Probability smaller than 0: {rdh_probability}")
-
-    rdh = np.random.choice(rdhs, p=rdh_probabilities)
-    return rdh
-
-
-def _select_snippet(snippets: list[Snippet]) -> Snippet:
-    """
-    Select a snippet according to the probabilities.
-    :param snippets: The list of snippets to select from.
-    :return: The selected snippet.
-    """
-    snippet_probabilities = [1 / len(snippets) for _ in snippets]
-    snippet = np.random.choice(snippets, p=snippet_probabilities)
-    return snippet
-
-
 class SurveyCrafter:
     """
     A class for crafting surveys from the given input directory and save them to the
@@ -197,24 +295,34 @@ class SurveyCrafter:
                  output_dir: str,
                  snippets_per_sheet: int = 20,
                  num_sheets: int = 20,
-                 strata_distributions: dict[str, float] = None,
-                 rdh_distributions: dict[str, float] = None):
+                 sample_amount_path: Path = None,
+                 original_name: str = "methods",
+                 nomod_name: str = "none"):
         """
         Initialize the survey crafter.
         :param input_dir: The input directory with the stratas, rdhs and snippets.
         :param output_dir: The output directory to save the surveys to.
         :param snippets_per_sheet: How many snippets per sheet.
+        :param sample_amount_path: The path to the sample amount file.
         :param num_sheets: How many sheets.
-        :param strata_distributions: The strata distributions.
-        :param rdh_distributions: The rdh distributions.
         """
         self.input_dir = input_dir
         self.output_dir = output_dir
         self.snippets_per_sheet = snippets_per_sheet
         self.num_sheets = num_sheets
-        self.strata_distributions = (strata_distributions or
-                                     default_strata_distributions.copy())
-        self.rdh_distributions = rdh_distributions or default_rdh_distributions.copy()
+        self.original_name = original_name
+        self.nomod_name = nomod_name
+        self.num_stratas = None
+        self.num_rdhs = None
+        self.rdh_names = None
+        self.int_to_key = None
+
+        # Load the sample amount
+        self.sample_amount: dict[str, float] = {}
+        if sample_amount_path is not None:
+            self.sample_amount = load_yaml_file(sample_amount_path)
+        if self.sample_amount is None or len(self.sample_amount) == 0:
+            self.sample_amount = default_sample_amount
 
     def craft_surveys(self) -> None:
         """
@@ -226,92 +334,156 @@ class SurveyCrafter:
 
         # Log information about the stratas
         logging.info(f"Strata: Number of stratas: {len(strata)}")
-        for stratum in strata:
-            logging.info(f"{stratum.name}: Number of rdhs: {len(stratum.rdhs)}")
-            for rdh in stratum.rdhs:
-                logging.info(
-                    f"{stratum.name} - {rdh.name}: Number of snippets: "
-                    f"{len(rdh.unused_snippets)}")
+        for stratum in strata.values():
+            logging.info(f"{stratum.name}: Number of methods: {len(stratum.methods)}")
 
-        surveys = self.sample_sheets(strata)
+        methods = self.sample_methods(strata, sample_amount=self.sample_amount)
+        no_mod_methods = []
+        for method in methods:
+            no_mod_methods += method.compare_to_nomod(Path(self.input_dir))
 
-        # Calculate for each rdh how many snippets were used
-        for stratum in strata:
-            for rdh in stratum.rdhs:
-                rdh.used_snippets = len(rdh.unused_snippets)
-                logging.info(
-                    f"{stratum.name} - {rdh.name}: Number of used snippets: "
-                    f"{rdh.used_snippets}")
+        # Log information about the not different snippets
+        logging.info(
+            f"Strata: Number of not different snippets: {len(no_mod_methods)}")
+
+        # Shuffle the methods to make sure all stratas are equally represented
+        random.shuffle(methods)
+
+        # Create the surveys
+        surveys = self.craft_sheets(methods)
 
         self._write_output(surveys)
 
-    def craft_stratas(self) -> list[Stratum]:
+    def craft_stratas(self) -> dict[str, Stratum]:
         """
         Craft the stratas from the input directory.
         :return: The stratas.
         """
         # Load the stratas and rdhs
-        strata_names, strata_probabilities = self._load_stratas()
-        rdh_names, rdh_probabilities = self._load_rdhs(strata_names)
+        strata_names = self._load_stratas()
+        self.num_stratas = len(strata_names)
+        self.rdh_names = self._load_rdhs(strata_names)
+        self.num_rdhs = len(self.rdh_names)
 
-        # Convert the strats and rdhs to objects with probabilities
-        # If no probability is specified, the probability is 0
-        strata = []
-        for strata_name, strata_probability in zip(strata_names, strata_probabilities):
-            rdhs = []
-            for rdh_name, rdh_probability in zip(rdh_names[strata_name],
-                                                 rdh_probabilities[strata_name]):
-                unused_snippet_names = list_non_hidden(
-                    os.path.join(self.input_dir, strata_name, rdh_name))
-                unused_snippets = [Snippet(snippet_name) for snippet_name in
-                                   unused_snippet_names]
-                rdhs.append(RDH(rdh_name, rdh_probability, unused_snippets))
-            strata.append(Stratum(strata_name, strata_probability, rdhs))
+        # Create the int_to_key
+        self._set_int_to_key(self.rdh_names)
+        self._validate_configuration()
+
+        # Convert the strats and rdhs to objects
+        strata = {}
+        for strata_name in strata_names:
+            rdhs = {}
+            for rdh_name in self.rdh_names:
+                # Skip the nomod and original rdh
+                if rdh_name == self.nomod_name or rdh_name == self.original_name:
+                    continue
+
+                # Add the rdh
+                rdhs[rdh_name] = self._create_rdh(strata_name, rdh_name)
+
+            # Add the original and nomod rdh
+            original_rdh = self._create_rdh(strata_name, self.original_name)
+            nomod_rdh = self._create_rdh(strata_name, self.nomod_name)
+
+            # Create the methods from the rdhs, original and nomod
+            methods = self._create_methods(rdhs, original_rdh, nomod_rdh)
+
+            # Add the stratum
+            strata[strata_name] = Stratum(strata_name, methods)
 
         # Remove empty rdhs and stratas
-        for stratum in strata:
-            stratum.rdhs = [rdh for rdh in stratum.rdhs if len(rdh.unused_snippets) > 0]
-        strata = [stratum for stratum in strata if len(stratum.rdhs) > 0]
+        # for stratum in strata:
+        #     stratum.rdhs = {rdh_name: rdh for rdh_name, rdh in
+        #                     stratum.rdhs.values() if len(rdh.snippets) > 0}
+        # strata = {stratum_name: stratum for stratum_name, stratum in
+        #           strata.values() if len(stratum.rdhs) > 0}
 
         return strata
 
-    def _load_rdhs(self, strata_names: list[str]) -> tuple[dict[str, list[str]],
-    dict[str, list[float]]]:
+    def _validate_configuration(self):
+        # Check that the num_sheets and snippets_per_sheet are a multiple of num_rdhs
+        if self.num_sheets % self.num_rdhs != 0:
+            raise ValueError("The number of sheets must be a multiple of the number of "
+                             "rdhs.")
+        if self.snippets_per_sheet % self.num_rdhs != 0:
+            raise ValueError("The number of snippets per sheet must be a multiple of "
+                             "the number of rdhs.")
+
+        # Check that the num_stratas length is equal to the sample_amount length
+        if len(self.sample_amount) != self.num_stratas:
+            raise ValueError("The sample amount must be specified for each stratum.")
+
+        # Check that the sample amount summed up is <= num_rdhs * num_stratas
+        if sum(self.sample_amount.values()) > self.num_rdhs * self.num_stratas:
+            raise ValueError("The sample amount summed up must be less than or equal "
+                             "to the number of rdhs times the number of stratas.")
+
+    def _create_methods(self, rdhs: dict[str, RDH], original_rdh: RDH,
+                        nomod_rdh: RDH) -> list[Method]:
+        """
+        Create the methods from the given rdhs, original and nomod.
+        :param rdhs: The rdhs to create the methods from.
+        :param original_rdh: The original rdh.
+        :param nomod_rdh: The nomod rdh.
+        :return: The methods.
+        """
+        methods = []
+        for name, original_method in original_rdh.snippets.items():
+            nomod_method = self._get_snippet(name, nomod_rdh)
+            rdh_methods = {}
+            for rdh in rdhs.values():
+                rdh_methods[rdh.name] = self._get_snippet(name, rdh)
+            methods.append(Method(original_method, nomod_method, rdh_methods))
+        return methods
+
+    @staticmethod
+    def _get_snippet(name: str, rdh: RDH) -> Snippet:
+        """
+        Get the snippet with the given name from the given rdh. If the snippet does not
+        exist, return a new NoSnippet.
+        :param name: The name of the snippet.
+        :param rdh: The rdh to get the snippet from.
+        :return: The snippet.
+        """
+        snippet = rdh.get_snippet(name)
+        if snippet is None:
+            snippet = NoSnippet(name, rdh)
+        return snippet
+
+    def _create_rdh(self, strata_name: str, rdh_name: str) -> RDH:
+        """
+        Create a rdh from the given rdh name and strata name.
+        :param rdh_name: The name of the rdh.
+        :param strata_name: The name of the strata.
+        :return: The rdh.
+        """
+        snippet_names = list_non_hidden(
+            os.path.join(self.input_dir, strata_name, rdh_name))
+        snippets = {snippet_name: Snippet(snippet_name) for snippet_name in
+                    snippet_names}
+        return RDH(rdh_name, snippets)
+
+    def _load_rdhs(self, strata_names: list[str]) -> list[str]:
         """
         Load the rdhs from the input directory.
         :param strata_names: The names of the stratas.
         :return: The rdh names and probabilities.
         """
         # Load the rdh names as the names of the subdirectories
-        rdh_names = {}
+        rdh_names = []
         for strata_name in strata_names:
-            rdh_names[strata_name] = list_non_hidden(os.path.join(self.input_dir,
-                                                                  strata_name))
+            rdh_names += list_non_hidden(os.path.join(self.input_dir, strata_name))
 
-        # Assign each rdh a probability distribution
-        rdh_probabilities = {}
-        for strata_name in strata_names:
-            rdh_probabilities[strata_name] = []
-            for rdh_name in rdh_names[strata_name]:
-                rdh_probabilities[strata_name].append(
-                    self.rdh_distributions[rdh_name])
+        return list(set(rdh_names))
 
-        return rdh_names, rdh_probabilities
-
-    def _load_stratas(self) -> tuple[list[str], list[float]]:
+    def _load_stratas(self) -> list[str]:
         """
         Load the stratas from the input directory.
         :return: The strata names and probabilities.
         """
         # Load the strata names as the names of the subdirectories
         strata_names = list_non_hidden(self.input_dir)
-
-        # Assign each stratum a probability distribution
-        strata_probabilities = []
-        for strata_name in strata_names:
-            strata_probabilities.append(self.strata_distributions[strata_name])
-
-        return strata_names, strata_probabilities
+        return strata_names
 
     def _write_output(self, surveys: list[Survey]) -> None:
         """
@@ -323,72 +495,96 @@ class SurveyCrafter:
         for i in range(self.num_sheets):
             os.makedirs(os.path.join(self.output_dir, f"sheet_{i}"), exist_ok=True)
 
-        # Copy the snippets to the output subdirectories with name "stratum_rdh_oldName"
+        # Copy the snippets to the output with name "idx_stratum_rdh_oldName"
         for i, survey in enumerate(surveys):
+            random.shuffle(survey.snippets)
             for j, snippet in enumerate(survey.snippets):
                 stratum = snippet.stratum.name
                 rdh = snippet.rdh.name
                 old_name = snippet.name
-                new_name = f"{stratum}_{rdh}_{old_name}"
-                shutil.copy(
-                    os.path.join(self.input_dir, stratum, rdh, old_name),
-                    os.path.join(self.output_dir, f"sheet_{i}", new_name),
-                )
+                new_name = f"{j}_{stratum}_{rdh}_{old_name}"
+                if isinstance(snippet, NoSnippet):
+                    logging.warning(f"Survey {i}: Snippet {j}: "
+                                    f"{stratum}/{rdh}/{old_name} not found.")
+                else:
+                    shutil.copy(
+                        os.path.join(self.input_dir, stratum, rdh, old_name),
+                        os.path.join(self.output_dir, f"sheet_{i}", new_name),
+                    )
 
-    def sample_sheets(self, strata: list[Stratum]) -> list[Survey]:
+    def craft_sheets(self, methods: list[Method]) -> list[Survey]:
         """
-        Sample the surveys.
-        :param strata: The strata to sample from.
+        Craft the surveys from the given strata. Each survey contains only one variant
+        of each method.
+        :param methods: The methods to sample from.
         :return: The sampled surveys.
         """
-        # Create num_sheet surveys with different snippets according to the probs
+        permutations = permutation_matrix_3(sub_matrix_size=self.num_rdhs,
+                                            width=self.snippets_per_sheet,
+                                            height=self.num_sheets)
         surveys = []
         for i in range(self.num_sheets):
-            snippets = []
-            for j in range(self.snippets_per_sheet):
-
-                # Select a stratum, a rdh and a snippet
-                stratum = _select_stratum(strata)
-                rdh = _select_rdh(stratum.rdhs)
-                snippet = _select_snippet(rdh.unused_snippets)
-
-                # Add the snippet to the list of snippets
-                snippets.append(snippet)
-                rdh.unused_snippets.remove(snippet)
-
-                # Remove the rdh or stratum if there are no more snippets
-                self._clean_up(rdh, strata, stratum)
-
-                # If there are no more strata, stop
-                if len(strata) == 0:
-                    logging.info(f"Strata: No more strata left.")
-                    break
-
-            # Add the survey to the list of surveys
-            surveys.append(Survey(snippets))
-
-            # If there are no more strata, stop
-            if len(strata) == 0:
-                logging.info(f"Strata: No more strata left.")
-                break
+            surveys.append(self._craft_sheet(methods, permutations[i]))
 
         return surveys
 
-    @staticmethod
-    def _clean_up(rdh: RDH, strata: list[Stratum], stratum: Stratum) -> None:
+    def _craft_sheet(self, methods: list[Method], permutation: np.ndarray) -> Survey:
         """
-        Clean up the rdh and stratum if there are no more snippets.
-        :param rdh: The rdh to clean up.
-        :param strata: The strata to clean up.
-        :param stratum: The stratum to clean up.
-        :return: None
+        Craft a single sheet using the given methods and permutation array.
+        :param methods: The methods to sample from.
+        :param permutation: The permutation to use.
+        :return: The sampled snippets.
         """
-        # If it was the last snippet, remove the rdh
-        if len(rdh.unused_snippets) == 0:
-            stratum.rdhs.remove(rdh)
-            logging.info(f"Removed {rdh.name} from {stratum.name}")
+        snippets = []
+        for i in range(self.snippets_per_sheet):
+            method_idx, variant_idx = permutation[i]
+            snippet = self._pick_snippet(methods, method_idx, variant_idx)
+            snippets.append(snippet)
 
-        # If it was the last rdh, remove the stratum
-        if len(stratum.rdhs) == 0:
-            strata.remove(stratum)
-            logging.info(f"Removed {stratum.name}")
+        return Survey(snippets)
+
+    def sample_methods(self, strata: dict[str, Stratum],
+                       sample_amount: dict[str, int] = None) -> list[Method]:
+        """
+        Sample methods from the given rdh name.
+        :param strata: The strata to sample from.
+        :param sample_amount: The amount of methods to sample per stratum.
+        :return: The sampled methods.
+        """
+        # Initialize the sample amount
+        sample_amount = (sample_amount or self.sample_amount.copy())
+        sampled = []
+
+        # Iterate over the strata and sample the methods
+        for stratum in strata.values():
+            methods = stratum.methods
+            sampled_methods = []
+            for i in range(sample_amount[stratum.name]):
+                sampled_methods.append(methods.pop(random.randint(0, len(methods) - 1)))
+            sampled += sampled_methods
+
+        return sampled
+
+    def _set_int_to_key(self, rdh_names: list[str]) -> None:
+        """
+        Calculate the int_to_key dict from the given rdh names and set it.
+        :param rdh_names: The rdh names to use.
+        :return: The int_to_key dict.
+        """
+        int_to_key = {}
+        for i, rdh_name in enumerate(rdh_names):
+            int_to_key[i] = rdh_name
+        self.int_to_key = int_to_key
+
+    def _pick_snippet(self, methods: list[Method], index: int,
+                      variant: str | int) -> Snippet:
+        """
+        Obtain the variant of the method at the given index.
+        :param methods: The methods to sample from.
+        :param index: The index of the method.
+        :param variant: The variant of the method.
+        :return: The picked snippet.
+        """
+        if not isinstance(variant, str):
+            variant = self.int_to_key[variant]
+        return methods[index].pick_variant(variant)

@@ -1,20 +1,20 @@
 [
   {
     "stratum": "overall",
-    "total": 3107,
-    "not_different_abs": 544,
-    "different_abs": 2563,
-    "not_different_rel": 0.17508850981654328,
-    "different_rel": 0.8249114901834567,
+    "total": 2841,
+    "not_different_abs": 429,
+    "different_abs": 2412,
+    "not_different_rel": 0.15100316789862725,
+    "different_rel": 0.8489968321013728,
     "sub_statistics": []
   },
   {
     "stratum": "stratum0",
-    "total": 817,
-    "not_different_abs": 233,
-    "different_abs": 584,
-    "not_different_rel": 0.28518971848225216,
-    "different_rel": 0.7148102815177478,
+    "total": 749,
+    "not_different_abs": 190,
+    "different_abs": 559,
+    "not_different_rel": 0.253671562082777,
+    "different_rel": 0.7463284379172229,
     "sub_statistics": [
       {
         "stratum": "all8",
@@ -62,15 +62,6 @@
         "sub_statistics": []
       },
       {
-        "stratum": "realistic",
-        "total": 68,
-        "not_different_abs": 43,
-        "different_abs": 25,
-        "not_different_rel": 0.6323529411764706,
-        "different_rel": 0.36764705882352944,
-        "sub_statistics": []
-      },
-      {
         "stratum": "rename",
         "total": 73,
         "not_different_abs": 59,
@@ -101,11 +92,11 @@
   },
   {
     "stratum": "stratum1",
-    "total": 827,
-    "not_different_abs": 19,
-    "different_abs": 808,
-    "not_different_rel": 0.022974607013301087,
-    "different_rel": 0.9770253929866989,
+    "total": 755,
+    "not_different_abs": 12,
+    "different_abs": 743,
+    "not_different_rel": 0.015894039735099338,
+    "different_rel": 0.9841059602649007,
     "sub_statistics": [
       {
         "stratum": "all8",
@@ -153,15 +144,6 @@
         "sub_statistics": []
       },
       {
-        "stratum": "realistic",
-        "total": 72,
-        "not_different_abs": 7,
-        "different_abs": 65,
-        "not_different_rel": 0.09722222222222222,
-        "different_rel": 0.9027777777777778,
-        "sub_statistics": []
-      },
-      {
         "stratum": "rename",
         "total": 78,
         "not_different_abs": 6,
@@ -192,11 +174,11 @@
   },
   {
     "stratum": "stratum2",
-    "total": 641,
-    "not_different_abs": 192,
-    "different_abs": 449,
-    "not_different_rel": 0.2995319812792512,
-    "different_rel": 0.7004680187207488,
+    "total": 586,
+    "not_different_abs": 151,
+    "different_abs": 435,
+    "not_different_rel": 0.257679180887372,
+    "different_rel": 0.742320819112628,
     "sub_statistics": [
       {
         "stratum": "all8",
@@ -244,15 +226,6 @@
         "sub_statistics": []
       },
       {
-        "stratum": "realistic",
-        "total": 55,
-        "not_different_abs": 41,
-        "different_abs": 14,
-        "not_different_rel": 0.7454545454545455,
-        "different_rel": 0.2545454545454545,
-        "sub_statistics": []
-      },
-      {
         "stratum": "rename",
         "total": 48,
         "not_different_abs": 42,
@@ -283,11 +256,11 @@
   },
   {
     "stratum": "stratum3",
-    "total": 822,
-    "not_different_abs": 100,
-    "different_abs": 722,
-    "not_different_rel": 0.12165450121654502,
-    "different_rel": 0.878345498783455,
+    "total": 751,
+    "not_different_abs": 76,
+    "different_abs": 675,
+    "not_different_rel": 0.10119840213049268,
+    "different_rel": 0.8988015978695073,
     "sub_statistics": [
       {
         "stratum": "all8",
@@ -332,15 +305,6 @@
         "different_abs": 84,
         "not_different_rel": 0.16,
         "different_rel": 0.84,
-        "sub_statistics": []
-      },
-      {
-        "stratum": "realistic",
-        "total": 71,
-        "not_different_abs": 24,
-        "different_abs": 47,
-        "not_different_rel": 0.3380281690140845,
-        "different_rel": 0.6619718309859155,
         "sub_statistics": []
       },
       {

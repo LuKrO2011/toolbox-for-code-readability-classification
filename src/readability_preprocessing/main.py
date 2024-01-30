@@ -417,7 +417,30 @@ def _set_up_arg_parser() -> ArgumentParser:
         default=20,
         help="Number of survey sheets to create.",
     )
-    # TODO: Sample mode?, probabilities?
+    craft_surveys_parser.add_argument(
+        "--sample-amount-path",
+        "-sap",
+        required=False,
+        type=str,
+        default=None,
+        help="Path to the yaml file containing the sample amounts for each stratum.",
+    )
+    craft_surveys_parser.add_argument(
+        "--original-name",
+        "-on",
+        required=False,
+        type=str,
+        default="methods",
+        help="Name of the directory containing the original methods.",
+    )
+    craft_surveys_parser.add_argument(
+        "--nomod-name",
+        "-nm",
+        required=False,
+        type=str,
+        default="none",
+        help="Name of the directory containing the rdh-none methods.",
+    )
 
     # Parser for extracting diffs
     extract_diff_parser = sub_parser.add_parser(str(Tasks.EXTRACT_DIFF))
@@ -685,12 +708,18 @@ def _run_craft_surveys(parsed_args: Any) -> None:
     output_dir = parsed_args.output
     snippets_per_sheet = parsed_args.snippets_per_sheet
     num_sheets = parsed_args.num_sheets
+    sample_amount_path = parsed_args.sample_amount_path
+    original_name = parsed_args.original_name
+    nomod_name = parsed_args.nomod_name
 
     # Log the arguments
     logging.info(f"Input directory: {input_dir}")
     logging.info(f"Output directory: {output_dir}")
     logging.info(f"Snippets per sheet: {snippets_per_sheet}")
     logging.info(f"Number of sheets: {num_sheets}")
+    logging.info(f"Sample amount path: {sample_amount_path}")
+    logging.info(f"Original name: {original_name}")
+    logging.info(f"Nomod name: {nomod_name}")
 
     # Create the output directory, if it does not exist
     if not os.path.isdir(output_dir):
@@ -700,7 +729,10 @@ def _run_craft_surveys(parsed_args: Any) -> None:
     survey_crafter = SurveyCrafter(input_dir=input_dir,
                                    output_dir=output_dir,
                                    snippets_per_sheet=snippets_per_sheet,
-                                   num_sheets=num_sheets)
+                                   num_sheets=num_sheets,
+                                   sample_amount_path=sample_amount_path,
+                                   original_name=original_name,
+                                   nomod_name=nomod_name)
     survey_crafter.craft_surveys()
 
 

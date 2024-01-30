@@ -1,6 +1,11 @@
+import logging
 import os
 import shutil
-from typing import List
+from pathlib import Path
+from typing import List, Any
+
+import yaml
+from yaml import SafeLoader
 
 
 def store_as_txt(stratas: List[List[str]], output_dir: str) -> None:
@@ -98,3 +103,30 @@ def list_non_hidden(dir: str) -> list[str]:
     """
     return [f for f in os.listdir(dir) if
             not f.startswith(".") and not f.endswith(".log")]
+
+
+def load_yaml_file(path: Path) -> dict[str, Any]:
+    """
+    Loads a yaml file to a dict.
+    :param path: The path to the yaml file.
+    :return: Returns the loaded yaml as dict.
+    """
+    # Read file
+    try:
+        raw_str = path.read_text()
+    except FileNotFoundError:
+        logging.warning(f"Yaml file {path} not found.")
+        return {}
+
+    # Parse yaml
+    try:
+        dic = yaml.load(raw_str, Loader=SafeLoader)
+    except yaml.YAMLError as e:
+        logging.warning(f"Yaml file {path} could not be parsed.")
+        logging.warning(e)
+        return {}
+
+    # Return dict
+    if dic is None:
+        return {}
+    return dic
