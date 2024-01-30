@@ -25,6 +25,10 @@ def permutation_matrix(start_idx: int, matrix_size: int) -> np.ndarray:
     """
     matrix = [[(i + start_idx, (i + j) % matrix_size) for j in range(matrix_size)]
               for i in range(matrix_size)]
+
+    # Transpose the matrix to get the desired output
+    matrix = list(map(list, zip(*matrix)))
+
     return np.array(matrix)
 
 
@@ -38,11 +42,11 @@ def permutation_matrix_2(start_idx: int, sub_matrix_size: int,
     :param width: The width of the combined permutation matrix.
     :return: The combined permutation matrix.
     """
-    width_matrix_count = sub_matrix_size // width
+    width_matrix_count = width // sub_matrix_size
     width_end_idx = start_idx + width_matrix_count
     sub_matrices = []
     for i in range(start_idx, width_end_idx):
-        sub_matrices.append(permutation_matrix(start_idx=i,
+        sub_matrices.append(permutation_matrix(start_idx=i * sub_matrix_size,
                                                matrix_size=sub_matrix_size))
     return np.concatenate(sub_matrices, axis=1)
 
@@ -56,14 +60,14 @@ def permutation_matrix_3(sub_matrix_size: int, width: int, height: int) -> np.nd
     :param height: The height of the combined permutation matrix.
     :return: The combined permutation matrix.
     """
-    height_matrix_count = sub_matrix_size // height
+    height_matrix_count = height // sub_matrix_size
     sub_matrices = []
     for i in range(height_matrix_count):
-        sub_matrices.append(permutation_matrix_2(start_idx=i,
+        sub_matrices.append(permutation_matrix_2(start_idx=i * 2,
                                                  sub_matrix_size=sub_matrix_size,
                                                  width=width))
 
-    return np.concatenate(sub_matrices, axis=1)
+    return np.concatenate(sub_matrices, axis=0)
 
 
 class Snippet:
@@ -426,7 +430,7 @@ class SurveyCrafter:
                                             height=self.num_sheets)
         surveys = []
         for i in range(self.num_sheets):
-            surveys.append(self._craft_sheet(methods, permutations[:, i]))
+            surveys.append(self._craft_sheet(methods, permutations[i]))
 
         return surveys
 

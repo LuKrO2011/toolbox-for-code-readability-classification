@@ -47,7 +47,7 @@ DIFF_EXTRACTOR_DIR = RES_DIR / "diff_extractor/"
 
 
 class DirTest(unittest.TestCase):
-    output_dir_name = None  # Set to "output" to generate output
+    output_dir_name = "output"  # Set to "output" to generate output
 
     def setUp(self):
         # Create temporary directories for testing if output directory is None
