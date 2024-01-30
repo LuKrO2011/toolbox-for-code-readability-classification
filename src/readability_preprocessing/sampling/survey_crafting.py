@@ -9,10 +9,10 @@ from readability_preprocessing.extractors.diff_extractor import compare_java_fil
 from readability_preprocessing.utils.utils import list_non_hidden, load_yaml_file
 
 default_sample_amount: dict[str, int] = {
-    "stratum0": 5,
-    "stratum1": 10,
-    "stratum2": 5,
-    "stratum3": 10,
+    "stratum0": 4,
+    "stratum1": 16,
+    "stratum2": 4,
+    "stratum3": 16,
 }
 
 
@@ -134,6 +134,18 @@ class RDH:
         """
         self.stratum = stratum
 
+    def get_snippet(self, name: str) -> Snippet | None:
+        """
+        Get the snippet with the given name, if it exists. Otherwise, return None.
+        :param name: The name of the snippet.
+        :return: The snippet or None.
+        """
+        if name in self.snippets:
+            return self.snippets[name]
+        else:
+            logging.warning(f"Snippet {name} not found in rdh {self.name}.")
+            return None
+
 
 class Method:
     """
@@ -160,10 +172,19 @@ class Method:
         :return: None
         """
         self.stratum = stratum
-        self.original.set_stratum(stratum)
-        self.nomod.set_stratum(stratum)
+        if self.original is not None:
+            self.original.set_stratum(stratum)
+        else:
+            logging.warning(f"Could not set stratum for method.")
+        if self.nomod is not None:
+            self.nomod.set_stratum(stratum)
+        else:
+            logging.warning(f"Could not set stratum for method.")
         for rdh in self.rdhs.values():
-            rdh.set_stratum(stratum)
+            if rdh is not None:
+                rdh.set_stratum(stratum)
+            else:
+                logging.warning(f"Could not set stratum for method.")
 
     def compare_to_nomod(self, root: Path) -> list[Snippet]:
         """
@@ -174,9 +195,13 @@ class Method:
         """
         not_diff = []
         for rdh in self.rdhs.values():
-            is_diff = compare_java_files(self.nomod.get_path(root), rdh.get_path(root))
-            if not is_diff:
-                not_diff.append(rdh)
+            if rdh is not None:
+                is_diff = compare_java_files(self.nomod.get_path(root),
+                                             rdh.get_path(root))
+                if not is_diff:
+                    not_diff.append(rdh)
+            else:
+                logging.warning(f"Could not compare rdh to nomod.")
         return not_diff
 
     def pick_variant(self, variant: str) -> Snippet:
@@ -249,14 +274,18 @@ class SurveyCrafter:
         self.output_dir = output_dir
         self.snippets_per_sheet = snippets_per_sheet
         self.num_sheets = num_sheets
-        self.sample_amount = load_yaml_file(sample_amount_path)
-        if self.sample_amount is None or len(self.sample_amount) == 0:
-            self.sample_amount: dict[str, float] = default_sample_amount
         self.original_name = original_name
         self.nomod_name = nomod_name
         self.num_stratas = None
         self.num_rdhs = None
         self.int_to_key = None
+
+        # Load the sample amount
+        self.sample_amount: dict[str, float] = {}
+        if sample_amount_path is not None:
+            self.sample_amount = load_yaml_file(sample_amount_path)
+        if self.sample_amount is None or len(self.sample_amount) == 0:
+            self.sample_amount = default_sample_amount
 
     def craft_surveys(self) -> None:
         """
@@ -271,7 +300,7 @@ class SurveyCrafter:
         for stratum in strata.values():
             logging.info(f"{stratum.name}: Number of methods: {len(stratum.methods)}")
 
-        methods = self.sample_methods(strata)
+        methods = self.sample_methods(strata, sample_amount=self.sample_amount)
         no_mod_methods = []
         for method in methods:
             no_mod_methods += method.compare_to_nomod(Path(self.input_dir))
@@ -366,10 +395,10 @@ class SurveyCrafter:
         """
         methods = []
         for name, original_method in original_rdh.snippets.items():
-            nomod_method = nomod_rdh.snippets[name]
+            nomod_method = nomod_rdh.get_snippet(name)
             rdh_methods = {}
             for rdh in rdhs.values():
-                rdh_methods[rdh.name] = rdh.snippets[name]
+                rdh_methods[rdh.name] = rdh.get_snippet(name)
             methods.append(Method(original_method, nomod_method, rdh_methods))
         return methods
 
@@ -421,14 +450,17 @@ class SurveyCrafter:
         # Copy the snippets to the output subdirectories with name "stratum_rdh_oldName"
         for i, survey in enumerate(surveys):
             for j, snippet in enumerate(survey.snippets):
-                stratum = snippet.stratum.name
-                rdh = snippet.rdh.name
-                old_name = snippet.name
-                new_name = f"{stratum}_{rdh}_{old_name}"
-                shutil.copy(
-                    os.path.join(self.input_dir, stratum, rdh, old_name),
-                    os.path.join(self.output_dir, f"sheet_{i}", new_name),
-                )
+                if snippet is not None:
+                    stratum = snippet.stratum.name
+                    rdh = snippet.rdh.name
+                    old_name = snippet.name
+                    new_name = f"{stratum}_{rdh}_{old_name}"
+                    shutil.copy(
+                        os.path.join(self.input_dir, stratum, rdh, old_name),
+                        os.path.join(self.output_dir, f"sheet_{i}", new_name),
+                    )
+                else:
+                    logging.warning(f"Snippet {j} in survey {i} is None.")
 
     def craft_sheets(self, methods: list[Method]) -> list[Survey]:
         """
