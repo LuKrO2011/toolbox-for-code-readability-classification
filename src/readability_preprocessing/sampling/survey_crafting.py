@@ -71,6 +71,32 @@ def permutation_matrix_3(sub_matrix_size: int, width: int, height: int) -> np.nd
     return np.concatenate(sub_matrices, axis=0)
 
 
+# def permutation_matrix_3(sub_matrix_size: int, width: int, height: int) -> np.ndarray:
+#     """
+#     Create a permutation matrix of the given size. Therefore, multiple permutation
+#     matrices are combined.
+#     :param sub_matrix_size: The size of a sub matrix.
+#     :param width: The width of the combined permutation matrix.
+#     :param height: The height of the combined permutation matrix.
+#     :return: The combined permutation matrix.
+#     """
+#     width_matrix_count = width // sub_matrix_size
+#     height_matrix_count = height // sub_matrix_size
+#     matrix_count = width_matrix_count * height_matrix_count
+#     sub_matrices = []
+#     for i in range(matrix_count):
+#         sub_matrices.append(
+#             permutation_matrix(
+#                 start_idx=i * sub_matrix_size,
+#                 matrix_size=sub_matrix_size))
+#
+#     # Concat 1 and 4 horizontally and 2 and 3 horizontally and then vertically
+#     sub_matrices = [np.concatenate([sub_matrices[0], sub_matrices[3]], axis=1),
+#                     np.concatenate([sub_matrices[1], sub_matrices[2]], axis=1)]
+#     matrix = np.concatenate(sub_matrices, axis=0)
+#     return matrix
+
+
 class Snippet:
     """
     A snippet is a code snippet. It belongs to a RDH.
@@ -320,6 +346,9 @@ class SurveyCrafter:
         logging.info(
             f"Strata: Number of not different snippets: {len(no_mod_methods)}")
 
+        # Shuffle the methods to make sure all stratas are equally represented
+        random.shuffle(methods)
+
         # Create the surveys
         surveys = self.craft_sheets(methods)
 
@@ -466,15 +495,17 @@ class SurveyCrafter:
         for i in range(self.num_sheets):
             os.makedirs(os.path.join(self.output_dir, f"sheet_{i}"), exist_ok=True)
 
-        # Copy the snippets to the output subdirectories with name "stratum_rdh_oldName"
+        # Copy the snippets to the output with name "idx_stratum_rdh_oldName"
         for i, survey in enumerate(surveys):
+            random.shuffle(survey.snippets)
             for j, snippet in enumerate(survey.snippets):
                 stratum = snippet.stratum.name
                 rdh = snippet.rdh.name
                 old_name = snippet.name
-                new_name = f"{stratum}_{rdh}_{old_name}"
+                new_name = f"{j}_{stratum}_{rdh}_{old_name}"
                 if isinstance(snippet, NoSnippet):
-                    logging.warning(f"Survey {i}: Snippet {j}: {old_name} not found.")
+                    logging.warning(f"Survey {i}: Snippet {j}: "
+                                    f"{stratum}/{rdh}/{old_name} not found.")
                 else:
                     shutil.copy(
                         os.path.join(self.input_dir, stratum, rdh, old_name),
