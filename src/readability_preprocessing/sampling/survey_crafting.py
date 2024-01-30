@@ -1,7 +1,6 @@
 import logging
 import os
 import shutil
-from enum import Enum
 from pathlib import Path
 
 import numpy as np
@@ -44,6 +43,45 @@ def permutation_matrix(start_idx: int = 0, matrix_size: int = 10) -> np.ndarray:
     matrix = [[(i + start_idx, (i + j) % matrix_size) for j in range(matrix_size)]
               for i in range(matrix_size)]
     return np.array(matrix)
+
+
+def permutation_matrix_2(start_idx: int = 0, sub_matrix_size: int = 10,
+                         width: int = 20) -> np.ndarray:
+    """
+    Create a permutation matrix of the given size. Therefore, multiple permutation
+    matrices are combined.
+    :param start_idx: The index to start the permutation matrix at.
+    :param sub_matrix_size: The size of a sub matrix.
+    :param width: The width of the combined permutation matrix.
+    :return: The combined permutation matrix.
+    """
+    width_matrix_count = sub_matrix_size // width
+    width_end_idx = start_idx + width_matrix_count
+    sub_matrices = []
+    for i in range(start_idx, width_end_idx):
+        sub_matrices.append(permutation_matrix(start_idx=i,
+                                               matrix_size=sub_matrix_size))
+    return np.concatenate(sub_matrices, axis=1)
+
+
+def permutation_matrix_3(sub_matrix_size: int = 10, width: int = 20, height: int = 20) \
+    -> np.ndarray:
+    """
+    Create a permutation matrix of the given size. Therefore, multiple permutation
+    matrices are combined.
+    :param sub_matrix_size: The size of a sub matrix.
+    :param width: The width of the combined permutation matrix.
+    :param height: The height of the combined permutation matrix.
+    :return: The combined permutation matrix.
+    """
+    height_matrix_count = sub_matrix_size // height
+    sub_matrices = []
+    for i in range(height_matrix_count):
+        sub_matrices.append(permutation_matrix_2(start_idx=i,
+                                                 sub_matrix_size=sub_matrix_size,
+                                                 width=width))
+
+    return np.concatenate(sub_matrices, axis=1)
 
 
 class Snippet:
@@ -406,35 +444,29 @@ class SurveyCrafter:
         :param methods: The methods to sample from.
         :return: The sampled surveys.
         """
+        permutations = permutation_matrix_3(sub_matrix_size=self.num_rdhs,
+                                            width=self.snippets_per_sheet,
+                                            height=self.num_sheets)
         surveys = []
-
-        # Craft the sheet parts: list of num_rdhs * num_rdhs
-        num_sheet_parts = (self.num_sheets * self.snippets_per_sheet) // self.num_rdhs
-        for i in range(num_sheet_parts):
-            surveys += self.craft_sheet_parts(methods, i)
+        for i in range(self.num_sheets):
+            surveys.append(self.craft_sheet(methods, permutations[:, i]))
 
         return surveys
 
-    def craft_sheet_parts(self, methods: list[Method], idx: int) -> list[list[Snippet]]:
+    def craft_sheet(self, methods: list[Method], permutation: np.ndarray) -> Survey:
         """
-        Craft a part of the sheets using the given methods and permutations.
+        Craft a single sheet using the given methods and permutation array.
         :param methods: The methods to sample from.
-        :param idx: The index of the part.
+        :param permutation: The permutation to use.
         :return: The sampled snippets.
         """
-        start_inx = idx * self.num_rdhs
-        # TODO: Extend permutation matrix to 20*10 instead of 20*20
-        permutations = permutation_matrix(start_inx, self.num_rdhs)
-        sheet_parts = []
-        for i in range(self.num_rdhs):
-            snippets = []
-            for j in range(self.num_rdhs):
-                method_idx, variant_idx = permutations[i, j]
-                snippet = pick_snippet(methods, method_idx, variant_idx)
-                snippets.append(snippet)
-            sheet_parts.append(snippets)
+        snippets = []
+        for i in range(self.snippets_per_sheet):
+            method_idx, variant_idx = permutation[i]
+            snippet = pick_snippet(methods, method_idx, variant_idx)
+            snippets.append(snippet)
 
-        return sheet_parts
+        return Survey(snippets)
 
     def sample_methods(self, strata: dict[str, Stratum],
                        sample_amount: dict[str, int] = None) -> list[Method]:
