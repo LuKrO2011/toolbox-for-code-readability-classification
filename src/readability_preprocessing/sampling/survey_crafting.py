@@ -284,6 +284,7 @@ class SurveyCrafter:
         self.nomod_name = nomod_name
         self.num_stratas = None
         self.num_rdhs = None
+        self.int_to_key = None
 
     def craft_surveys(self) -> None:
         """
@@ -307,16 +308,15 @@ class SurveyCrafter:
         logging.info(
             f"Strata: Number of not different snippets: {len(no_mod_methods)}")
 
-        # TODO: Remove not diff and add new snippets
-
         # Create the surveys
         surveys = self.craft_sheets(methods)
 
-        # Log information about the methods
-        for stratum in methods.values():
-            logging.info(f"{stratum.name}: Number of methods: {len(stratum.methods)}")
+        # Log information about the surveys
+        logging.info(f"Strata: Number of surveys: {len(surveys)}")
+        for i, survey in enumerate(surveys):
+            logging.info(f"Survey {i}: Number of snippets: {len(survey.snippets)}")
 
-        # self._write_output(surveys)
+        self._write_output(surveys)
 
     def craft_stratas(self) -> dict[str, Stratum]:
         """
@@ -329,11 +329,14 @@ class SurveyCrafter:
         rdh_names = self._load_rdhs(strata_names)
         self.num_rdhs = len(rdh_names)
 
+        # Create the int_to_key
+        self.set_int_to_key(rdh_names)
+
         # Convert the strats and rdhs to objects
         strata = {}
         for strata_name in strata_names:
             rdhs = {}
-            for rdh_name in rdh_names[strata_name]:
+            for rdh_name in rdh_names:
                 # Skip the nomod and original rdh
                 if rdh_name == self.nomod_name or rdh_name == self.original_name:
                     continue
@@ -392,19 +395,18 @@ class SurveyCrafter:
                            snippet_names}
         return RDH(rdh_name, unused_snippets)
 
-    def _load_rdhs(self, strata_names: list[str]) -> dict[str, list[str]]:
+    def _load_rdhs(self, strata_names: list[str]) -> list[str]:
         """
         Load the rdhs from the input directory.
         :param strata_names: The names of the stratas.
         :return: The rdh names and probabilities.
         """
         # Load the rdh names as the names of the subdirectories
-        rdh_names = {}
+        rdh_names = []
         for strata_name in strata_names:
-            rdh_names[strata_name] = list_non_hidden(os.path.join(self.input_dir,
-                                                                  strata_name))
+            rdh_names += list_non_hidden(os.path.join(self.input_dir, strata_name))
 
-        return rdh_names
+        return list(set(rdh_names))
 
     def _load_stratas(self) -> list[str]:
         """
@@ -489,3 +491,14 @@ class SurveyCrafter:
             sampled += sampled_methods
 
         return sampled
+
+    def set_int_to_key(self, rdh_names: list[str]) -> None:
+        """
+        Calculate the int_to_key dict from the given rdh names and set it.
+        :param rdh_names: The rdh names to use.
+        :return: The int_to_key dict.
+        """
+        int_to_key = {}
+        for i, rdh_name in enumerate(rdh_names):
+            int_to_key[i] = rdh_name
+        self.int_to_key = int_to_key
