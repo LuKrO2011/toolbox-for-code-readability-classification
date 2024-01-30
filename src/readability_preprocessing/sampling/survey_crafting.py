@@ -338,6 +338,14 @@ class SurveyCrafter:
             logging.info(f"{stratum.name}: Number of methods: {len(stratum.methods)}")
 
         methods = self.sample_methods(strata, sample_amount=self.sample_amount)
+
+        # Store and log the original method name of each method
+        self._store_sampled_methods(methods)
+        logging.info("Original method names of the sampled methods:")
+        for method in methods:
+            logging.info(f"{method.original.stratum.name}/{method.original.rdh.name}/"
+                         f"{method.original.name}")
+
         no_mod_methods = []
         for method in methods:
             no_mod_methods += method.compare_to_nomod(Path(self.input_dir))
@@ -588,3 +596,16 @@ class SurveyCrafter:
         if not isinstance(variant, str):
             variant = self.int_to_key[variant]
         return methods[index].pick_variant(variant)
+
+    def _store_sampled_methods(self, methods: list[Method],
+                               filename: str = "chosen_methods.txt") -> None:
+        """
+        Store the sampled methods in the output directory.
+        :param methods: The methods to store.
+        :return: The stored methods.
+        """
+        with open(os.path.join(self.output_dir, filename), "w") as file:
+            for method in methods:
+                file.write(f"{method.original.stratum.name}/"
+                           f"{method.original.rdh.name}/"
+                           f"{method.original.name}\n")
