@@ -1,5 +1,6 @@
 import logging
 import os
+import random
 import shutil
 from pathlib import Path
 
@@ -220,13 +221,12 @@ class Method:
         :param variant: The variant name or index.
         :return: The picked snippet.
         """
-        if isinstance(variant, str):
-            if variant == "none":
-                return self.nomod
-            elif variant == "methods":
-                return self.original
-            else:
-                return self.rdhs[variant]
+        if variant == "none":
+            return self.nomod
+        elif variant == "methods":
+            return self.original
+        else:
+            return self.rdhs[variant]
 
 
 class Stratum:
@@ -529,7 +529,7 @@ class SurveyCrafter:
             methods = stratum.methods
             sampled_methods = []
             for i in range(sample_amount[stratum.name]):
-                sampled_methods.append(methods.pop(np.random.randint(len(methods))))
+                sampled_methods.append(methods.pop(random.randint(0, len(methods) - 1)))
             sampled += sampled_methods
 
         return sampled
