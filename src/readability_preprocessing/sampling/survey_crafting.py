@@ -347,19 +347,25 @@ class SurveyCrafter:
         methods = self.sample_methods(strata, sample_amount=self.sample_amount)
 
         # Store and log the original method name of each method
-        self._store_sampled_methods(methods)
+        self._store_methods(methods, "chosen_methods.txt")
         logging.info("Original method names of the sampled methods:")
         for method in methods:
             logging.info(f"{method.original.stratum.name}/{method.original.rdh.name}/"
                          f"{method.original.name}")
 
-        no_mod_methods = []
+        # Compare each rdh to the nomod to get the not different snippets
+        no_mod_snippets: list[Snippet] = []
         for method in methods:
-            no_mod_methods += method.compare_to_nomod(Path(self.input_dir))
+            no_mod_snippets += method.compare_to_nomod(Path(self.input_dir))
 
         # Log information about the not different snippets
+        self._store_snippets(no_mod_snippets, "no_mod_snippets.txt")
         logging.info(
-            f"Strata: Number of not different snippets: {len(no_mod_methods)}")
+            f"Strata: Number of not different snippets: {len(no_mod_snippets)}")
+        logging.info("Original method names of the not different snippets:")
+        for snippet in no_mod_snippets:
+            logging.info(f"{snippet.stratum.name}/{snippet.rdh.name}/"
+                         f"{snippet.name}")
 
         # Shuffle the methods to make sure all stratas are equally represented
         random.shuffle(methods)
@@ -405,13 +411,6 @@ class SurveyCrafter:
 
             # Add the stratum
             strata[strata_name] = Stratum(strata_name, methods)
-
-        # Remove empty rdhs and stratas
-        # for stratum in strata:
-        #     stratum.rdhs = {rdh_name: rdh for rdh_name, rdh in
-        #                     stratum.rdhs.values() if len(rdh.snippets) > 0}
-        # strata = {stratum_name: stratum for stratum_name, stratum in
-        #           strata.values() if len(stratum.rdhs) > 0}
 
         return strata
 
@@ -521,6 +520,15 @@ class SurveyCrafter:
                 if isinstance(snippet, NoSnippet):
                     logging.warning(f"Survey {i}: Snippet {j}: "
                                     f"{stratum}/{rdh}/{old_name} not found.")
+
+                    # Replace the first _ with / and remove everything after second _
+                    source_path = old_name.replace("_", "/", 1).split("_")[0]
+                    logging.info(f"None path:   "
+                                 f"none/none/{source_path}")
+                    logging.info(f"Source path: "
+                                 f"{rdh}/{rdh}/{source_path}")
+                    logging.info(f"Goal path:   "
+                                 f"sheet_{i}/{j}_{stratum}_{rdh}_{old_name}")
                 else:
                     shutil.copy(
                         os.path.join(self.input_dir, stratum, rdh, old_name),
@@ -576,7 +584,7 @@ class SurveyCrafter:
             sampled_methods = []
             for i in range(sample_amount[stratum.name]):
                 chosen = None
-                while chosen is None or self.in_excluded(chosen):
+                while chosen is None or self._in_excluded(chosen):
                     chosen = methods.pop(random.randint(0, len(methods) - 1))
                 sampled_methods.append(chosen)
             sampled += sampled_methods
@@ -621,7 +629,33 @@ class SurveyCrafter:
                            f"{method.original.rdh.name}/"
                            f"{method.original.name}\n")
 
-    def in_excluded(self, chosen: Method) -> bool:
+    def _store_methods(self, methods: list[Method], filename: str) -> None:
+        """
+        Store the given methods in the given txt file in the output directory.
+        The format is stratum/rdh/method.
+        :param methods: The methods to store.
+        :return: The stored methods.
+        """
+        with open(os.path.join(self.output_dir, filename), "w") as file:
+            for method in methods:
+                file.write(f"{method.original.stratum.name}/"
+                           f"{method.original.rdh.name}/"
+                           f"{method.original.name}\n")
+
+    def _store_snippets(self, snippets: list[Snippet], filename: str) -> None:
+        """
+        Store the given snippets in the given txt file in the output directory.
+        The format is stratum/rdh/method.
+        :param snippets: The methods to store.
+        :return: The stored methods.
+        """
+        with open(os.path.join(self.output_dir, filename), "w") as file:
+            for snippet in snippets:
+                file.write(f"{snippet.stratum.name}/"
+                           f"{snippet.rdh.name}/"
+                           f"{snippet.name}\n")
+
+    def _in_excluded(self, chosen: Method) -> bool:
         """
         Check if the chosen method is in the excluded list. This is done by comparing
         the original method stratum/rdh/name with the excluded list.
