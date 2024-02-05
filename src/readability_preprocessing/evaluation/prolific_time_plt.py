@@ -2,11 +2,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from readability_preprocessing.evaluation.utils import load_csv_file, \
-    DEMOGRAPHIC_DATA_DIR
+    DEMOGRAPHIC_DATA_DIR, load_csv_files
 
 # Load the CSV file into a DataFrame
-file_path = DEMOGRAPHIC_DATA_DIR / "p1s1.csv"
-df = load_csv_file(file_path)
+file_path = DEMOGRAPHIC_DATA_DIR / "p1s0.csv"
+file_path2 = DEMOGRAPHIC_DATA_DIR / "p1s1.csv"
+df = load_csv_files([file_path, file_path2])
 
 # Remove all non-completed surveys
 not_completed_codes = ['TIMED-OUT', 'RETURNED']

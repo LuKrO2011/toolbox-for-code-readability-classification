@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+import re
 
 import pandas as pd
 
@@ -18,6 +19,7 @@ NONE_DIFF_RESULTS_DIR = DIFF_RESULTS_DIR / "none"
 
 PROLIFIC_DIR = CURR_DIR / "../../res/prolific"
 DEMOGRAPHIC_DATA_DIR = PROLIFIC_DIR / "demographic_data"
+GROUPS_DIR = PROLIFIC_DIR / "groups"
 
 
 def load_repos(input_path: Path = DEFAULT_REPOS_INPUT, top_k: int = None) -> dict:
@@ -59,3 +61,28 @@ def load_csv_file(file_path):
     :return: The parsed CSV file as a DataFrame
     """
     return pd.read_csv(file_path)
+
+
+def load_csv_files(file_paths):
+    """
+    Load and combine multiple CSV files into a single DataFrame
+    :param file_paths: The paths to the CSV files
+    :return: The combined CSV files as a DataFrame
+    """
+    return pd.concat([load_csv_file(file_path) for file_path in file_paths],
+                     ignore_index=True)
+
+
+def load_ids_from_txt(file_path):
+    """
+    Load the ids from a txt file. The ids are split by regular or full-width commas.
+    Remove non-breaking space characters.
+    :param file_path: The path to the txt file
+    :return: A list of ids
+    """
+    with open(file_path, 'r', encoding='utf-8') as file:
+        # Split by regular and full-width commas, remove non-breaking space characters
+        ids = [id.replace('\u00A0', '').strip() for id in
+               re.split(r'[，,]', file.read())]
+    ids = [id for id in ids if id]
+    return ids
