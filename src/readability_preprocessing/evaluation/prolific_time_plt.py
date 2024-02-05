@@ -13,29 +13,25 @@ df = load_csv_file(file_path)
 df = df[df['Status'] != 'TIMED-OUT']
 
 # Get the time taken to complete the survey
-time_in_seconds = df['Time taken']
-time_in_minutes = time_in_seconds / 60
+time_taken = pd.to_timedelta(df['Time taken'], unit="s")
 
-# Plotting
-plt.figure(figsize=(6, 8))
-plt.boxplot(time_in_seconds)
-plt.xticks([1], ['Overall'])
-plt.ylabel('Time (minutes)')
-plt.title('Time required to complete the survey')
+# # Plot the boxplot
+# plt.figure(figsize=(10, 6))
+# boxplot = plt.boxplot(time_taken, vert=False, patch_artist=True)
+#
+# # Customize the boxplot
+# plt.title('Time Taken to Complete Survey')
+# plt.xlabel('Time (mm:ss)')
+# plt.yticks([])  # Hide y-axis ticks
 
-# Update y-axis labels
-plt.yticks(plt.yticks()[0],
-           ['{}:{:02d}'.format(int(seconds // 60), int(seconds % 60)) for seconds in
-            plt.yticks()[0]])
+# Calculate and display mean, std, and median
+mean_time = time_taken.mean()
+std_time = time_taken.std()
+median_time = time_taken.median()
+
+print(f"Mean Time: {str(mean_time).split()[-1]}")
+print(f"Standard Deviation: {str(std_time).split()[-1]}")
+print(f"Median Time: {str(median_time).split()[-1]}")
+
+# Show the plot
 plt.show()
-
-# Calculate and print statistics
-average_time = time_in_minutes.mean()
-median_time = time_in_minutes.median()
-std_deviation = time_in_minutes.std()
-
-# Print time values as mm:ss
-print("Statistics:")
-print("Average: {:.2f} minutes".format(average_time))
-print("Median: {:.2f} minutes".format(median_time))
-print("Standard Deviation: {:.2f} minutes".format(std_deviation))
