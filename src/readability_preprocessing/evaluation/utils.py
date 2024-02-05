@@ -3,6 +3,8 @@ import json
 import os
 from pathlib import Path
 
+import pandas as pd
+
 CURR_DIR = Path(os.path.dirname(os.path.relpath(__file__)))
 REPOS_DIR = CURR_DIR / "../../res/repos"
 PROJECT_DIR = REPOS_DIR / "try5-2023-11-27-pom"
@@ -13,6 +15,9 @@ DEFAULT_SURVEY_DIR = SURVEYS_DIR / "pilot_survey"
 
 DIFF_RESULTS_DIR = CURR_DIR / "../../res/diff_results"
 NONE_DIFF_RESULTS_DIR = DIFF_RESULTS_DIR / "none"
+
+PROLIFIC_DIR = CURR_DIR / "../../res/prolific"
+DEMOGRAPHIC_DATA_DIR = PROLIFIC_DIR / "demographic_data"
 
 
 def load_repos(input_path: Path = DEFAULT_REPOS_INPUT, top_k: int = None) -> dict:
@@ -45,3 +50,12 @@ def load_json_file(file_path):
     with open(file_path, 'r') as file:
         content = json.load(file)
     return content
+
+
+def load_csv_file(file_path):
+    """
+    Load and parse a CSV file as a DataFrame
+    :param file_path: The path to the CSV file
+    :return: The parsed CSV file as a DataFrame
+    """
+    return pd.read_csv(file_path)
