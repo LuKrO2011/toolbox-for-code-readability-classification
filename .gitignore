@@ -291,3 +291,4 @@ tests/res/raw_datasets/krod/*
 tests/res/encoded_datasets/krod/*
 tests/res/encoded_datasets/scalabrio/*
 /tests/res/credentials/
+/src/res/prolific/plots/

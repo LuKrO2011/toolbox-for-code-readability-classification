@@ -501,35 +501,109 @@ def anova(ratings: dict[str, list[int]]) -> tuple[float, float]:
     return statistic, p_value
 
 
-def tukey(ratings: dict[str, list[int]], alpha: float = 0.05) -> None:
+def check_normality(ratings: dict[str, list[int]]) -> None:
     """
-    Perform pairwise Turkey's HSD test on the ratings
+    Check the normality of the ratings
     :param ratings: The ratings
-    :param alpha: The significance level
-    :return: The results of the test
+    :return: None
     """
-
-    # Compare none to methods
-    none = ratings['none']
-    methods = ratings['methods']
-    # results = stats.tukey_hsd(none, methods)
-    results = stats.ttest_ind(none, methods)
-    rejected = results[1] < alpha
-    print("none-methods")
-    print(results)
-    print("Rejected:", rejected)
+    # for key, value in ratings.items():
+    #     statistic, p_value = stats.normaltest(value)
+    #     print(f"Normality Test for {key}:")
+    #     print("Statistic:", statistic)
+    #     print("P-value:", p_value)
+    #     print("Normal:", p_value > 0.05)
+    #     print()
+    statistic, p_value = stats.normaltest(np.concatenate(list(ratings.values())))
+    print("Normality Test for All Ratings:")
+    print("Statistic:", statistic)
+    print("P-value:", p_value)
+    print("Normal:", p_value > 0.05)
     print()
 
-    # Compare none to all others pairwise
+
+def check_homogeneity_of_variance(ratings: dict[str, list[int]]) -> None:
+    """
+    Check the homogeneity of variance of the ratings
+    :param ratings: The ratings
+    :return: None
+    """
+    statistic, p_value = stats.levene(*list(ratings.values()))
+    print("Levene's Test for Homogeneity of Variance:")
+    print("Statistic:", statistic)
+    print("P-value:", p_value)
+    print("Homogeneous:", p_value > 0.05)
+    print()
+
+
+def ttest_ind(ratings: dict[str, list[int]], alpha: float = 0.05,
+              compare_to: str = 'none') -> None:
+    """
+    Perform pairwise independent t-tests on the ratings.
+    REQUIRES NORMALITY AND HOMOGENEITY OF VARIANCE!
+    :param ratings: The ratings
+    :param alpha: The significance level
+    :param compare_to: The key to compare all others to
+    :return: The results of the test
+    """
+    none = ratings[compare_to]
     for key, value in ratings.items():
-        if key != 'none':
-            # results = stats.tukey_hsd(none, value)
+        if key != compare_to:
             results = stats.ttest_ind(none, value)
             rejected = results[1] < alpha
             print(f"none-{key}")
             print(results)
             print("Rejected:", rejected)
             print()
+
+def mann_whitney_u(ratings: dict[str, list[int]], alpha: float = 0.05,
+                compare_to: str = 'none') -> None:
+    """
+    Perform pairwise independent t-tests on the ratings.
+    :param ratings: The ratings
+    :param alpha: The significance level
+    :param compare_to: The key to compare all others to
+    :return: The results of the test
+    """
+    none = ratings[compare_to]
+    for key, value in ratings.items():
+        if key != compare_to:
+            results = stats.mannwhitneyu(none, value)
+            rejected = results[1] < alpha
+            print(f"none-{key}")
+            print(results)
+            print("Rejected:", rejected)
+            print()
+
+
+def plot_distributions(ratings: dict[str, list[int]]) -> None:
+    """
+    Plot the distribution of the ratings for each RDH
+    :param ratings: The ratings
+    :return: None
+    """
+    for key, value in ratings.items():
+        plt.hist(value, label=key)
+    plt.legend(loc='upper right')
+    plt.show()
+
+
+def plot_distribution(ratings: list[int],
+                      title: str = 'Distribution of Ratings') -> None:
+    """
+    Plot the distribution of the ratings
+    :param ratings: The ratings
+    :param title: The title of the plot
+    :return: None
+    """
+    # Set the bin edges to integer values
+    bin_edges = range(min(ratings), max(ratings) + 2)  # +2 to include the rightmost edge
+    plt.hist(ratings, bins=bin_edges, align='left', edgecolor='black')
+    plt.xticks(range(1, 6))
+    plt.title(title)
+    plt.xlabel('Rating')
+    plt.ylabel('Frequency')
+    plt.show()
 
 
 stratas = load_stratas(SURVEY_DATA_DIR)
@@ -539,14 +613,17 @@ stratas = load_stratas(SURVEY_DATA_DIR)
 
 ratings = combine_by_rdh(stratas)
 print("Overall Score:", calculate_overall_score(ratings))
+print()
 anova(ratings)
 print()
-tukey(ratings)
+mann_whitney_u(ratings)
+# print()
+# check_normality(ratings)
+# print()
+# check_homogeneity_of_variance(ratings)
 
-# for stratum in stratas.keys():
-#     ratings = {}
-#     for rdh in stratas[stratum].rdhs.values():
-#         ratings[rdh.name] = rdh.get_ratings()
-#     print(f"Stratum: {stratum}")
-#     anova(ratings)
-#     print()
+# Plot the distribution of the ratings for each RDH
+# merged = []
+# for value in ratings.values():
+#     merged.extend(value)
+# plot_distribution(merged, title='Distribution of Ratings for All RDHs')
