@@ -20,6 +20,8 @@ NONE_DIFF_RESULTS_DIR = DIFF_RESULTS_DIR / "none"
 PROLIFIC_DIR = CURR_DIR / "../../res/prolific"
 DEMOGRAPHIC_DATA_DIR = PROLIFIC_DIR / "demographic_data"
 GROUPS_DIR = PROLIFIC_DIR / "groups"
+SURVEY_DATA_DIR = PROLIFIC_DIR / "results"
+PLOT_DIR = PROLIFIC_DIR / "plots"
 
 
 def load_repos(input_path: Path = DEFAULT_REPOS_INPUT, top_k: int = None) -> dict:
