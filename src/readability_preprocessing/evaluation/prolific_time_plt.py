@@ -1,13 +1,16 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from readability_preprocessing.evaluation.utils import load_csv_file, \
-    DEMOGRAPHIC_DATA_DIR, load_csv_files
+from readability_preprocessing.evaluation.utils import DEMOGRAPHIC_DATA_DIR, \
+    load_csv_files
 
 # Load the CSV file into a DataFrame
-file_path = DEMOGRAPHIC_DATA_DIR / "p1s0.csv"
-file_path2 = DEMOGRAPHIC_DATA_DIR / "p1s1.csv"
-df = load_csv_files([file_path, file_path2])
+folder_path = DEMOGRAPHIC_DATA_DIR
+file_paths = []
+for file_path in folder_path.iterdir():
+    if file_path.suffix == '.csv':
+        file_paths.append(file_path)
+df = load_csv_files(file_paths)
 
 # Remove all non-completed surveys
 not_completed_codes = ['TIMED-OUT', 'RETURNED']
@@ -37,8 +40,10 @@ plt.xticks([1], ['Overall'])
 plt.ylabel('Time (minutes)')
 plt.title('Time required to complete the survey')
 
-# Update y-axis labels
-plt.yticks(plt.yticks()[0],
-           ['{}:{:02d}'.format(int(seconds // 60), int(seconds % 60)) for seconds in
-            plt.yticks()[0]])
+# Update y-axis labels to be in minutes and seconds in 5-minute intervals
+plt.yticks(
+    [i * 300 for i in range(int(max(time_in_seconds) // 300) + 1)],
+    [f"{i // 60:.0f}:{i % 60:.0f}" for i in range(0, int(max(time_in_seconds)) + 1, 300)]
+)
+
 plt.show()
