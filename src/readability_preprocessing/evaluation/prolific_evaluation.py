@@ -235,6 +235,21 @@ def group_into_strats(json_objects: list[SnippetData]) -> dict[str, Stratum]:
     return stratas
 
 
+def data_and_cat_from_ratings(ratings: dict[list[int]]) -> tuple[list[int], list[str]]:
+    """
+    Extract the data and categories from the ratings
+    :param ratings: The ratings as a dictionary of lists
+    :return: A tuple containing the data and categories
+    """
+    # Sort the ratings by name
+    ratings = dict(sorted(ratings.items()))
+
+    # Extract the data and categories
+    data = list(ratings.values())
+    categories = list(map(str, ratings.keys()))
+    return data, categories
+
+
 def create_box_plot(ratings: dict[list[int]],
                     title: str = 'Box Plot of Ratings') -> pyplot:
     """
@@ -243,16 +258,7 @@ def create_box_plot(ratings: dict[list[int]],
     :param title: The title of the box plot
     :return: None
     """
-    # Check if there are any ratings
-    if not ratings:
-        print("No ratings provided. Cannot create a box plot.")
-        return
-
-    # Create a list of lists for boxplot data
-    data = list(ratings.values())
-
-    # Get the keys (categories) for the box plot as strings
-    categories = list(map(str, ratings.keys()))
+    data, categories = data_and_cat_from_ratings(ratings)
 
     # Create box plot
     plt.boxplot(data, labels=categories)
@@ -272,6 +278,30 @@ def create_box_plot(ratings: dict[list[int]],
     return plt
 
 
+def create_bar_plot(ratings: dict[list[int]],
+                    title: str = 'Bar Plot of Ratings') -> pyplot:
+    """
+    Create a bar plot for the mean of the given ratings
+    :param ratings: The ratings as a dictionary of lists
+    :param title: The title of the bar plot
+    :return: None
+    """
+    data, categories = data_and_cat_from_ratings(ratings)
+
+    # Create bar plot
+    means = [np.mean(values) for values in data]
+    plt.bar(categories, means)
+    plt.title(title)
+    plt.xlabel(PLOT_X_LABEL)
+    plt.ylabel(PLOT_Y_LABEL)
+
+    # Adjust category label display
+    plt.xticks(rotation=90)
+    plt.subplots_adjust(bottom=0.5)
+
+    return plt
+
+
 def create_violin_plot(ratings: dict[list[int]],
                        title: str = 'Violin Plot of Ratings') -> pyplot:
     """
@@ -280,19 +310,7 @@ def create_violin_plot(ratings: dict[list[int]],
     :param title: The title of the violin plot
     :return: None
     """
-    # Check if there are any ratings
-    if not ratings:
-        print("No ratings provided. Cannot create a violin plot.")
-        return
-
-    # Sort the ratings by name
-    ratings = dict(sorted(ratings.items()))
-
-    # Create a list of lists for violin plot data
-    data = list(ratings.values())
-
-    # Get the keys (categories) for the violin plot as strings
-    categories = list(map(str, ratings.keys()))
+    data, categories = data_and_cat_from_ratings(ratings)
 
     # Create violin plot
     plt.violinplot(data, showmeans=True, showmedians=False)
@@ -311,6 +329,40 @@ def create_violin_plot(ratings: dict[list[int]],
         plt.text(i + 1, mean_value + 0.1, f' {mean_value:.2f}', color='black')
 
     return plt
+
+
+def normalize_ratings(ratings: dict[list[int]], sub: float = 0, div: float = 1) -> dict[
+    list[int]]:
+    """
+    Normalize the ratings by the given key
+    :param ratings: The ratings as a dictionary of lists
+    :param sub: The amount to subtract from each rating
+    :param div: The amount to divide each rating by
+    :return: The normalized ratings
+    """
+    # Normalize the ratings
+    normalized_ratings = {}
+    for key, value in ratings.items():
+        if key not in normalized_ratings:
+            normalized_ratings[key] = []
+        normalized_ratings[key].extend(
+            [(rating - sub) / div for rating in value])
+    return normalized_ratings
+
+
+def create_normalized_bar_plot(ratings: dict[list[int]], normalize_by: str = 'methods',
+                               title: str = 'Box Plot of Ratings') -> pyplot:
+    """
+    Create a normalized box plot for the given ratings
+    :param ratings: The ratings as a dictionary of lists
+    :param normalize_by: The key to normalize the ratings by
+    :param title: The title of the box plot
+    :return: None
+    """
+    # Get the mean value of the ratings "normalize_by"
+    mean_value = sum(ratings[normalize_by]) / len(ratings[normalize_by])
+    normalized_ratings = normalize_ratings(ratings, sub=mean_value)
+    return create_bar_plot(normalized_ratings, title)
 
 
 def extract_name(path: str) -> str:
@@ -357,19 +409,29 @@ def plot_rdhs_of_stratum(stratas: dict[str, Stratum], stratum: str) -> None:
     plt.show()
 
 
-def plot_rdhs(stratas: dict[str, Stratum]) -> None:
+def combine_by_rdh(stratas: dict[str, Stratum]) -> dict[str, list[int]]:
     """
-    Plot the RDHs over all strata
+    Combine the ratings of all strata by RDH
     :param stratas: The stratas
-    :return: None
+    :return: A dictionary containing the combined ratings
     """
-    # Combine the ratings of all strata by rdh
+    # Combine the ratings of all strata by RDH
     ratings = {}
     for stratum in stratas.values():
         for rdh in stratum.rdhs.values():
             if rdh.name not in ratings:
                 ratings[rdh.name] = []
             ratings[rdh.name].extend(rdh.get_ratings())
+    return ratings
+
+
+def plot_rdhs(stratas: dict[str, Stratum]) -> None:
+    """
+    Plot the RDHs over all strata
+    :param stratas: The stratas
+    :return: None
+    """
+    ratings = combine_by_rdh(stratas)
 
     # Create a box plot for the ratings of each RDH
     title = "Violin Plot of Ratings for All Strata"
@@ -379,8 +441,14 @@ def plot_rdhs(stratas: dict[str, Stratum]) -> None:
     plt.savefig(PLOT_DIR / "all_strata_violin_plot.png")
     plt.show()
 
+    # Create a normalized box plot for the ratings of each RDH
+    plt = create_normalized_bar_plot(ratings, normalize_by='methods',
+                                     title="Box Plot of Relative Ratings with 'methods' as Baseline")
+
+    # Store the normalized box plot
+    plt.savefig(PLOT_DIR / "all_strata_normalized_bar_plot.png")
+    plt.show()
+
 
 stratas = load_stratas(SURVEY_DATA_DIR)
 plot_rdhs(stratas)
-for stratum in stratas:
-    plot_rdhs_of_stratum(stratas, stratum)
