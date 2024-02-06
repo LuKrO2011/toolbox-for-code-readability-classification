@@ -285,6 +285,9 @@ def create_violin_plot(ratings: dict[list[int]],
         print("No ratings provided. Cannot create a violin plot.")
         return
 
+    # Sort the ratings by name
+    ratings = dict(sorted(ratings.items()))
+
     # Create a list of lists for violin plot data
     data = list(ratings.values())
 
@@ -354,5 +357,30 @@ def plot_rdhs_of_stratum(stratas: dict[str, Stratum], stratum: str) -> None:
     plt.show()
 
 
+def plot_rdhs(stratas: dict[str, Stratum]) -> None:
+    """
+    Plot the RDHs over all strata
+    :param stratas: The stratas
+    :return: None
+    """
+    # Combine the ratings of all strata by rdh
+    ratings = {}
+    for stratum in stratas.values():
+        for rdh in stratum.rdhs.values():
+            if rdh.name not in ratings:
+                ratings[rdh.name] = []
+            ratings[rdh.name].extend(rdh.get_ratings())
+
+    # Create a box plot for the ratings of each RDH
+    title = "Violin Plot of Ratings for All Strata"
+    plt = create_violin_plot(ratings, title)
+
+    # Store the violin plot
+    plt.savefig(PLOT_DIR / "all_strata_violin_plot.png")
+    plt.show()
+
+
 stratas = load_stratas(SURVEY_DATA_DIR)
-plot_rdhs_of_stratum(stratas, 'stratum1')
+plot_rdhs(stratas)
+for stratum in stratas:
+    plot_rdhs_of_stratum(stratas, stratum)
