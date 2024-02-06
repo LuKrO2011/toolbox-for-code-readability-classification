@@ -235,14 +235,23 @@ def group_into_strats(json_objects: list[SnippetData]) -> dict[str, Stratum]:
     return stratas
 
 
-def data_and_cat_from_ratings(ratings: dict[list[int]]) -> tuple[list[int], list[str]]:
+def data_and_cat_from_ratings(ratings: dict[list[int]],
+                              order: list[str] = None) -> tuple[
+    list[list[int]], list[str]]:
     """
     Extract the data and categories from the ratings
     :param ratings: The ratings as a dictionary of lists
+    :param order: The order of the categories
     :return: A tuple containing the data and categories
     """
+    if order is None:
+        order = ['methods', 'none']
+
     # Sort the ratings by name
-    ratings = dict(sorted(ratings.items()))
+    ratings = {
+        k: v for k, v in sorted(ratings.items(), key=lambda item: (
+            order.index(item[0]) if item[0] in order else float('inf'), item[0]))
+    }
 
     # Extract the data and categories
     data = list(ratings.values())
@@ -327,6 +336,11 @@ def create_violin_plot(ratings: dict[list[int]],
     for i, category in enumerate(categories):
         mean_value = round(sum(data[i]) / len(data[i]), 2)
         plt.text(i + 1, mean_value + 0.1, f' {mean_value:.2f}', color='black')
+
+    # Add a horizontal line at the mean value of the first category
+    first_category_mean = round(sum(data[0]) / len(data[0]), 2)
+    plt.axhline(y=first_category_mean, color='red', linestyle='--',
+                label=f'Mean of {categories[0]}', alpha=0.5)
 
     return plt
 
@@ -452,3 +466,5 @@ def plot_rdhs(stratas: dict[str, Stratum]) -> None:
 
 stratas = load_stratas(SURVEY_DATA_DIR)
 plot_rdhs(stratas)
+# for stratum in stratas.keys():
+#     plot_rdhs_of_stratum(stratas, stratum)
