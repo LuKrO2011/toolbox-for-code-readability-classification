@@ -2,8 +2,9 @@ from pathlib import Path
 
 import numpy as np
 from matplotlib import pyplot as plt, pyplot
+import scipy.stats as stats
 
-from readability_preprocessing.evaluation.utils import DEFAULT_SURVEY_DIR, SURVEYS_DIR, \
+from readability_preprocessing.evaluation.utils import DEFAULT_SURVEY_DIR, \
     load_json_file, SURVEY_DATA_DIR, PLOT_DIR
 
 DEMOGRAPHICS_FILE_NAME = "demographics.json"
@@ -474,7 +475,46 @@ def plot_rdhs(stratas: dict[str, Stratum]) -> None:
     plt.show()
 
 
+def anova(ratings: dict[str, list[int]]) -> tuple[float, float]:
+    """
+    Perform a one-way ANOVA on the ratings
+    :param ratings: The ratings
+    :return: The F-statistic and the p-value
+    """
+    groups = list(ratings.values())
+    statistic, p_value = stats.f_oneway(*groups)
+
+    # Display the results
+    print("One-Way ANOVA Results:")
+    print("F-statistic:", statistic)
+    print("P-value:", p_value)
+
+    # Check for statistical significance
+    alpha = 0.05
+    if p_value < alpha:
+        print(
+            "Reject the null hypothesis; there are significant differences between group means.")
+    else:
+        print(
+            "Fail to reject the null hypothesis; there are no significant differences between group means.")
+
+    return statistic, p_value
+
+
 stratas = load_stratas(SURVEY_DATA_DIR)
 # plot_rdhs(stratas)
 # for stratum in stratas.keys():
 #     plot_rdhs_of_stratum(stratas, stratum)
+
+ratings = combine_by_rdh(stratas)
+print("Overall Score:", calculate_overall_score(ratings))
+anova(ratings)
+print()
+
+for stratum in stratas.keys():
+    ratings = {}
+    for rdh in stratas[stratum].rdhs.values():
+        ratings[rdh.name] = rdh.get_ratings()
+    print(f"Stratum: {stratum}")
+    anova(ratings)
+    print()
