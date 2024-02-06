@@ -501,6 +501,37 @@ def anova(ratings: dict[str, list[int]]) -> tuple[float, float]:
     return statistic, p_value
 
 
+def tukey(ratings: dict[str, list[int]], alpha: float = 0.05) -> None:
+    """
+    Perform pairwise Turkey's HSD test on the ratings
+    :param ratings: The ratings
+    :param alpha: The significance level
+    :return: The results of the test
+    """
+
+    # Compare none to methods
+    none = ratings['none']
+    methods = ratings['methods']
+    # results = stats.tukey_hsd(none, methods)
+    results = stats.ttest_ind(none, methods)
+    rejected = results[1] < alpha
+    print("none-methods")
+    print(results)
+    print("Rejected:", rejected)
+    print()
+
+    # Compare none to all others pairwise
+    for key, value in ratings.items():
+        if key != 'none':
+            # results = stats.tukey_hsd(none, value)
+            results = stats.ttest_ind(none, value)
+            rejected = results[1] < alpha
+            print(f"none-{key}")
+            print(results)
+            print("Rejected:", rejected)
+            print()
+
+
 stratas = load_stratas(SURVEY_DATA_DIR)
 # plot_rdhs(stratas)
 # for stratum in stratas.keys():
@@ -510,11 +541,12 @@ ratings = combine_by_rdh(stratas)
 print("Overall Score:", calculate_overall_score(ratings))
 anova(ratings)
 print()
+tukey(ratings)
 
-for stratum in stratas.keys():
-    ratings = {}
-    for rdh in stratas[stratum].rdhs.values():
-        ratings[rdh.name] = rdh.get_ratings()
-    print(f"Stratum: {stratum}")
-    anova(ratings)
-    print()
+# for stratum in stratas.keys():
+#     ratings = {}
+#     for rdh in stratas[stratum].rdhs.values():
+#         ratings[rdh.name] = rdh.get_ratings()
+#     print(f"Stratum: {stratum}")
+#     anova(ratings)
+#     print()
