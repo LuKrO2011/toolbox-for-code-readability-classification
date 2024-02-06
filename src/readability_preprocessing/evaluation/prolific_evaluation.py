@@ -305,8 +305,7 @@ def create_violin_plot(ratings: dict[list[int]],
     # Add mean values as text
     for i, category in enumerate(categories):
         mean_value = round(sum(data[i]) / len(data[i]), 2)
-        plt.text(i + 1, mean_value, f'{mean_value:.2f}', ha='center', va='bottom',
-                 color='black')
+        plt.text(i + 1, mean_value + 0.1, f' {mean_value:.2f}', color='black')
 
     return plt
 
@@ -321,35 +320,39 @@ def extract_name(path: str) -> str:
     return path.split('_')[-1]
 
 
-# Load the snippet data
-survey_dir = SURVEY_DATA_DIR
-snippet_datas = []
-for survey_file in survey_dir.iterdir():
-    snippet_datas.extend(load_snippet_datas(survey_file))
+def load_stratas(input_path: Path) -> dict[str, Stratum]:
+    """
+    Load the snippets from the JSON files and group them into stratas
+    :param input_path: The path to the directory containing the JSON files
+    :return: A dictionary containing the stratas
+    """
+    snippet_datas = []
+    for survey_file in input_path.iterdir():
+        snippet_datas.extend(load_snippet_datas(survey_file))
 
-# Group into stratas
-stratas = group_into_strats(snippet_datas)
+    return group_into_strats(snippet_datas)
 
-stratum = 'stratum1'
 
-# Calculate the statistics for each RDH in the stratum
-statistics = {}
-for rdh in stratas[stratum].rdhs.values():
-    statistics[rdh.name] = rdh.calculate_statistics()
-    print(rdh.name)
-    print(statistics[rdh.name])
-    print()
+def plot_rdhs_of_stratum(stratas: dict[str, Stratum], stratum: str) -> None:
+    """
+    Plot the RDHs of the stratum
+    :param stratas: The stratas
+    :param stratum: The stratum to plot
+    :return: None
+    """
+    # Get the ratings for each RDH in the stratum
+    ratings = {}
+    for rdh in stratas[stratum].rdhs.values():
+        ratings[rdh.name] = rdh.get_ratings()
 
-# Get the ratings for each RDH in the stratum
-ratings = {}
-for rdh in stratas[stratum].rdhs.values():
-    ratings[rdh.name] = rdh.get_ratings()
+    # Create a box plot for the ratings of each RDH in the stratum
+    title = f"Violin Plot of Ratings for '{stratum}'"
+    plt = create_violin_plot(ratings, title)
 
-# Create a box plot for the ratings of each RDH in the stratum
-title = f"Violin Plot of Ratings for '{stratum}'"
-plt = create_violin_plot(ratings, title)
+    # Store the violin plot
+    plt.savefig(PLOT_DIR / f"{stratum}_violin_plot.png")
+    plt.show()
 
-# Store the violin plot
-plt.savefig(PLOT_DIR / f"{stratum}_violin_plot.png")
 
-plt.show()
+stratas = load_stratas(SURVEY_DATA_DIR)
+plot_rdhs_of_stratum(stratas, 'stratum1')
