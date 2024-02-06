@@ -439,6 +439,16 @@ def combine_by_rdh(stratas: dict[str, Stratum]) -> dict[str, list[int]]:
     return ratings
 
 
+def calculate_overall_score(ratings: dict[str, list[int]]) -> float:
+    """
+    Calculate the overall score of the ratings
+    :param ratings: The ratings
+    :return: The overall score
+    """
+    return sum([sum(rating) for rating in ratings.values()]) / sum(
+        [len(rating) for rating in ratings.values()])
+
+
 def plot_rdhs(stratas: dict[str, Stratum]) -> None:
     """
     Plot the RDHs over all strata
@@ -465,6 +475,6 @@ def plot_rdhs(stratas: dict[str, Stratum]) -> None:
 
 
 stratas = load_stratas(SURVEY_DATA_DIR)
-plot_rdhs(stratas)
+# plot_rdhs(stratas)
 # for stratum in stratas.keys():
 #     plot_rdhs_of_stratum(stratas, stratum)
