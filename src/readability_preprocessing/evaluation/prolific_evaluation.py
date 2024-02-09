@@ -629,6 +629,36 @@ def subgroup_chi2(ratings: dict[str, list[int]], alpha: float = 0.05,
                     print(f"none-{key} {combo}")
 
 
+def binary_chi2(ratings: dict[str, list[int]], alpha: float = 0.05,
+                compare_to: str = 'none') -> None:
+    """
+    Perform a chi-squared test on the ratings.
+    Tries to find a split, so that the ratings can be split into two groups
+    with significant differences between the amount of each rating.
+    :param ratings: The ratings
+    :param alpha: The significance level
+    :param compare_to: The key to compare all others to
+    :return: The results of the test
+    """
+    splits = list(range(1, 6-1))
+    none = ratings[compare_to]
+    for key, value in ratings.items():
+        if key != compare_to:
+            for split in splits:
+                low_none = len([i for i in none if i <= split])
+                high_none = len([i for i in none if i > split])
+                low_value = len([i for i in value if i <= split])
+                high_value = len([i for i in value if i > split])
+                table = np.array([[low_none, low_value], [high_none, high_value]])
+                results = stats.chi2_contingency(table)
+                rejected = results[1] < alpha
+                if rejected:
+                    low_up = list(range(1, split+1))
+                    high_down = list(range(split+1, 6))
+                    print(f"none-{key} {low_up} {high_down}")
+
+
+
 def plot_distributions(ratings: dict[str, list[int]]) -> None:
     """
     Plot the distribution of the ratings for each RDH
@@ -683,7 +713,7 @@ ratings = combine_by_rdh(stratas)
 # print()
 # anova(ratings)
 # print()
-subgroup_chi2(ratings)
+binary_chi2(ratings)
 # print()
 # check_normality(ratings)
 # print()
