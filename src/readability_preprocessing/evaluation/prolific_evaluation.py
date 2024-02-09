@@ -591,6 +591,40 @@ def mann_whitney_u(ratings: dict[str, list[int]], alpha: float = 0.05,
             print()
 
 
+def subgroup_chi2(ratings: dict[str, list[int]], numbers_to_count=None,
+                  alpha: float = 0.05, compare_to: str = 'none') -> None:
+    """
+    Perform a chi-squared test on the ratings.
+    Tries to find any significant differences between the amount of each rating
+    for each RDH.
+    :param ratings: The ratings
+    :param numbers_to_count: The numbers to count in the chi-squared test
+    :param alpha: The significance level
+    :param compare_to: The key to compare all others to
+    :return: The results of the test
+    """
+    if numbers_to_count is None:
+        numbers_to_count = [1, 2, 3, 4, 5]
+
+    none = ratings[compare_to]
+    for key, value in ratings.items():
+        if key != compare_to:
+            # Create the contingency table
+            table = np.array(
+                [[none.count(number) for number in numbers_to_count],
+                 [value.count(number) for number in numbers_to_count]])
+
+            # Perform the chi-squared test
+            statistic, p_value, dof, expected = stats.chi2_contingency(table)
+            rejected = p_value < alpha
+            print(f"none-{key}")
+            print("Chi-Squared Test Results:")
+            print("Statistic:", statistic)
+            print("P-value:", p_value)
+            print("Rejected:", rejected)
+            print()
+
+
 def plot_distributions(ratings: dict[str, list[int]]) -> None:
     """
     Plot the distribution of the ratings for each RDH
@@ -636,16 +670,16 @@ def print_no_samples(stratas: dict[str, Stratum]) -> None:
 
 
 stratas = load_stratas(SURVEY_DATA_DIR)
-plot_rdhs(stratas)
-for stratum in stratas.keys():
-    plot_rdhs_of_stratum(stratas, stratum)
+# plot_rdhs(stratas)
+# for stratum in stratas.keys():
+#     plot_rdhs_of_stratum(stratas, stratum)
 
-# ratings = combine_by_rdh(stratas)
+ratings = combine_by_rdh(stratas)
 # print("Overall Score:", calculate_overall_score(ratings))
 # print()
 # anova(ratings)
 # print()
-# mann_whitney_u(ratings)
+subgroup_chi2(ratings)
 # print()
 # check_normality(ratings)
 # print()
