@@ -679,7 +679,7 @@ def binary_chi2(ratings: dict[str, list[int]], alpha: float = 0.05,
                 if rejected:
                     low_up = list(range(1, split + 1))
                     high_down = list(range(split + 1, 6))
-                    print(f"none-{key} {low_up} {high_down}")
+                    print(f"none-{key} {low_up} {high_down} {results[1]}")
 
 
 def plot_distributions(ratings: dict[str, list[int]]) -> None:
@@ -736,7 +736,7 @@ ratings = combine_by_rdh(stratas)
 # print()
 # anova(ratings)
 # print()
-# binary_chi2(ratings)
+binary_chi2(ratings, alpha=0.2)
 # print()
 # check_normality(ratings)
 # print()
@@ -751,6 +751,6 @@ ratings = combine_by_rdh(stratas)
 # print_no_samples(stratas)
 
 
-mean_ratings = combine_means_by_rdh(stratas)
-mann_whitney_u(mean_ratings)
-print()
+# mean_ratings = combine_means_by_rdh(stratas)
+# mann_whitney_u(mean_ratings)
+# print()
