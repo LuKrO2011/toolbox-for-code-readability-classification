@@ -108,6 +108,13 @@ class SnippetData:
 
         return statistics
 
+    def mean(self) -> float:
+        """
+        Calculate the mean of the rates of the snippet
+        :return: The mean of the rates
+        """
+        return np.mean([rate.rate for rate in self.rates])
+
 
 class RDH:
 
@@ -455,6 +462,23 @@ def combine_by_rdh(stratas: dict[str, Stratum]) -> dict[str, list[int]]:
     return ratings
 
 
+def combine_means_by_rdh(stratas: dict[str, Stratum]) -> dict[str, list[float]]:
+    """
+    Calculate the mean of the ratings for each snippet and combine the mean ratings
+    of all strata by RDH.
+    :param stratas: The stratas
+    :return: The stratas with the mean ratings
+    """
+    ratings = {}
+    for stratum in stratas.values():
+        for rdh in stratum.rdhs.values():
+            if rdh.name not in ratings:
+                ratings[rdh.name] = []
+            ratings[rdh.name].extend([snippet.mean() for snippet in
+                                      rdh.snippets.values()])
+    return ratings
+
+
 def calculate_overall_score(ratings: dict[str, list[int]]) -> float:
     """
     Calculate the overall score of the ratings
@@ -572,7 +596,7 @@ def ttest_ind(ratings: dict[str, list[int]], alpha: float = 0.05,
             print()
 
 
-def mann_whitney_u(ratings: dict[str, list[int]], alpha: float = 0.05,
+def mann_whitney_u(ratings: dict[str, list[int | float]], alpha: float = 0.05,
                    compare_to: str = 'none') -> None:
     """
     Perform pairwise independent t-tests on the ratings.
@@ -640,7 +664,7 @@ def binary_chi2(ratings: dict[str, list[int]], alpha: float = 0.05,
     :param compare_to: The key to compare all others to
     :return: The results of the test
     """
-    splits = list(range(1, 6-1))
+    splits = list(range(1, 6 - 1))
     none = ratings[compare_to]
     for key, value in ratings.items():
         if key != compare_to:
@@ -653,10 +677,9 @@ def binary_chi2(ratings: dict[str, list[int]], alpha: float = 0.05,
                 results = stats.chi2_contingency(table)
                 rejected = results[1] < alpha
                 if rejected:
-                    low_up = list(range(1, split+1))
-                    high_down = list(range(split+1, 6))
+                    low_up = list(range(1, split + 1))
+                    high_down = list(range(split + 1, 6))
                     print(f"none-{key} {low_up} {high_down}")
-
 
 
 def plot_distributions(ratings: dict[str, list[int]]) -> None:
@@ -713,7 +736,7 @@ ratings = combine_by_rdh(stratas)
 # print()
 # anova(ratings)
 # print()
-binary_chi2(ratings)
+# binary_chi2(ratings)
 # print()
 # check_normality(ratings)
 # print()
@@ -726,3 +749,8 @@ binary_chi2(ratings)
 # plot_distribution(merged, title='Distribution of Ratings for All RDHs')
 
 # print_no_samples(stratas)
+
+
+mean_ratings = combine_means_by_rdh(stratas)
+mann_whitney_u(mean_ratings)
+print()
