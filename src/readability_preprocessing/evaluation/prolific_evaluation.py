@@ -312,6 +312,15 @@ def create_bar_plot(ratings: dict[list[int]],
     return plt
 
 
+def calculate_mode(data: list[int]) -> int:
+    """
+    Calculate the mode of the given data
+    :param data: The data
+    :return: The mode
+    """
+    return max(set(data), key=data.count)
+
+
 def create_violin_plot(ratings: dict[list[int]],
                        title: str = 'Violin Plot of Ratings') -> pyplot:
     """
@@ -337,6 +346,11 @@ def create_violin_plot(ratings: dict[list[int]],
     for i, category in enumerate(categories):
         mean_value = round(sum(data[i]) / len(data[i]), 2)
         plt.text(i + 1, mean_value + 0.1, f' {mean_value:.2f}', color='black')
+
+    # Add a yellow dot for the mode value of each category
+    for i, category in enumerate(categories):
+        mode_value = calculate_mode(data[i])
+        plt.scatter(i + 1, mode_value, color='yellow', zorder=3)
 
     # Add a horizontal line at the mean value of the first category
     first_category_mean = round(sum(data[0]) / len(data[0]), 2)
@@ -556,8 +570,9 @@ def ttest_ind(ratings: dict[str, list[int]], alpha: float = 0.05,
             print("Rejected:", rejected)
             print()
 
+
 def mann_whitney_u(ratings: dict[str, list[int]], alpha: float = 0.05,
-                compare_to: str = 'none') -> None:
+                   compare_to: str = 'none') -> None:
     """
     Perform pairwise independent t-tests on the ratings.
     :param ratings: The ratings
@@ -597,7 +612,8 @@ def plot_distribution(ratings: list[int],
     :return: None
     """
     # Set the bin edges to integer values
-    bin_edges = range(min(ratings), max(ratings) + 2)  # +2 to include the rightmost edge
+    bin_edges = range(min(ratings),
+                      max(ratings) + 2)  # +2 to include the rightmost edge
     plt.hist(ratings, bins=bin_edges, align='left', edgecolor='black')
     plt.xticks(range(1, 6))
     plt.title(title)
@@ -606,17 +622,30 @@ def plot_distribution(ratings: list[int],
     plt.show()
 
 
-stratas = load_stratas(SURVEY_DATA_DIR)
-# plot_rdhs(stratas)
-# for stratum in stratas.keys():
-#     plot_rdhs_of_stratum(stratas, stratum)
+def print_no_samples(stratas: dict[str, Stratum]) -> None:
+    """
+    Print the number of samples for each RDH in each stratum
+    :param stratas: The stratas
+    :return: None
+    """
+    for stratum, stratum_data in stratas.items():
+        print(stratum)
+        for rdh, rdh_data in stratum_data.rdhs.items():
+            print(f"  {rdh}: {len(rdh_data.snippets)}")
+        print()
 
-ratings = combine_by_rdh(stratas)
-print("Overall Score:", calculate_overall_score(ratings))
-print()
-anova(ratings)
-print()
-mann_whitney_u(ratings)
+
+stratas = load_stratas(SURVEY_DATA_DIR)
+plot_rdhs(stratas)
+for stratum in stratas.keys():
+    plot_rdhs_of_stratum(stratas, stratum)
+
+# ratings = combine_by_rdh(stratas)
+# print("Overall Score:", calculate_overall_score(ratings))
+# print()
+# anova(ratings)
+# print()
+# mann_whitney_u(ratings)
 # print()
 # check_normality(ratings)
 # print()
@@ -627,3 +656,5 @@ mann_whitney_u(ratings)
 # for value in ratings.values():
 #     merged.extend(value)
 # plot_distribution(merged, title='Distribution of Ratings for All RDHs')
+
+# print_no_samples(stratas)
