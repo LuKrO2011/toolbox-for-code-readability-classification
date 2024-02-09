@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 from matplotlib import pyplot as plt, pyplot
 import scipy.stats as stats
+from itertools import combinations
 
 from readability_preprocessing.evaluation.utils import DEFAULT_SURVEY_DIR, \
     load_json_file, SURVEY_DATA_DIR, PLOT_DIR
@@ -591,38 +592,41 @@ def mann_whitney_u(ratings: dict[str, list[int]], alpha: float = 0.05,
             print()
 
 
-def subgroup_chi2(ratings: dict[str, list[int]], numbers_to_count=None,
-                  alpha: float = 0.05, compare_to: str = 'none') -> None:
+def get_combinations(n: int, start: int = 1) -> list[tuple[int]]:
+    """
+    Get all combinations of n elements
+    :param n: The number of elements
+    :param start: The starting number
+    :return: A list of all combinations
+    """
+    numbers = list(range(start, start + n))
+    combos = []
+    for i in range(1, n + 1):
+        combos.extend(combinations(numbers, i))
+    return combos
+
+
+def subgroup_chi2(ratings: dict[str, list[int]], alpha: float = 0.05,
+                  compare_to: str = 'none') -> None:
     """
     Perform a chi-squared test on the ratings.
     Tries to find any significant differences between the amount of each rating
     for each RDH.
     :param ratings: The ratings
-    :param numbers_to_count: The numbers to count in the chi-squared test
     :param alpha: The significance level
     :param compare_to: The key to compare all others to
     :return: The results of the test
     """
-    if numbers_to_count is None:
-        numbers_to_count = [1, 2, 3, 4, 5]
-
+    combos = get_combinations(5, start=1)
     none = ratings[compare_to]
     for key, value in ratings.items():
         if key != compare_to:
-            # Create the contingency table
-            table = np.array(
-                [[none.count(number) for number in numbers_to_count],
-                 [value.count(number) for number in numbers_to_count]])
-
-            # Perform the chi-squared test
-            statistic, p_value, dof, expected = stats.chi2_contingency(table)
-            rejected = p_value < alpha
-            print(f"none-{key}")
-            print("Chi-Squared Test Results:")
-            print("Statistic:", statistic)
-            print("P-value:", p_value)
-            print("Rejected:", rejected)
-            print()
+            for combo in combos:
+                table = np.array([[none.count(i), value.count(i)] for i in combo])
+                results = stats.chi2_contingency(table)
+                rejected = results[1] < alpha
+                if rejected:
+                    print(f"none-{key} {combo}")
 
 
 def plot_distributions(ratings: dict[str, list[int]]) -> None:
