@@ -2,8 +2,10 @@ from pathlib import Path
 
 from matplotlib import pyplot as plt
 
+from readability_preprocessing.evaluation.prolific_groups import load_submissions, \
+    filter_submissions_by_status, Submission
 from readability_preprocessing.evaluation.utils import DEFAULT_SURVEY_DIR, \
-    load_json_file, SURVEY_DATA_DIR
+    load_json_file, SURVEY_DATA_DIR, DEMOGRAPHIC_DATA_DIR
 from readability_preprocessing.utils.utils import list_files_with_name
 
 DEMOGRAPHICS_FILE_NAME = "demographics.json"
@@ -197,8 +199,45 @@ def combine_demographics(demographics: list[Demographics]) -> Demographics:
     return Demographics(questions, solutions)
 
 
+class ExtendedSolution(Solution):
+    """
+    A class to represent a demographic solution in the survey with additional data.
+    """
+
+    def __init__(self, questionId: int, rater: str, innerSolution: InnerSolution,
+                 submission: Submission):
+        super().__init__(questionId, rater, innerSolution)
+        self.submission = submission
+
+
+def extend_solutions(demographics: Demographics,
+                     submissions: list[Submission]) -> Demographics:
+    """
+    Match the demographic data to the submissions
+    :param demographics: The demographic data
+    :param submissions: The submissions
+    :return: The extended demographic data
+    """
+    extended_solutions = []
+    for solution in demographics.solutions:
+        submission = None  # TODO
+        if submission is not None:
+            extended_solutions.append(
+                ExtendedSolution(solution.questionId, solution.rater,
+                                 solution.solution, submission))
+        else:
+            print(f"Submission not found for participant {solution.rater}")
+    return Demographics(demographics.questions, extended_solutions)
+
+
 question_id = 16
 demographics = load_demographics(SURVEY_DATA_DIR)
 demographics = combine_demographics(demographics)
+
+# submissions = load_submissions(DEMOGRAPHIC_DATA_DIR)
+# submissions = filter_submissions_by_status(submissions, ['TIMED-OUT', 'RETURNED'])
+# extended_demographics = extend_solutions(demographics, submissions)
+# extended_demographics.print_no_solutions(question_id)
+
 demographics.pie_plot(question_id)
 demographics.print_no_solutions(question_id)
