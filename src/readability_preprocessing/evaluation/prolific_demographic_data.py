@@ -55,19 +55,21 @@ class Question:
         return Question(id, content, type, answer, parentQuestionId)
 
 
-class Questions:
+class Answer:
     """
-    A class to represent the demographic questions in the survey.
+    A class to represent the answer part of a solution in the survey.
     """
 
-    def __init__(self, questions: list[Question]):
-        self.questions = questions
+    def __init__(self, input: any, selected: list[int]):
+        self.input = input
+        self.selected = selected
 
     @staticmethod
-    def from_dict(obj: any) -> 'Questions':
-        assert isinstance(obj, list)
-        questions = [Question.from_dict(i) for i in obj]
-        return Questions(questions)
+    def from_dict(obj: any) -> 'Answer':
+        assert isinstance(obj, dict)
+        input = obj.get("input")
+        selected = obj.get("selected")
+        return Answer(input, selected)
 
 
 class Solution:
@@ -75,31 +77,18 @@ class Solution:
     A class to represent a demographic solution in the survey.
     """
 
-    def __init__(self, input: str, selected: list[int]):
-        self.input = input
-        self.selected = selected
+    def __init__(self, questionId: int, rater: str, solution: Answer):
+        self.questionId = questionId
+        self.rater = rater
+        self.solution = solution
 
     @staticmethod
     def from_dict(obj: any) -> 'Solution':
         assert isinstance(obj, dict)
-        input = obj.get("input")
-        selected = obj.get("selected")
-        return Solution(input, selected)
-
-
-class Solutions:
-    """
-    A class to represent the demographic solutions in the survey.
-    """
-
-    def __init__(self, solutions: list[Solution]):
-        self.solutions = solutions
-
-    @staticmethod
-    def from_dict(obj: any) -> 'Solutions':
-        assert isinstance(obj, list)
-        solutions = [Solution.from_dict(i) for i in obj]
-        return Solutions(solutions)
+        questionId = obj.get("questionId")
+        rater = obj.get("rater")
+        solution = Answer.from_dict(obj.get("solution"))
+        return Solution(questionId, rater, solution)
 
 
 class Demographics:
@@ -107,15 +96,15 @@ class Demographics:
     A class to represent the demographic data.
     """
 
-    def __init__(self, questions: Questions, solutions: Solutions):
+    def __init__(self, questions: list[Question], solutions: list[Solution]):
         self.questions = questions
         self.solutions = solutions
 
     @staticmethod
     def from_dict(obj: any) -> 'Demographics':
         assert isinstance(obj, dict)
-        questions = Questions.from_dict(obj.get("questions"))
-        solutions = Solutions.from_dict(obj.get("solutions"))
+        questions = [Question.from_dict(question) for question in obj.get("questions")]
+        solutions = [Solution.from_dict(solution) for solution in obj.get("solutions")]
         return Demographics(questions, solutions)
 
 
@@ -149,14 +138,14 @@ def combine_demographics(demographics: list[Demographics]) -> Demographics:
 
     for demographic in demographics:
         # Add the question, if there is no question with the same id
-        for question in demographic.questions.questions:
+        for question in demographic.questions:
             if question.id not in [q.id for q in questions]:
                 questions.append(question)
 
         # Add all solutions
-        solutions.extend(demographic.solutions.solutions)
+        solutions.extend(demographic.solutions)
 
-    return Demographics(Questions(questions), Solutions(solutions))
+    return Demographics(questions, solutions)
 
 
 demographics = load_demographics(SURVEY_DATA_DIR)
