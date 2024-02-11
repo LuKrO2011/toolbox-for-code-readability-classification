@@ -38,6 +38,23 @@ def list_java_files(directory: str) -> List[str]:
     return java_files
 
 
+def list_files_with_name(directory: Path, name: str) -> List[Path]:
+    """
+    List the paths of all files with a specific name in a directory and its
+    subdirectories.
+    :param directory: The directory to search for files
+    :param name: The name of the files
+    :return: A list of files
+    """
+    files = []
+
+    for current_path in directory.rglob('*'):
+        if current_path.is_file() and current_path.name == name:
+            files.append(current_path)
+
+    return files
+
+
 def load_code(file: str) -> str:
     """
     Loads the code from a file.
