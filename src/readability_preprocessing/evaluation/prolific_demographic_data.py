@@ -7,8 +7,6 @@ from readability_preprocessing.evaluation.utils import DEFAULT_SURVEY_DIR, \
 from readability_preprocessing.utils.utils import list_files_with_name
 
 DEMOGRAPHICS_FILE_NAME = "demographics.json"
-PLOT_X_LABEL = 'Applied Readability Decreasing Heuristic'
-PLOT_Y_LABEL = 'Readability Rating'
 
 
 class Answer:
@@ -67,7 +65,7 @@ class InnerSolution:
         self.selected = selected
 
     @staticmethod
-    def from_dict(obj: any) -> 'Answer':
+    def from_dict(obj: any) -> 'InnerSolution':
         assert isinstance(obj, dict)
         input = obj.get("input")
         selected = obj.get("selected")
@@ -171,7 +169,6 @@ def load_demographics(input_path: Path = DEFAULT_SURVEY_DIR) -> list[Demographic
     file_paths = list_files_with_name(input_path, DEMOGRAPHICS_FILE_NAME)
 
     # Load the JSON data
-    test = Demographics.from_dict(load_json_file(file_paths[0]))
     json_objects = []
     for file_path in file_paths:
         json_objects.append(Demographics.from_dict(load_json_file(file_path)))
