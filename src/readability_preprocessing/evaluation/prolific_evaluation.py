@@ -18,14 +18,18 @@ class Rate:
     A class representing a single rate.
     """
 
-    def __init__(self, comment, rate, rater, solutions):
+    def __init__(self, comment, rate, rater, raterExternalId, raterExternalSystem,
+                 solutions):
         self.comment = comment
         self.rate = rate
         self.rater = rater
+        self.raterExternalId = raterExternalId
+        self.raterExternalSystem = raterExternalSystem
         self.solutions = solutions
 
     def __str__(self):
         return (f"Rate(comment={self.comment}, rate={self.rate}, rater={self.rater}, "
+                f"raterExternalId={self.raterExternalId}, raterExternalSystem={self.raterExternalSystem}, "
                 f"solutions={self.solutions})")
 
 
@@ -726,17 +730,117 @@ def print_no_samples(stratas: dict[str, Stratum]) -> None:
         print()
 
 
+def list_pids(stratas: dict[str, Stratum]) -> list[str]:
+    """
+    List all PIDs
+    :param stratas: The stratas
+    :return: A list of all PIDs
+    """
+    pids = []
+    for stratum, stratum_data in stratas.items():
+        for rdh, rdh_data in stratum_data.rdhs.items():
+            for snippet in rdh_data.snippets.values():
+                for rate in snippet.rates:
+                    pids.append(rate.raterExternalId)
+    return list(set(pids))
+
+
+def get_answers_by_pid(stratas: dict[str, Stratum], raterExternalId: str) -> dict[
+    str, int]:
+    """
+    Get the answers of a specific rater for each snippet
+    :param stratas: The stratas
+    :param raterExternalId: The rater's external ID
+    :return: A dictionary containing the answers
+    """
+    answers = {}
+    for stratum, stratum_data in stratas.items():
+        for rdh, rdh_data in stratum_data.rdhs.items():
+            for snippet in rdh_data.snippets.values():
+                for rate in snippet.rates:
+                    if rate.raterExternalId == raterExternalId:
+                        answers[snippet.path] = rate.rate
+    return answers
+
+
+def get_mean_answer_by_snippet(stratas: dict[str, Stratum], snippet: str) -> float:
+    """
+    Get the mean answer for a specific snippet
+    :param stratas: The stratas
+    :param snippet: The snippet
+    :return: The mean answer
+    """
+    answers = []
+    for stratum, stratum_data in stratas.items():
+        for rdh, rdh_data in stratum_data.rdhs.items():
+            if snippet in rdh_data.snippets:
+                for rate in rdh_data.snippets[snippet].rates:
+                    answers.append(rate.rate)
+    return sum(answers) / len(answers)
+
+
+def get_answer_deviation(stratas: dict[str, Stratum], raterExternalId: str) -> float:
+    """
+    Get the deviation of a specific rater's answers from the mean for each snippet
+    :param stratas: The stratas
+    :param raterExternalId: The rater's external ID
+    :return: The deviation
+    """
+    answers = get_answers_by_pid(stratas, raterExternalId)
+    total_deviation_from_mean = 0
+    for snippet, answer in answers.items():
+        mean = get_mean_answer_by_snippet(stratas, snippet)
+        total_deviation_from_mean += abs(answer - mean)
+    return total_deviation_from_mean
+
+
+def filter_answers_by_deviation(stratas: dict[str, Stratum], min_deviation: float) -> \
+    list[str]:
+    """
+    Filter the raters by the deviation of their answers from the mean for each snippet
+    :param stratas: The stratas
+    :param min_deviation: The minimal deviation
+    :return: A list of raters
+    """
+    pids = list_pids(stratas)
+    filtered_pids = []
+    for pid in pids:
+        deviation = get_answer_deviation(stratas, pid)
+        if deviation > min_deviation:
+            filtered_pids.append(pid)
+    return filtered_pids
+
+
+def print_answers_by_pid(stratas: dict[str, Stratum], raterExternalId: str) -> None:
+    """
+    Print the answers of a specific rater for each snippet and the number of ratings
+    of the user. Also prints the mean answer for each snippet.
+    :param stratas: The stratas
+    :param raterExternalId: The rater's external ID
+    :return: None
+    """
+    answers = get_answers_by_pid(stratas, raterExternalId)
+    total_deviation_from_mean = 0
+    print(f"Answers by {raterExternalId}:")
+    for snippet, answer in answers.items():
+        mean = get_mean_answer_by_snippet(stratas, snippet)
+        total_deviation_from_mean += abs(answer - mean)
+        print(f"  {snippet}: {answer} (mean: {mean})")
+    print(f"Number of ratings: {len(answers)}")
+    print(f"Total deviation from mean: {total_deviation_from_mean}")
+
+
 stratas = load_stratas(SURVEY_DATA_DIR)
 # plot_rdhs(stratas)
 # for stratum in stratas.keys():
 #     plot_rdhs_of_stratum(stratas, stratum)
 
-ratings = combine_by_rdh(stratas)
+# ratings = combine_by_rdh(stratas)
 # print("Overall Score:", calculate_overall_score(ratings))
 # print()
 # anova(ratings)
 # print()
-binary_chi2(ratings, alpha=0.2)
+# binary_chi2(ratings, alpha=0.2)
 # print()
 # check_normality(ratings)
 # print()
@@ -754,3 +858,10 @@ binary_chi2(ratings, alpha=0.2)
 # mean_ratings = combine_means_by_rdh(stratas)
 # mann_whitney_u(mean_ratings)
 # print()
+
+# print_answers_by_pid(stratas, "6101dfd623c9f6373a3aa21a")
+
+sus = filter_answers_by_deviation(stratas, 25)
+for pid in sus:
+    print_answers_by_pid(stratas, pid)
+    print()
