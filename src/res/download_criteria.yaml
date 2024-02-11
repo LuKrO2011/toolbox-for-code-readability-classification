@@ -1,0 +1,16 @@
+filter_criteria:
+  private: False
+  fork: False
+  archived: False
+  disabled: False
+  language: Java
+  stargazers_count:
+    min: 20
+  forks_count:
+    min: 20
+
+sorting_criteria:
+  forks_count:
+    weight: 1
+  stargazers_count:
+    weight: 1
