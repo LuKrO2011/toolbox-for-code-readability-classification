@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from matplotlib import pyplot as plt
+
 from readability_preprocessing.evaluation.utils import DEFAULT_SURVEY_DIR, \
     load_json_file, SURVEY_DATA_DIR
 from readability_preprocessing.utils.utils import list_files_with_name
@@ -11,7 +13,7 @@ PLOT_Y_LABEL = 'Readability Rating'
 
 class Answer:
     """
-    A class to represent a answer option for a demographic question in the survey.
+    A class to represent an answer option for a demographic question in the survey.
     """
 
     def __init__(self, options: list[str], attributes: list[any],
@@ -55,7 +57,7 @@ class Question:
         return Question(id, content, type, answer, parentQuestionId)
 
 
-class Answer:
+class InnerSolution:
     """
     A class to represent the answer part of a solution in the survey.
     """
@@ -69,7 +71,7 @@ class Answer:
         assert isinstance(obj, dict)
         input = obj.get("input")
         selected = obj.get("selected")
-        return Answer(input, selected)
+        return InnerSolution(input, selected)
 
 
 class Solution:
@@ -77,7 +79,7 @@ class Solution:
     A class to represent a demographic solution in the survey.
     """
 
-    def __init__(self, questionId: int, rater: str, solution: Answer):
+    def __init__(self, questionId: int, rater: str, solution: InnerSolution):
         self.questionId = questionId
         self.rater = rater
         self.solution = solution
@@ -87,7 +89,7 @@ class Solution:
         assert isinstance(obj, dict)
         questionId = obj.get("questionId")
         rater = obj.get("rater")
-        solution = Answer.from_dict(obj.get("solution"))
+        solution = InnerSolution.from_dict(obj.get("solution"))
         return Solution(questionId, rater, solution)
 
 
@@ -106,6 +108,56 @@ class Demographics:
         questions = [Question.from_dict(question) for question in obj.get("questions")]
         solutions = [Solution.from_dict(solution) for solution in obj.get("solutions")]
         return Demographics(questions, solutions)
+
+    def filter_by_question_id(self, question_id: int) -> 'Demographics':
+        """
+        Filter the demographics (questions and solutions) for a specific question
+        :param question_id: The id of the question
+        :return: The filtered solutions
+        """
+        return Demographics(
+            [question for question in self.questions if question.id == question_id],
+            [solution for solution in self.solutions if
+             solution.questionId == question_id])
+
+    def pie_plot(self, question_id: int) -> None:
+        """
+        Create and show a pie plot for the demographic data for a specific question.
+        Assumes that the question is a single choice question.
+        Assumes that the options are the same for all solutions.
+        :param question_id: The id of the question to create the pie plot for
+        :return: None
+        """
+        # Filter demographics for the specified question_id
+        filtered_demographics = self.filter_by_question_id(question_id)
+        question = filtered_demographics.questions[0]
+
+        # Count the occurrences of each answer option
+        answer_counts = {}
+        answer_options = question.answer.options
+
+        for solution in filtered_demographics.solutions:
+            selected_option = solution.solution.selected[0]
+            answer_counts[selected_option] = answer_counts.get(selected_option, 0) + 1
+
+        # Prepare data for pie chart
+        labels = [f"{option} ({5 - i})" for i, option in enumerate(answer_options)]
+        sizes = list(answer_counts.values())
+
+        # Create pie chart
+        plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
+        plt.title(question.content)
+        plt.show()
+
+    def print_no_solutions(self, question_id: int) -> None:
+        """
+        Print the number of solutions for a specific question
+        :param question_id: The id of the question
+        :return: None
+        """
+        filtered_demographics = self.filter_by_question_id(question_id)
+        print(
+            f"Question {question_id} has {len(filtered_demographics.solutions)} solutions")
 
 
 def load_demographics(input_path: Path = DEFAULT_SURVEY_DIR) -> list[Demographics]:
@@ -148,6 +200,8 @@ def combine_demographics(demographics: list[Demographics]) -> Demographics:
     return Demographics(questions, solutions)
 
 
+question_id = 16
 demographics = load_demographics(SURVEY_DATA_DIR)
 demographics = combine_demographics(demographics)
-print(demographics)
+demographics.pie_plot(question_id)
+demographics.print_no_solutions(question_id)
