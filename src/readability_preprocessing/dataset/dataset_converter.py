@@ -387,8 +387,8 @@ class TwoFoldersToDataset:
         self,
         original_data_dir: str,
         rdh_data_dir: str,
-        original_score: float = 4.5,
-        rdh_score: float = 1.5,
+        original_score: float = 3.68,  # 4.5
+        rdh_score: float = 3.26,  # 1.5
     ) -> Dataset:
         """
         Loads the data and converts it to the HuggingFace format.
