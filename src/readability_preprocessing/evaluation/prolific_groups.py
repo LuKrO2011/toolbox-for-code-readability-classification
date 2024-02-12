@@ -1,6 +1,7 @@
 import csv
 from datetime import datetime
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 from readability_preprocessing.evaluation.utils import DEMOGRAPHIC_DATA_DIR
 
@@ -80,7 +81,8 @@ class CSVProcessor:
                 self.submissions.append(submission)
 
 
-def load_submissions(input_path: Path) -> list[Submission]:
+def load_submissions(input_path: Path) -> dict[str, list[Submission]] or list[
+    Submission]:
     """
     Load all submissions from a CSV file and return a list of submission objects.
     :param input_path: The path to the CSV file
@@ -92,11 +94,11 @@ def load_submissions(input_path: Path) -> list[Submission]:
         return csv_processor.submissions
     else:  # Load all CSV files
         file_paths = list(input_path.glob('*.csv'))
-        submissions = []
+        submissions = {file_path.stem: [] for file_path in file_paths}
         for file_path in file_paths:
             csv_processor = CSVProcessor(file_path)
             csv_processor.process_csv()
-            submissions.extend(csv_processor.submissions)
+            submissions[file_path.stem] = csv_processor.submissions
         return submissions
 
 
@@ -112,6 +114,47 @@ def filter_submissions_by_status(submissions: list[Submission], to_remove: list[
             submission.status not in to_remove]
 
 
+def get_time_less_than(submissions: dict[str, list[Submission]], time: int = 221) -> \
+    dict[str, list[Submission]]:
+    """
+    Get the submissions that took less than a certain time.
+    The default time is the mean - 1 standard deviation.
+    :param submissions: The dictionary of submissions
+    :param time: The time in seconds
+    :return: The filtered dictionary of submissions
+    """
+    return {key: [submission for submission in value if
+                  submission.time_taken and submission.time_taken < time] for
+            key, value in submissions.items()}
+
+
+def plot_critical_times(critical_times: dict[str, int]):
+    """
+    Plot the critical times in a bar plot.
+    :param critical_times: The dictionary of critical times
+    :return: None
+    """
+    import matplotlib.pyplot as plt
+    plt.bar(critical_times.keys(), critical_times.values())
+    plt.xlabel('Survey group')
+    plt.title('Participants needing less than 221s per survey')
+
+    # Change the labels to 1, 2, 3, ...
+    plt.xticks(range(len(critical_times)),
+               [i for i in range(1, len(critical_times) + 1)])
+
+    # Change the y-axis to 0, 1, 2, 3, ...
+    plt.yticks(range(max(critical_times.values()) + 1))
+
+    plt.show()
+
+
 submissions = load_submissions(DEMOGRAPHIC_DATA_DIR)
-submissions = filter_submissions_by_status(submissions, ['TIMED-OUT', 'RETURNED'])
-print(len(submissions))
+# submissions = [submission for sublist in submissions.values() for submission in sublist]
+# submissions = filter_submissions_by_status(submissions, ['TIMED-OUT', 'RETURNED'])
+# print(len(submissions))
+
+critical = get_time_less_than(submissions)
+
+# plot the critical times in a bar plot
+plot_critical_times({key: len(value) for key, value in critical.items()})
