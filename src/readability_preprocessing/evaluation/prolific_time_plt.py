@@ -39,19 +39,19 @@ print(f"Median time: {median_time:.0f} seconds")
 print(f"Mean - 1 std: {mean_time - std_time:.0f} seconds")
 
 # Plotting a historgram
-# plt.hist(time_taken.dt.total_seconds() // 60, bins=30)
-# plt.xlabel('Time taken (minutes)')
-# plt.ylabel('Number of participants')
-# plt.title('Time taken to complete the survey')
-#
-# # Mean, median, mean - 1 std
-# plt.axvline(mean_time // 60, color='orange', linestyle='dashed', linewidth=2)
-# # plt.axvline((mean_time - std_time) // 60, color='red', linestyle='dashed', linewidth=2)
-#
-# # legend
-# plt.legend(['Mean'])
-#
-# plt.show()
+plt.hist(time_taken.dt.total_seconds() // 60, bins=30)
+plt.xlabel('Time taken (minutes)')
+plt.ylabel('Number of participants')
+plt.title('Time taken to complete the survey')
+
+# Mean, median, mean - 1 std
+plt.axvline(mean_time // 60, color='orange', linestyle='dashed', linewidth=2)
+# plt.axvline((mean_time - std_time) // 60, color='red', linestyle='dashed', linewidth=2)
+
+# legend
+plt.legend(['Mean'])
+
+plt.show()
 
 # Plot a box plot (orange line = median)
 time_in_seconds = time_taken.dt.total_seconds()
