@@ -1,12 +1,14 @@
 from pathlib import Path
 
 import numpy as np
+from datasets import Dataset
 from matplotlib import pyplot as plt, pyplot
 import scipy.stats as stats
 from itertools import combinations
+import datasets
 
 from readability_preprocessing.evaluation.utils import DEFAULT_SURVEY_DIR, \
-    load_json_file, SURVEY_DATA_DIR, PLOT_DIR
+    load_json_file, SURVEY_DATA_DIR, PLOT_DIR, DATASET_DIR
 
 DEMOGRAPHICS_FILE_NAME = "demographics.json"
 PLOT_X_LABEL = 'Applied Readability Decreasing Heuristic'
@@ -830,6 +832,63 @@ def print_answers_by_pid(stratas: dict[str, Stratum], raterExternalId: str) -> N
     print(f"Total deviation from mean: {total_deviation_from_mean}")
 
 
+def export_csv(stratas: dict[str, Stratum], output_path: Path) -> None:
+    """
+    Export the stratas to a csv file.
+    Each row contains in the first column the snippet name and in the second
+    to n-th column the ratings of the raters. If a rater did not rate a snippet,
+    the cell is empty.
+    :param stratas: The stratas
+    :param output_path: The path to the output file
+    :return: None
+    """
+    # TODO
+    pass
+
+
+def load_code_snippet(name: str, input_path: Path = SURVEY_DATA_DIR,
+                      encoding='utf-8') -> str:
+    """
+    Searches the subdirectories of the input path for the code snippet with the
+    given name and returns the content of the file.
+    :param name: The name of the code snippet
+    :param input_path: The path to the directory containing the code snippets
+    :param encoding: The encoding of the file
+    :return: The content of the code snippet
+    """
+    for file in input_path.rglob(f"*{name}"):
+        return file.read_text(encoding=encoding)
+    return ""
+
+
+def export_huggingface_dataset(stratas: dict[str, Stratum], output_path: Path) -> None:
+    """
+    Convert the stratas to a huggingface dataset and store it in the output path.
+    :param stratas: The stratas
+    :param output_path: The path to the output file
+    :return: None
+    """
+    # Flatten the stratas and rdhs into a list of snippets
+    snippets = []
+    for stratum in stratas.values():
+        for rdh in stratum.rdhs.values():
+            for snippet in rdh.snippets.values():
+                snippets.append(snippet)
+
+    # Create the dataset
+    dataset_dict = {
+        'name': [snippet.path for snippet in snippets],
+        'stratum': [snippet.stratum for snippet in snippets],
+        'rdh': [snippet.rdh for snippet in snippets],
+        'code_snippet': [load_code_snippet(snippet.path) for snippet in snippets],
+        'scores': [[rate.rate for rate in snippet.rates] for snippet in snippets],
+    }
+
+    # Save the dataset
+    dataset = Dataset.from_dict(dataset_dict)
+    dataset.save_to_disk(output_path)
+
+
 stratas = load_stratas(SURVEY_DATA_DIR)
 # plot_rdhs(stratas)
 # for stratum in stratas.keys():
@@ -861,7 +920,9 @@ stratas = load_stratas(SURVEY_DATA_DIR)
 
 # print_answers_by_pid(stratas, "6101dfd623c9f6373a3aa21a")
 
-sus = filter_answers_by_deviation(stratas, 25)
-for pid in sus:
-    print_answers_by_pid(stratas, pid)
-    print()
+# sus = filter_answers_by_deviation(stratas, 25)
+# for pid in sus:
+#     print_answers_by_pid(stratas, pid)
+#     print()
+
+export_huggingface_dataset(stratas, DATASET_DIR)
