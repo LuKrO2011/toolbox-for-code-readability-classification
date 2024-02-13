@@ -884,6 +884,11 @@ def export_huggingface_dataset(stratas: dict[str, Stratum], output_path: Path) -
         'scores': [[rate.rate for rate in snippet.rates] for snippet in snippets],
     }
 
+    # dataset_dict = {
+    #     'code_snippet': [load_code_snippet(snippet.path) for snippet in snippets],
+    #     'score': [snippet.mean() for snippet in snippets],
+    # }
+
     # Save the dataset
     dataset = Dataset.from_dict(dataset_dict)
     dataset.save_to_disk(output_path)
