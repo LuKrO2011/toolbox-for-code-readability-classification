@@ -128,16 +128,18 @@ def get_time_less_than(submissions: dict[str, list[Submission]], time: int = 221
             key, value in submissions.items()}
 
 
-def plot_critical_times(critical_times: dict[str, int]):
+def plot_critical_times(critical_times: dict[str, int],
+                        title: str = 'Participants needing less than 221s per survey') -> None:
     """
     Plot the critical times in a bar plot.
     :param critical_times: The dictionary of critical times
+    :param title: The title of the plot
     :return: None
     """
     import matplotlib.pyplot as plt
     plt.bar(critical_times.keys(), critical_times.values())
     plt.xlabel('Survey group')
-    plt.title('Participants needing less than 221s per survey')
+    plt.title(title)
 
     # Change the labels to 1, 2, 3, ...
     plt.xticks(range(len(critical_times)),
@@ -154,7 +156,8 @@ submissions = load_submissions(DEMOGRAPHIC_DATA_DIR)
 # submissions = filter_submissions_by_status(submissions, ['TIMED-OUT', 'RETURNED'])
 # print(len(submissions))
 
-critical = get_time_less_than(submissions)
+critical = get_time_less_than(submissions, time=180)
 
 # plot the critical times in a bar plot
-plot_critical_times({key: len(value) for key, value in critical.items()})
+plot_critical_times({key: len(value) for key, value in critical.items()},
+                    title='Participants needing less than 180s per survey')
