@@ -23,3 +23,10 @@ for x in ds_as_list:
     if x['score'] == 1.5:
         count += 1
 print(f"Number of samples with a score of 1.5: {count}")
+
+# Print the number of samples with a score of 1.5 that start with a method comment
+count = 0
+for x in ds_as_list:
+    if x['score'] == 1.5 and x['code_snippet'].startswith("/**"):
+        count += 1
+print(f"Number of samples with a score of 1.5 that start with a method comment: {count}")
