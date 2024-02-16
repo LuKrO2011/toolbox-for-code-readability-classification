@@ -1,14 +1,11 @@
 from dataclasses import dataclass
 
-import re
-import random
+import pyparsing
+from pyparsing import javaStyleComment, ParseException
 from pathlib import Path
 
 from readability_preprocessing.utils.utils import list_java_files_path, \
     load_code, store_code
-
-COMMENT_PATTERN = r"(\".*?\"|\'.*?\')|(/\*.*?\*/|//[^\r\n]*$)"
-COMMENT_REGEX = re.compile(COMMENT_PATTERN, re.MULTILINE | re.DOTALL)
 
 
 @dataclass
@@ -36,22 +33,16 @@ class CommentsRemover:
         :param code: The code to remove comments from.
         :return: The code without comments.
         """
+        javadocComment = pyparsing.nestedExpr("/**", "*/").suppress()
+        blockAndLineComment = pyparsing.javaStyleComment.suppress()
 
-        def remove_comment(match: re.Match) -> str:
-            """
-            Removes the comment with the given probability.
-            :param match: The match object.
-            :return: The comment or an empty string.
-            """
-            return '' if random.random() < self.config.probability else match.group(0)
+        output = javadocComment.transform_string(code)
+        output = blockAndLineComment.transform_string(output)
 
-        # Use regex to replace comments with an empty string with the given probability
-        code_without_comments = COMMENT_REGEX.sub(remove_comment, code)
+        # Strip newlines at the beginning and end of the output
+        output = output.strip("\n")
 
-        # Remove empty line at the beginning or end of the file
-        code_without_comments = code_without_comments.strip()
-
-        return code_without_comments
+        return output
 
 
 def remove_comments(input_dir: Path, output_dir: Path,
