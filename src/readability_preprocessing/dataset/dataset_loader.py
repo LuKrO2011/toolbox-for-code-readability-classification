@@ -1,7 +1,6 @@
 from datasets import load_dataset
 
-# ds = load_dataset("se2p/code-readability-krod")
-ds = load_dataset("LuKrO/code-readability-krod-balanced")
+ds = load_dataset("se2p/code-readability-krod")
 ds = ds['train']
 ds_as_list = ds.to_list()
 
