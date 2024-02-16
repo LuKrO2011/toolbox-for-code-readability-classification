@@ -49,9 +49,11 @@ PERMUTATIONS_DIR = RES_DIR / "permutations/"
 
 SAMPLE_AMOUNT_FILE = RES_DIR / "sample_amount.yaml"
 
+COMMENTS_REMOVED_DIR = RES_DIR / "comments_removed/"
+
 
 class DirTest(unittest.TestCase):
-    output_dir_name = None  # Set to "output" to generate output
+    output_dir_name = "output"  # Set to "output" to generate output
 
     def setUp(self):
         # Create temporary directories for testing if output directory is None

@@ -38,6 +38,22 @@ def list_java_files(directory: str) -> List[str]:
     return java_files
 
 
+def list_java_files_path(directory: Path) -> List[Path]:
+    """
+    List all Java files in a directory as Path objects.
+    :param directory: The directory to search for Java files
+    :return: A list of Java files
+    """
+    java_files = []
+
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith(".java"):
+                java_files.append(Path(os.path.join(root, file)))
+
+    return java_files
+
+
 def list_files_with_name(directory: Path, name: str) -> List[Path]:
     """
     List the paths of all files with a specific name in a directory and its
@@ -55,7 +71,7 @@ def list_files_with_name(directory: Path, name: str) -> List[Path]:
     return files
 
 
-def load_code(file: str) -> str:
+def load_code(file: str | Path) -> str:
     """
     Loads the code from a file.
     :param file: Path to the file.
@@ -63,6 +79,22 @@ def load_code(file: str) -> str:
     """
     with open(file) as file:
         return file.read()
+
+
+def store_code(code: str, file: Path, input_dir: Path, output_dir: Path) -> None:
+    """
+    Stores the given code in the output directory relative to the input directory.
+    :param code: The code to store.
+    :param file: The file to store the code in.
+    :param input_dir: The input directory.
+    :param output_dir: The output directory.
+    :return: None.
+    """
+    relative_path = os.path.relpath(file, input_dir)
+    output_file = os.path.join(output_dir, relative_path)
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+    with open(output_file, "w") as file:
+        file.write(code)
 
 
 def image_to_bytes(image_path: str) -> bytes:
