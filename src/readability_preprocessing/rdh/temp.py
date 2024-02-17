@@ -19,11 +19,9 @@ class RemoveCommentsController:
         :param code: The java code with comments.
         :return: The java code without comments.
         """
-        output = ""
-
         # Remove block comments
         if self.bccheck and self.bcopen != '':
-            output = self.remove_block_comments(output, code)
+            output = self.remove_block_comments(code)
         else:
             output = code
 
@@ -79,17 +77,28 @@ class RemoveCommentsController:
         :return: The line of java code without comments.
         """
         d, s = 0, 0  # double and single quote counters
-        output = line
+        rem = line
 
-        for i in range(len(line)):
-            if self.is_quote_char(line[i], d, s) and self.is_valid_quote(line, i):
-                d, s = self.update_quote_counters(line[i], d, s)
+        i = 0
+        while i < len(line):
+            check = not self.esccheck or self.esc == '' or line[i - len(self.esc):i] != self.esc or (line[i - len(self.esc):i] == self.esc and line[i - 2 * len(self.esc):i - len(self.esc)] == self.esc)
+            if line[i] == '"' and check and d == 0 and s == 0:
+                d += 1
+            elif line[i] == '"' and check and d == 1 and s == 0:
+                d -= 1
+
+            if line[i] == "'" and check and d == 0 and s == 0:
+                s += 1
+            elif line[i] == "'" and check and d == 0 and s == 1:
+                s -= 1
 
             if i in comment_indexes and d == 0 and s == 0:
-                output = line[:i]
+                rem = line[:i]
                 break
 
-        return output
+            i += 1
+
+        return rem
 
     @staticmethod
     def is_quote_char(char: str, d: int, s: int) -> bool:
@@ -204,13 +213,13 @@ class RemoveCommentsController:
             self.is_valid_quote(full, i)
         ) and d == 0 and s == 0 and (i not in bc_indexes)
 
-    def remove_block_comments(self, output: str, full: str) -> str:
+    def remove_block_comments(self, full: str) -> str:
         """
         Removes block comments from the given java code.
-        :param output: The java code without comments.
         :param full: The java code with comments.
         :return: The java code without block comments.
         """
+        output = ""
         bc_open_indexes, bc_close_indexes = self.find_block_comment_indexes(full)
         d, s, bc, record = 0, 0, 0, 0
 
