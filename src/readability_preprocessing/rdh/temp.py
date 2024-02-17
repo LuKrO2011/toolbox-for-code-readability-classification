@@ -81,7 +81,7 @@ class RemoveCommentsController:
 
         i = 0
         while i < len(line):
-            check = not self.esccheck or self.esc == '' or line[i - len(self.esc):i] != self.esc or (line[i - len(self.esc):i] == self.esc and line[i - 2 * len(self.esc):i - len(self.esc)] == self.esc)
+            check = self.is_valid_quote(line, i)
             if line[i] == '"' and check and d == 0 and s == 0:
                 d += 1
             elif line[i] == '"' and check and d == 1 and s == 0:
