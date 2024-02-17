@@ -1,4 +1,8 @@
-class RemComController:
+class RemoveCommentsController:
+    """
+    This class is used to remove comments from a given java code.
+    """
+
     def __init__(self):
         self.arr = []
         self.comment = "//"
@@ -9,143 +13,228 @@ class RemComController:
         self.esccheck = True
         self.bccheck = True
 
-    def split(self):
-        full = self.appText
-        finaltext = ""
+    def remove_comments(self, code: str) -> str:
+        """
+        Removes comments from the given java code.
+        :param code: The java code with comments.
+        :return: The java code without comments.
+        """
+        output = ""
 
         # Remove block comments
         if self.bccheck and self.bcopen != '':
-            finaltext = self.remove_block_comments(finaltext, full)
+            output = self.remove_block_comments(output, code)
         else:
-            finaltext = full
+            output = code
 
         # Remove line comments
         if self.comcheck and self.comment != '':
-            finaltext = self.remove_line_comments(finaltext)
+            output = self.remove_line_comments(output)
 
         # Remove extra newlines
-        finaltext = finaltext.replace('\n\n\n', '\n\n').lstrip('\n')
+        output = output.replace('\n\n\n', '\n\n').lstrip('\n')
 
-        self.appText = ''
         self.arr = []
-        self.appText = finaltext
+        return output
 
-    def remove_line_comments(self, finaltext):
-        lines = finaltext.split('\n')
+    def remove_line_comments(self, code: str) -> str:
+        """
+        Removes line comments from the given java code.
+        :param code: The java code with comments.
+        :return: The java code without line comments.
+        """
+        lines = code.split('\n')
         for line in lines:
             rem = self.remove_comments_from_line(line)
             if not rem.strip():
                 rem = '\n'
             self.arr.append(rem)
 
-        finaltext = '\n'.join(self.arr)
-        return finaltext
+        code = '\n'.join(self.arr)
+        return code
 
-    def remove_comments_from_line(self, line):
+    def remove_comments_from_line(self, line: str) -> str:
+        """
+        Removes comments from a single line of java code.
+        :param line: The line of java code with comments.
+        :return: The line of java code without comments.
+        """
         if self.esc == '':
             self.esc = None
 
         if self.comment in line:
-            comIndexes = [i for i in range(len(line)) if
-                          line.startswith(self.comment, i)]
-            rem = self.extract_comment_free_line(line, comIndexes)
+            comment_indexes = [i for i in range(len(line)) if
+                               line.startswith(self.comment, i)]
+            output = self.extract_comment_free_line(line, comment_indexes)
         else:
-            rem = line
+            output = line
 
-        return rem
+        return output
 
-    def extract_comment_free_line(self, line, comIndexes):
-        d, s = 0, 0
-        rem = line
+    def extract_comment_free_line(self, line: str, comment_indexes: list) -> str:
+        """
+        Extracts the comment free line from the given line of java code.
+        :param line: The line of java code with comments.
+        :param comment_indexes: The indexes of the comments in the line.
+        :return: The line of java code without comments.
+        """
+        d, s = 0, 0  # double and single quote counters
+        output = line
 
         for i in range(len(line)):
             if self.is_quote_char(line[i], d, s) and self.is_valid_quote(i, line):
                 d, s = self.update_quote_counters(line[i], d, s)
 
-            if i in comIndexes and d == 0 and s == 0:
-                rem = line[:i]
+            if i in comment_indexes and d == 0 and s == 0:
+                output = line[:i]
                 break
 
-        return rem
+        return output
 
-    def is_quote_char(self, char, d, s):
+    @staticmethod
+    def is_quote_char(char: str, d: int, s: int) -> bool:
+        """
+        Checks if the given character is a quote character.
+        :param char: The character to check.
+        :param d: The double quote counter.
+        :param s: The single quote counter.
+        :return: True if the character is a quote character, False otherwise.
+        """
         return (char == '"' and d == 0 and s == 0) or (
             char == "'" and d == 0 and s == 0)
 
-    def is_valid_quote(self, i, line):
+    def is_valid_quote(self, i: int, line: str) -> bool:
+        """
+        Checks if the given quote is valid.
+        :param i: The index of the quote in the line.
+        :param line: The line of java code with comments.
+        :return: True if the quote is valid, False otherwise.
+        """
         return not self.esccheck or self.esc == '' or line[i - len(
             self.esc):i] != self.esc or (line[i - len(self.esc):i] == self.esc and line[
                                                                                    i - 2 * len(
                                                                                        self.esc):i - len(
                                                                                        self.esc)] == self.esc)
 
-    def update_quote_counters(self, char, d, s):
+    def update_quote_counters(self, char: str, d: int, s: int) -> tuple:
+        """
+        Updates the double and single quote counters.
+        :param char: The character to check.
+        :param d: The double quote counter.
+        :param s: The single quote counter.
+        :return: The updated double and single quote counters.
+        """
         if char == '"':
             d += 1
         elif char == "'":
             s += 1
         return d, s
 
-    def remove_block_comments(self, finaltext, full):
-        bcOpenIndexes, bcCloseIndexes = [], []
+    def find_block_comment_indexes(self, full: str) -> tuple:
+        """
+        Finds the indexes of the block comments in the given java code.
+        :param full: The java code with comments.
+        :return: The indexes of the block comments.
+        """
+        bc_open_indexes = []
+        bc_close_indexes = []
         o, c = -1, -1
         while (o := full.find(self.bcopen, o + 1)) != -1:
-            bcOpenIndexes.append(o)
+            bc_open_indexes.append(o)
         if self.bcclose != '':
             while (c := full.find(self.bcclose, c + 1)) != -1:
-                bcCloseIndexes.append(c)
+                bc_close_indexes.append(c)
+        return bc_open_indexes, bc_close_indexes
+
+    def check_quotes_and_single_quotes(self, i: int, full: str, bc_open_indexes: list,
+                                       bc_close_indexes: list, d: int, s: int) -> tuple:
+        """
+        Checks the quotes and single quotes in the given java code.
+        :param i: The index of the character in the java code.
+        :param full: The java code with comments.
+        :param bc_open_indexes: The indexes of the block comments in the java code.
+        :param bc_close_indexes: The indexes of the block comments in the java code.
+        :param d: The double quote counter.
+        :param s: The single quote counter.
+        :return: The updated double and single quote counters.
+        """
+        if full[i] == '"' and self.is_valid_quote_2(i, full, d, s):
+            d += 1
+        elif full[i] == '"' and self.is_valid_quote_2(i, full, d, s, closing=True):
+            d -= 1
+        if full[i] == "'" and self.is_valid_single_quote(i, full, d, s,
+                                                         bc_open_indexes):
+            s += 1
+        elif full[i] == "'" and self.is_valid_single_quote(i, full, d, s,
+                                                           bc_close_indexes):
+            s -= 1
+        return d, s
+
+    def is_valid_quote_2(self, i: int, full: str, d: int, s: int,
+                         closing=False) -> bool:
+        """
+        Checks if the given quote is valid.
+        :param i: The index of the quote in the line.
+        :param full: The line of java code with comments.
+        :param d: The double quote counter.
+        :param s: The single quote counter.
+        :param closing: True if the quote is a closing quote, False otherwise.
+        :return: True if the quote is valid, False otherwise.
+        """
+        return (
+            full[i] == '"' and
+            (not self.esccheck or self.esc == '' or full[
+                                                    i - len(self.esc):i] != self.esc
+             or (full[i - len(self.esc):i] == self.esc and full[i - 2 * len(
+                    self.esc):i - len(self.esc)] == self.esc))
+        ) and d == 0 and s == 0 and (not closing or d == 1)
+
+    def is_valid_single_quote(self, i: int, full: str, d: int, s: int,
+                              bcIndexes: list) -> bool:
+        """
+        Checks if the given single quote is valid.
+        :param i: The index of the single quote in the line.
+        :param full: The line of java code with comments.
+        :param d: The double quote counter.
+        :param s: The single quote counter.
+        :param bcIndexes: The indexes of the block comments in the java code.
+        :return: True if the single quote is valid, False otherwise.
+        """
+        return (
+            full[i] == "'" and
+            (not self.esccheck or self.esc == '' or full[
+                                                    i - len(self.esc):i] != self.esc
+             or (full[i - len(self.esc):i] == self.esc and full[i - 2 * len(
+                    self.esc):i - len(self.esc)] == self.esc))
+        ) and d == 0 and s == 0 and (i not in bcIndexes)
+
+    def remove_block_comments(self, output: str, full: str) -> str:
+        """
+        Removes block comments from the given java code.
+        :param output: The java code without comments.
+        :param full: The java code with comments.
+        :return: The java code without block comments.
+        """
+        bc_open_indexes, bc_close_indexes = self.find_block_comment_indexes(full)
         d, s, bc, record = 0, 0, 0, 0
+
         for i in range(len(full)):
-            if full[i] == '"' and (not self.esccheck or self.esc == '' or full[
-                                                                          i - len(
-                                                                              self.esc):i] != self.esc
-                                   or (full[
-                                       i - len(self.esc):i] == self.esc and full[
-                                                                            i - 2 * len(
-                                                                                self.esc):i - len(
-                                                                                self.esc)] == self.esc)) and d == 0 and s == 0:
-                d += 1
-            elif full[i] == '"' and (not self.esccheck or self.esc == '' or full[
-                                                                            i - len(
-                                                                                self.esc):i] != self.esc
-                                     or (full[
-                                         i - len(self.esc):i] == self.esc and full[
-                                                                              i - 2 * len(
-                                                                                  self.esc):i - len(
-                                                                                  self.esc)] == self.esc)) and d == 1 and s == 0:
-                d -= 1
-            if full[i] == "'" and (not self.esccheck or self.esc == '' or full[
-                                                                          i - len(
-                                                                              self.esc):i] != self.esc
-                                   or (full[
-                                       i - len(self.esc):i] == self.esc and full[
-                                                                            i - 2 * len(
-                                                                                self.esc):i - len(
-                                                                                self.esc)] == self.esc)) and d == 0 and s == 0:
-                if i not in bcOpenIndexes:
-                    s += 1
-            elif full[i] == "'" and (not self.esccheck or self.esc == '' or full[
-                                                                            i - len(
-                                                                                self.esc):i] != self.esc
-                                     or (full[
-                                         i - len(self.esc):i] == self.esc and full[
-                                                                              i - 2 * len(
-                                                                                  self.esc):i - len(
-                                                                                  self.esc)] == self.esc)) and d == 0 and s == 1:
-                if i not in bcCloseIndexes:
-                    s -= 1
-            elif full[i] == '\n':
+            d, s = self.check_quotes_and_single_quotes(i, full, bc_open_indexes,
+                                                       bc_close_indexes, d, s)
+
+            if full[i] == '\n':
                 d = 0
                 s = 0
 
-            if i in bcOpenIndexes and d == 0 and s == 0 and bc == 0:
-                finaltext += full[record:i]
+            if i in bc_open_indexes and d == 0 and s == 0 and bc == 0:
+                output += full[record:i]
                 i += len(self.bcopen) - 1
                 bc = 1
-            elif self.bcclose != '' and i in bcCloseIndexes and bc == 1:
+            elif self.bcclose != '' and i in bc_close_indexes and bc == 1:
                 record = i + len(self.bcclose)
                 i += len(self.bcclose) - 1
                 bc = 0
             elif i == len(full) - 1 and bc == 0:
-                finaltext += full[record:]
-        return finaltext
+                output += full[record:]
+
+        return output
