@@ -2,12 +2,16 @@ import random
 from dataclasses import dataclass
 from pathlib import Path
 
-import pyparsing
-import pyparsing as pp
-from pyparsing import javaStyleComment, ParseException
+from pyparsing import ParseException, dblQuotedString, \
+    sglQuotedString, Combine, Regex
 
 from readability_preprocessing.utils.utils import list_java_files_path, \
     load_code, store_code
+
+slash_comment = Regex(r"//(?:\\\n|[^\n])*").set_name("// comment")
+java_comment = Combine(
+    Regex(r"/\*(?:[^*]|\*(?!/))*") + "*/" | slash_comment
+).set_name("Java comment")
 
 
 @dataclass
@@ -37,9 +41,13 @@ class CommentsRemover:
         """
         comment_positions = []
         try:
-            comments = javaStyleComment.scanString(code)
+            comments = java_comment.scanString(code)
+
+            # Only keep the comments that are not inside a string
             for comment, start, end in comments:
-                comment_positions.append((start, end))
+                within_string = self._is_within_string(start, end, code)
+                if not within_string:
+                    comment_positions.append((start, end))
         except ParseException as pe:
             print(f"Error parsing input: {pe}")
 
@@ -98,15 +106,69 @@ class CommentsRemover:
         """
         return random.random() < self.config.probability
 
+    def _is_within_string(self, start: int, end: int, code: str) -> bool:
+        """
+        Returns True if the comment is within a string.
+        :param start: The start of the comment.
+        :param end: The end of the comment.
+        :param code: The code.
+        :return: True if the comment is within a string.
+        """
+        start -= 1
+        end -= 1
+
+        # Find the string that contains the comment
+        string_positions = self._find_strings_positions(code)
+        for string_start, string_end in string_positions:
+            if string_start <= start and end <= string_end:
+                return True
+        return False
+
+    def _find_strings_positions(self, code: str) -> list:
+        """
+        Finds the positions of the strings in the code.
+        :param code: The code.
+        :return: The positions of the strings.
+        """
+        string_positions = []
+        try:
+            dbl_quoted_string = dblQuotedString
+            sgl_quoted_string = sglQuotedString
+            quoted_string = Combine(dbl_quoted_string | sgl_quoted_string)
+            strings = quoted_string.scanString(code)
+            for string, start, end in strings:
+                string_positions.append((start, end))
+        except ParseException as pe:
+            print(f"Error parsing input: {pe}")
+        return string_positions
+
 
 def remove_comments(input_dir: Path, output_dir: Path,
                     probability: float = 0.1) -> None:
     """
-    Removes comments with the given probability from the files in the input directory
-    and saves the files in the output directory.
-    :param input_dir: The input directory.
-    :param output_dir: The output directory.
-    :param probability: The probability of removing comments.
+
+    Removes
+    comments
+    with the given probability from the files in the input directory
+    and saves
+    the
+    files in the
+    output
+    directory.
+    :param
+    input_dir: The
+    input
+    directory.
+    :param
+    output_dir: The
+    output
+    directory.
+    :param
+    probability: The
+    probability
+    of
+    removing
+    comments.
     :return: None.
     """
     comments_remover = CommentsRemover(
