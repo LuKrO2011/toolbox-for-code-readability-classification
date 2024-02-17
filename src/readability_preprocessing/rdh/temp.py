@@ -1,3 +1,6 @@
+import random
+
+
 class RemoveCommentsController:
     """
     This class is used to remove comments from a given java code.
@@ -63,7 +66,10 @@ class RemoveCommentsController:
         if self.comment in line:
             comment_indexes = [i for i in range(len(line)) if
                                line.startswith(self.comment, i)]
-            output = self.extract_comment_free_line(line, comment_indexes)
+            if self.should_remove_comment():
+                output = self.extract_comment_free_line(line, comment_indexes)
+            else:
+                output = line
         else:
             output = line
 
@@ -236,10 +242,26 @@ class RemoveCommentsController:
                 i += len(self.bcopen) - 1
                 bc = 1
             elif self.bcclose != '' and i in bc_close_indexes and bc == 1:
-                record = i + len(self.bcclose)
-                i += len(self.bcclose) - 1
-                bc = 0
+                if self.should_remove_comment():
+                    record = i + len(self.bcclose)
+                    i += len(self.bcclose) - 1
+                    bc = 0
+                else:
+                    index = bc_close_indexes.index(i)
+                    bc_open_pos = bc_open_indexes[index]
+                    output += full[bc_open_pos:i + len(self.bcclose)]
+                    record = i + len(self.bcclose)
+                    i += len(self.bcclose) - 1
+                    bc = 0
             elif i == len(full) - 1 and bc == 0:
                 output += full[record:]
 
         return output
+
+    def should_remove_comment(self, probability: float = 0) -> bool:
+        """
+        True if comments should be removed, False otherwise.
+        :param probability: The probability of removing comments.
+        :return: True if comments should be removed, False otherwise.
+        """
+        return random.random() < probability
