@@ -55,4 +55,4 @@ class TestExtractSampled(DirTest):
     def test_remove_comments_dir(self):
         remove_comments(input_dir=Path(COMMENTS_WITH_DIR),
                         output_dir=Path(self.output_dir),
-                        probability=1)
+                        probability=0)

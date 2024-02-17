@@ -49,6 +49,10 @@ PERMUTATIONS_DIR = RES_DIR / "permutations/"
 
 SAMPLE_AMOUNT_FILE = RES_DIR / "sample_amount.yaml"
 
+COMMENTS_DIR = RES_DIR / "comments/"
+COMMENTS_WITH_DIR = COMMENTS_DIR / "with/"
+COMMENTS_WITHOUT_DIR = COMMENTS_DIR / "without/"
+
 
 class DirTest(unittest.TestCase):
     output_dir_name = "output"  # Set to "output" to generate output
