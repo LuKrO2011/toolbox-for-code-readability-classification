@@ -1,8 +1,10 @@
+import random
 from dataclasses import dataclass
 from pathlib import Path
 
 import pyparsing
 import pyparsing as pp
+from pyparsing import javaStyleComment, ParseException
 
 from readability_preprocessing.utils.utils import list_java_files_path, \
     load_code, store_code
@@ -33,13 +35,68 @@ class CommentsRemover:
         :param code: The code to remove comments from.
         :return: The code without comments.
         """
-        comments = pyparsing.javaStyleComment
-        output = comments.transform_string(code).suppress()
+        comment_positions = []
+        try:
+            comments = javaStyleComment.scanString(code)
+            for comment, start, end in comments:
+                comment_positions.append((start, end))
+        except ParseException as pe:
+            print(f"Error parsing input: {pe}")
 
-        # Strip newlines at the beginning and end of the output
-        output = output.strip("\n")
+        # Remove the comments from the code
+        code = self._remove_comments_from_code(code, comment_positions)
 
-        return output
+        return code
+
+    def _remove_comments_from_code(self, code: str, comment_positions: list) -> str:
+        """
+        Removes comments from the code at the given positions.
+        :param code: The code.
+        :param comment_positions: The positions of the comments.
+        :return: The code without comments.
+        """
+        if len(comment_positions) == 0:
+            return code
+
+        # Sort the comment positions in reverse order
+        comment_positions = sorted(comment_positions, key=lambda x: x[0], reverse=True)
+
+        # Keep the comments with the given probability
+        for start, end in comment_positions:
+            if self._to_remove_comment():
+                code = self._remove_comment(code, (start, end))
+            else:
+                code = self._keep_comment(code, (start, end))
+
+        return code
+
+    @staticmethod
+    def _keep_comment(code: str, comment_position: tuple) -> str:
+        """
+        Keeps the comment from the code at the given position.
+        :param code: The code.
+        :param comment_position: The position of the comment.
+        :return: The code with the comment.
+        """
+        return code
+
+    @staticmethod
+    def _remove_comment(code: str, comment_position: tuple) -> str:
+        """
+        Removes the comment from the code at the given position.
+        :param code: The code.
+        :param comment_position: The position of the comment.
+        :return: The code without the comment.
+        """
+        start, end = comment_position
+        return code[:start] + code[end:]
+
+    def _to_remove_comment(self):
+        """
+        Returns True with the given probability.
+        :return: True with the given probability.
+        """
+        return random.random() < self.config.probability
 
 
 def remove_comments(input_dir: Path, output_dir: Path,
