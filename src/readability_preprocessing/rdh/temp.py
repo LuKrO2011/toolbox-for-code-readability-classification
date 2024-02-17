@@ -82,7 +82,7 @@ class RemoveCommentsController:
         output = line
 
         for i in range(len(line)):
-            if self.is_quote_char(line[i], d, s) and self.is_valid_quote(i, line):
+            if self.is_quote_char(line[i], d, s) and self.is_valid_quote(line, i):
                 d, s = self.update_quote_counters(line[i], d, s)
 
             if i in comment_indexes and d == 0 and s == 0:
@@ -103,20 +103,22 @@ class RemoveCommentsController:
         return (char == '"' and d == 0 and s == 0) or (
             char == "'" and d == 0 and s == 0)
 
-    def is_valid_quote(self, i: int, line: str) -> bool:
+    def is_valid_quote(self, line: str, i: int) -> bool:
         """
         Checks if the given quote is valid.
         :param i: The index of the quote in the line.
         :param line: The line of java code with comments.
         :return: True if the quote is valid, False otherwise.
         """
-        return not self.esccheck or self.esc == '' or line[i - len(
-            self.esc):i] != self.esc or (line[i - len(self.esc):i] == self.esc and line[
-                                                                                   i - 2 * len(
-                                                                                       self.esc):i - len(
-                                                                                       self.esc)] == self.esc)
+        if not self.esccheck or self.esc == '':
+            return True
+        esc_slice = line[i - len(self.esc):i]
+        is_escaped = esc_slice == self.esc
+        line_minus_escaped = line[i - 2 * len(self.esc):i - len(self.esc)]
+        return not is_escaped or (is_escaped and line_minus_escaped == self.esc)
 
-    def update_quote_counters(self, char: str, d: int, s: int) -> tuple:
+    @staticmethod
+    def update_quote_counters(char: str, d: int, s: int) -> tuple:
         """
         Updates the double and single quote counters.
         :param char: The character to check.
@@ -158,9 +160,9 @@ class RemoveCommentsController:
         :param s: The single quote counter.
         :return: The updated double and single quote counters.
         """
-        if full[i] == '"' and self.is_valid_quote_2(i, full, d, s):
+        if full[i] == '"' and self.is_valid_double_quote(i, full, d, s):
             d += 1
-        elif full[i] == '"' and self.is_valid_quote_2(i, full, d, s, closing=True):
+        elif full[i] == '"' and self.is_valid_double_quote(i, full, d, s, closing=True):
             d -= 1
         if full[i] == "'" and self.is_valid_single_quote(i, full, d, s,
                                                          bc_open_indexes):
@@ -170,8 +172,8 @@ class RemoveCommentsController:
             s -= 1
         return d, s
 
-    def is_valid_quote_2(self, i: int, full: str, d: int, s: int,
-                         closing=False) -> bool:
+    def is_valid_double_quote(self, i: int, full: str, d: int, s: int,
+                              closing=False) -> bool:
         """
         Checks if the given quote is valid.
         :param i: The index of the quote in the line.
@@ -183,30 +185,24 @@ class RemoveCommentsController:
         """
         return (
             full[i] == '"' and
-            (not self.esccheck or self.esc == '' or full[
-                                                    i - len(self.esc):i] != self.esc
-             or (full[i - len(self.esc):i] == self.esc and full[i - 2 * len(
-                    self.esc):i - len(self.esc)] == self.esc))
+            self.is_valid_quote(full, i)
         ) and d == 0 and s == 0 and (not closing or d == 1)
 
     def is_valid_single_quote(self, i: int, full: str, d: int, s: int,
-                              bcIndexes: list) -> bool:
+                              bc_indexes: list) -> bool:
         """
         Checks if the given single quote is valid.
         :param i: The index of the single quote in the line.
         :param full: The line of java code with comments.
         :param d: The double quote counter.
         :param s: The single quote counter.
-        :param bcIndexes: The indexes of the block comments in the java code.
+        :param bc_indexes: The indexes of the block comments in the java code.
         :return: True if the single quote is valid, False otherwise.
         """
         return (
             full[i] == "'" and
-            (not self.esccheck or self.esc == '' or full[
-                                                    i - len(self.esc):i] != self.esc
-             or (full[i - len(self.esc):i] == self.esc and full[i - 2 * len(
-                    self.esc):i - len(self.esc)] == self.esc))
-        ) and d == 0 and s == 0 and (i not in bcIndexes)
+            self.is_valid_quote(full, i)
+        ) and d == 0 and s == 0 and (i not in bc_indexes)
 
     def remove_block_comments(self, output: str, full: str) -> str:
         """
