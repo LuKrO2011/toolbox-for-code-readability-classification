@@ -4,7 +4,7 @@ from readability_preprocessing.utils.utils import load_code
 from src.readability_preprocessing.rdh.comments_remover import remove_comments, \
     CommentsRemover, CommentsRemoverConfig
 from tests.readability_preprocessing.utils.utils import DirTest, EXTRACTED_DIR, \
-    METHODS_ORIGINAL_DIR
+    METHODS_ORIGINAL_DIR, COMMENTS_WITH_DIR
 
 
 def test_remove_comments():
@@ -53,6 +53,6 @@ def test_remove_comments_3():
 class TestExtractSampled(DirTest):
 
     def test_remove_comments_dir(self):
-        remove_comments(input_dir=Path(METHODS_ORIGINAL_DIR),
+        remove_comments(input_dir=Path(COMMENTS_WITH_DIR),
                         output_dir=Path(self.output_dir),
                         probability=1)
