@@ -1,8 +1,8 @@
 from dataclasses import dataclass
+from pathlib import Path
 
 import pyparsing
-from pyparsing import javaStyleComment, ParseException
-from pathlib import Path
+import pyparsing as pp
 
 from readability_preprocessing.utils.utils import list_java_files_path, \
     load_code, store_code
@@ -33,11 +33,8 @@ class CommentsRemover:
         :param code: The code to remove comments from.
         :return: The code without comments.
         """
-        javadocComment = pyparsing.nestedExpr("/**", "*/").suppress()
-        blockAndLineComment = pyparsing.javaStyleComment.suppress()
-
-        output = javadocComment.transform_string(code)
-        output = blockAndLineComment.transform_string(output)
+        comments = pyparsing.javaStyleComment
+        output = comments.transform_string(code).suppress()
 
         # Strip newlines at the beginning and end of the output
         output = output.strip("\n")
