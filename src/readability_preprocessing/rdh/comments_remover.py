@@ -2,16 +2,10 @@ import random
 from dataclasses import dataclass
 from pathlib import Path
 
-from pyparsing import ParseException, dblQuotedString, \
-    sglQuotedString, Combine, Regex
+from pyparsing import ParseException, javaStyleComment
 
 from readability_preprocessing.utils.utils import list_java_files_path, \
     load_code, store_code
-
-slash_comment = Regex(r"//(?:\\\n|[^\n])*").set_name("// comment")
-java_comment = Combine(
-    Regex(r"/\*(?:[^*]|\*(?!/))*") + "*/" | slash_comment
-).set_name("Java comment")
 
 
 @dataclass
@@ -41,12 +35,10 @@ class CommentsRemover:
         """
         comment_positions = []
         try:
-            comments = java_comment.scanString(code)
-
-            # Only keep the comments that are not inside a string
+            comments = javaStyleComment.scanString(code)
             for comment, start, end in comments:
-                within_string = self._is_within_string(start, end, code)
-                if not within_string:
+                is_safe = self._quote_ends_before_comment(code, start)
+                if is_safe:
                     comment_positions.append((start, end))
         except ParseException as pe:
             print(f"Error parsing input: {pe}")
@@ -106,41 +98,17 @@ class CommentsRemover:
         """
         return random.random() < self.config.probability
 
-    def _is_within_string(self, start: int, end: int, code: str) -> bool:
+    @staticmethod
+    def _quote_ends_before_comment(code: str, start: int) -> bool:
         """
-        Returns True if the comment is within a string.
+        Returns True if the last quote before the comment is not closed.
+        :param code: The code.
         :param start: The start of the comment.
-        :param end: The end of the comment.
-        :param code: The code.
-        :return: True if the comment is within a string.
+        :return: True if the last quote before the comment is not closed.
         """
-        start -= 1
-        end -= 1
-
-        # Find the string that contains the comment
-        string_positions = self._find_strings_positions(code)
-        for string_start, string_end in string_positions:
-            if string_start <= start and end <= string_end:
-                return True
-        return False
-
-    def _find_strings_positions(self, code: str) -> list:
-        """
-        Finds the positions of the strings in the code.
-        :param code: The code.
-        :return: The positions of the strings.
-        """
-        string_positions = []
-        try:
-            dbl_quoted_string = dblQuotedString
-            sgl_quoted_string = sglQuotedString
-            quoted_string = Combine(dbl_quoted_string | sgl_quoted_string)
-            strings = quoted_string.scanString(code)
-            for string, start, end in strings:
-                string_positions.append((start, end))
-        except ParseException as pe:
-            print(f"Error parsing input: {pe}")
-        return string_positions
+        code_before_comment = code[:start]
+        quotes_count = code_before_comment.count('"') + code_before_comment.count('\'')
+        return quotes_count % 2 == 0
 
 
 def remove_comments(input_dir: Path, output_dir: Path,
