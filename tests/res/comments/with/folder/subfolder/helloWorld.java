@@ -33,7 +33,7 @@ public static void main(String[] args) {
 
     // Always remember to end statements with a semicolon (;).
 
-    // Comments within strings provide explanations for specific lines of code.
-    String commentExample = "// This is a comment within a string."; // Display comment within a string
+    // Comments within 'strings provide explanations for specific lines of code.
+    String commentExample = "// 'This is a comment within a string.";
     System.out.println(commentExample);
 }

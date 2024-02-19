@@ -49,7 +49,8 @@ class CommentsRemover:
             output = self.remove_line_comments(output)
 
         # Remove extra newlines
-        output = output.replace('\n\n\n', '\n\n').lstrip('\n')
+        output = output.replace('\n\n', '\n').lstrip('\n')
+        output = output.strip('\n')
 
         self.arr = []
         return output

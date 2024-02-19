@@ -55,7 +55,7 @@ COMMENTS_WITHOUT_DIR = COMMENTS_DIR / "without/"
 
 
 class DirTest(unittest.TestCase):
-    output_dir_name = "output"  # Set to "output" to generate output
+    output_dir_name = None  # Set to "output" to generate output
 
     def setUp(self):
         # Create temporary directories for testing if output directory is None
@@ -87,7 +87,7 @@ def assert_lines_equal(file: str, num_expected_lines: int):
     assert len(lines) == num_expected_lines
 
 
-def assert_content_equal(file1: str, file2: str):
+def assert_content_equal(file1: str | Path, file2: str | Path):
     with open(file1, "r") as f:
         lines1 = f.readlines()
     with open(file2, "r") as f:

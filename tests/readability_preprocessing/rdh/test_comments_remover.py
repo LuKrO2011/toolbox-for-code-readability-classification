@@ -4,7 +4,7 @@ from readability_preprocessing.utils.utils import load_code
 from src.readability_preprocessing.rdh.comments_remover import remove_comments, \
     CommentsRemover, CommentsRemoverConfig
 from tests.readability_preprocessing.utils.utils import DirTest, EXTRACTED_DIR, \
-    METHODS_ORIGINAL_DIR, COMMENTS_WITH_DIR
+    METHODS_ORIGINAL_DIR, COMMENTS_WITH_DIR, COMMENTS_WITHOUT_DIR, assert_content_equal
 
 
 def test_remove_comments():
@@ -55,4 +55,16 @@ class TestExtractSampled(DirTest):
     def test_remove_comments_dir(self):
         remove_comments(input_dir=Path(COMMENTS_WITH_DIR),
                         output_dir=Path(self.output_dir),
-                        probability=0)
+                        probability=1)
+
+        # Check that the files in the output dir are the same as the expected ones
+        expected_files = [
+            "helloWorld.java",
+            "folder/helloWorld.java",
+            "folder/subfolder/helloWorld.java",
+        ]
+        for filename in expected_files:
+            assert_content_equal(
+                COMMENTS_WITHOUT_DIR / filename,
+                Path(self.output_dir) / filename
+            )
