@@ -1,4 +1,4 @@
-from datasets import load_dataset, VerificationMode
+from datasets import load_dataset, VerificationMode, Dataset
 from datasets import load_from_disk
 
 # Load from hub
@@ -38,3 +38,14 @@ for x in ds_as_list:
         count += 1
 print(
     f"Number of samples with a score of 3.26 that start with a method comment: {count}")
+
+# # Reduce the number of samples to 200, 100 from each score
+# ds_as_list_3_68 = [x for x in ds_as_list if x['score'] == 3.68]
+# ds_as_list_3_26 = [x for x in ds_as_list if x['score'] == 3.26]
+# ds_as_list_3_68 = ds_as_list_3_68[:100]
+# ds_as_list_3_26 = ds_as_list_3_26[:100]
+# ds_as_list = ds_as_list_3_68 + ds_as_list_3_26
+#
+# # Save the reduced dataset
+# ds = Dataset.from_list(ds_as_list)
+# ds.save_to_disk("LuKrO/code-readability-krod-balanced-200")
