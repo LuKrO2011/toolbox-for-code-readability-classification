@@ -9,6 +9,7 @@ from typing import Any
 
 from readability_preprocessing.extractors.diff_extractor import compare_to_folder
 from readability_preprocessing.extractors.sampled_extractor import extract_sampled
+from readability_preprocessing.rdh.comments_remover import remove_comments
 from readability_preprocessing.sampling.survey_crafting import SurveyCrafter
 from src.readability_preprocessing.dataset.dataset_combiner import combine_datasets
 from src.readability_preprocessing.dataset.dataset_converter import convert_dataset_csv, \
@@ -86,6 +87,7 @@ class Tasks(Enum):
     DOWNLOAD = "DOWNLOAD"
     UPLOAD = "UPLOAD"
     CRAFT_SURVEYS = "CRAFT_SURVEYS"
+    REMOVE_COMMENTS = "REMOVE_COMMENTS"
 
     @classmethod
     def _missing_(cls, value: object) -> Any:
@@ -474,6 +476,31 @@ def _set_up_arg_parser() -> ArgumentParser:
         help="Name of the directory containing the original methods to compare against."
     )
 
+    # Parser for removing comments
+    remove_comments_parser = sub_parser.add_parser(str(Tasks.REMOVE_COMMENTS))
+    remove_comments_parser.add_argument(
+        "--input",
+        "-i",
+        required=True,
+        type=str,
+        help="Path to the folder containing the java files.",
+    )
+    remove_comments_parser.add_argument(
+        "--output",
+        "-o",
+        required=True,
+        type=str,
+        help="Path to the folder where the java files without comments should be stored.",
+    )
+    remove_comments_parser.add_argument(
+        "--probability",
+        "-p",
+        required=False,
+        type=float,
+        default=0.1,
+        help="Probability with that a comment is removed.",
+    )
+
     return arg_parser
 
 
@@ -766,6 +793,29 @@ def _run_extract_diff(parsed_args: Any) -> None:
                       methods_dir_name=methods_dir_name)
 
 
+def _run_remove_comments(parsed_args: Any) -> None:
+    """
+    Removes comments from the java files in the input directory.
+    :param parsed_args: Parsed arguments.
+    :return: None
+    """
+    input_dir = parsed_args.input
+    output_dir = parsed_args.output
+    probability = parsed_args.probability
+
+    # Log the arguments
+    logging.info(f"Input directory: {input_dir}")
+    logging.info(f"Output directory: {output_dir}")
+    logging.info(f"Probability: {probability}")
+
+    # Create the output directory, if it does not exist
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+
+    # Remove the comments
+    remove_comments(input_dir=input_dir, output_dir=output_dir, probability=probability)
+
+
 def main(args: list[str]) -> int:
     """
     Main function of the readability classifier.
@@ -813,6 +863,8 @@ def main(args: list[str]) -> int:
             _run_craft_surveys(parsed_args)
         case Tasks.EXTRACT_DIFF:
             _run_extract_diff(parsed_args)
+        case Tasks.REMOVE_COMMENTS:
+            _run_remove_comments(parsed_args)
 
     return 0
 

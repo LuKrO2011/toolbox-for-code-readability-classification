@@ -7,7 +7,7 @@ from src.readability_preprocessing.main import _run_stratified_sampling, \
     _run_extract_files, _run_extract_methods, _run_convert_csv, \
     _run_convert_two_folders, \
     _run_combine_datasets, _run_download, _run_upload, _run_extract_sampled, \
-    _run_craft_surveys, _run_extract_diff
+    _run_craft_surveys, _run_extract_diff, _run_remove_comments
 from tests.readability_preprocessing.utils.utils import DirTest, RES_DIR, \
     ENCODED_BW_DIR, METHODS_ORIGINAL_ADD_COMMAND_DIR, \
     CHECKSTYLED_DIR, RAW_BW_DIR, RAW_KROD_DIR, SAMPLED_DIR_2_2, \
@@ -190,3 +190,16 @@ class TestRunMain(DirTest):
 
         # Find the files with no diff to the original methods
         _run_extract_diff(parsed_args)
+
+    def test_run_remove_comments(self):
+        class MockParsedArgs:
+            def __init__(self, save: str = self.output_dir):
+                self.input = EXTRACTED_DIR
+                self.output = save
+                self.probability = 0.1
+
+        parsed_args = MockParsedArgs()
+
+        # Remove comments within the test
+        _run_remove_comments(parsed_args)
+
