@@ -12,10 +12,7 @@ INPUT_PATH = ROOT_DIR / 'src/res/merge_distances.json'
 REVERSE_X_AXIS = True
 PLOT_DIFF_TO_PREV = True
 
-if PLOT_DIFF_TO_PREV:
-    title = 'Merge Distances and Local Derivation vs Number of Stratas'
-else:
-    title = 'Merge Distances vs Number of Stratas'
+title = None
 
 with open(INPUT_PATH, 'r') as file:
     data = json.load(file)
@@ -34,7 +31,7 @@ fig, ax1 = plt.subplots(figsize=(8, 6))
 # Plot merge distances on the first y-axis
 ax1.plot(num_stratas, merge_distances, marker='o', linestyle='-', color='b',
          label='Merge Distances')
-ax1.set_xlabel('Number of Stratas')
+ax1.set_xlabel('Number of Strata')
 ax1.set_ylabel('Merge Distances', color='b')
 ax1.tick_params('y', colors='b')
 ax1.grid(True)
@@ -54,7 +51,7 @@ if REVERSE_X_AXIS:
     # Plot merge distances on the first y-axis
     ax1.plot(num_stratas, merge_distances, marker='o', linestyle='-', color='b',
              label='Merge Distances')
-    ax1.set_xlabel('Number of Stratas')
+    ax1.set_xlabel('Number of Strata')
     ax1.set_ylabel('Merge Distances', color='b')
     ax1.tick_params('y', colors='b')
     ax1.grid(True)
