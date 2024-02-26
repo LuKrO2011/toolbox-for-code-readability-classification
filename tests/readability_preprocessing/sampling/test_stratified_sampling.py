@@ -218,42 +218,42 @@ class TestStratifiedSampling(DirTest):
 
         assert "2_stratas_2" in output_dir_content
         subfolder_content = os.listdir(os.path.join(self.output_dir, "2_stratas_2"))
-        assert 'stratum_0.txt' in subfolder_content
+        assert 'stratum0.txt' in subfolder_content
         assert_lines_equal(
-            os.path.join(self.output_dir, "2_stratas_2", "stratum_0.txt"), 2)
-        assert 'stratum_1.txt' in subfolder_content
+            os.path.join(self.output_dir, "2_stratas_2", "stratum0.txt"), 2)
+        assert 'stratum1.txt' in subfolder_content
         assert_lines_equal(
-            os.path.join(self.output_dir, "2_stratas_2", "stratum_1.txt"), 2)
+            os.path.join(self.output_dir, "2_stratas_2", "stratum1.txt"), 2)
 
         assert "2_stratas_all" in output_dir_content
         subfolder_content = os.listdir(os.path.join(self.output_dir, "2_stratas_all"))
-        assert 'stratum_0.txt' in subfolder_content
+        assert 'stratum0.txt' in subfolder_content
         assert_lines_equal(
-            os.path.join(self.output_dir, "2_stratas_all", "stratum_0.txt"), 2)
-        assert 'stratum_1.txt' in subfolder_content
+            os.path.join(self.output_dir, "2_stratas_all", "stratum0.txt"), 2)
+        assert 'stratum1.txt' in subfolder_content
         assert_lines_equal(
-            os.path.join(self.output_dir, "2_stratas_all", "stratum_1.txt"), 6)
+            os.path.join(self.output_dir, "2_stratas_all", "stratum1.txt"), 6)
 
         assert "3_stratas_2" in output_dir_content
         subfolder_content = os.listdir(os.path.join(self.output_dir, "3_stratas_2"))
-        assert 'stratum_0.txt' in subfolder_content
+        assert 'stratum0.txt' in subfolder_content
         assert_lines_equal(
-            os.path.join(self.output_dir, "3_stratas_2", "stratum_0.txt"), 2)
-        assert 'stratum_1.txt' in subfolder_content
+            os.path.join(self.output_dir, "3_stratas_2", "stratum0.txt"), 2)
+        assert 'stratum1.txt' in subfolder_content
         assert_lines_equal(
-            os.path.join(self.output_dir, "3_stratas_2", "stratum_1.txt"), 2)
-        assert 'stratum_2.txt' in subfolder_content
+            os.path.join(self.output_dir, "3_stratas_2", "stratum1.txt"), 2)
+        assert 'stratum2.txt' in subfolder_content
         assert_lines_equal(
-            os.path.join(self.output_dir, "3_stratas_2", "stratum_2.txt"), 2)
+            os.path.join(self.output_dir, "3_stratas_2", "stratum2.txt"), 2)
 
         assert "3_stratas_all" in output_dir_content
         subfolder_content = os.listdir(os.path.join(self.output_dir, "3_stratas_all"))
-        assert 'stratum_0.txt' in subfolder_content
+        assert 'stratum0.txt' in subfolder_content
         assert_lines_equal(
-            os.path.join(self.output_dir, "3_stratas_all", "stratum_0.txt"), 2)
-        assert 'stratum_1.txt' in subfolder_content
+            os.path.join(self.output_dir, "3_stratas_all", "stratum0.txt"), 2)
+        assert 'stratum1.txt' in subfolder_content
         assert_lines_equal(
-            os.path.join(self.output_dir, "3_stratas_all", "stratum_1.txt"), 2)
-        assert 'stratum_2.txt' in subfolder_content
+            os.path.join(self.output_dir, "3_stratas_all", "stratum1.txt"), 2)
+        assert 'stratum2.txt' in subfolder_content
         assert_lines_equal(
-            os.path.join(self.output_dir, "3_stratas_all", "stratum_2.txt"), 4)
+            os.path.join(self.output_dir, "3_stratas_all", "stratum2.txt"), 4)
