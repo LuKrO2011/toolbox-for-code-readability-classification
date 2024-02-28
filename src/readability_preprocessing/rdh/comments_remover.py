@@ -1,3 +1,4 @@
+import logging
 import random
 from dataclasses import dataclass
 from pathlib import Path
@@ -274,6 +275,7 @@ def remove_comments(input_dir: Path, output_dir: Path,
 
     java_files = list_java_files_path(input_dir)
     for file in java_files:
+        logging.info(f"Processing file: {file}")
         code = load_code(file)
         code = comments_remover.remove_comments(code)
         store_code(code, file, input_dir, output_dir)
