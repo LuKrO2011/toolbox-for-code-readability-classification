@@ -276,6 +276,9 @@ def remove_comments(input_dir: Path, output_dir: Path,
     java_files = list_java_files_path(input_dir)
     for file in java_files:
         logging.info(f"Processing file: {file}")
-        code = load_code(file)
-        code = comments_remover.remove_comments(code)
-        store_code(code, file, input_dir, output_dir)
+        try:
+            code = load_code(file)
+            code = comments_remover.remove_comments(code)
+            store_code(code, file, input_dir, output_dir)
+        except Exception as e:
+            logging.error(f"Error processing file: {file}. Error: {e}")
