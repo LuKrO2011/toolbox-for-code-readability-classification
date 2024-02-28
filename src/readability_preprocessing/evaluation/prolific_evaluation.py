@@ -832,20 +832,6 @@ def print_answers_by_pid(stratas: dict[str, Stratum], raterExternalId: str) -> N
     print(f"Total deviation from mean: {total_deviation_from_mean}")
 
 
-def export_csv(stratas: dict[str, Stratum], output_path: Path) -> None:
-    """
-    Export the stratas to a csv file.
-    Each row contains in the first column the snippet name and in the second
-    to n-th column the ratings of the raters. If a rater did not rate a snippet,
-    the cell is empty.
-    :param stratas: The stratas
-    :param output_path: The path to the output file
-    :return: None
-    """
-    # TODO
-    pass
-
-
 def load_code_snippet(name: str, input_path: Path = SURVEY_DATA_DIR,
                       encoding='utf-8') -> str:
     """
