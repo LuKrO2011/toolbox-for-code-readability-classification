@@ -12,10 +12,10 @@ stars = []
 watchers = []
 
 for repo_info in data.values():
-    repo_names.append(repo_info.get('name'))
-    forks.append(repo_info.get('forks', 0))
-    stars.append(repo_info.get('stargazers_count', 0))
-    watchers.append(repo_info.get('watchers_count', 0))
+    repo_names.append(repo_info.get("name"))
+    forks.append(repo_info.get("forks", 0))
+    stars.append(repo_info.get("stargazers_count", 0))
+    watchers.append(repo_info.get("watchers_count", 0))
 
 # Set the width of the bars
 bar_width = 0.25
@@ -28,15 +28,16 @@ r3 = [x + bar_width for x in r2]
 # Create bar plots for forks, stars, and watchers
 plt.figure(figsize=(12, 6))
 
-plt.bar(r1, forks, color='b', width=bar_width, edgecolor='grey', label='Forks')
-plt.bar(r2, stars, color='g', width=bar_width, edgecolor='grey', label='Stars')
-plt.bar(r3, watchers, color='r', width=bar_width, edgecolor='grey', label='Watchers')
+plt.bar(r1, forks, color="b", width=bar_width, edgecolor="grey", label="Forks")
+plt.bar(r2, stars, color="g", width=bar_width, edgecolor="grey", label="Stars")
+plt.bar(r3, watchers, color="r", width=bar_width, edgecolor="grey", label="Watchers")
 
-plt.xlabel('Repositories')
-plt.ylabel('Count')
-plt.title('Forks, Stars, and Watchers of Repositories')
-plt.xticks([r + bar_width for r in range(len(repo_names))], repo_names,
-           rotation='vertical')
+plt.xlabel("Repositories")
+plt.ylabel("Count")
+plt.title("Forks, Stars, and Watchers of Repositories")
+plt.xticks(
+    [r + bar_width for r in range(len(repo_names))], repo_names, rotation="vertical"
+)
 plt.legend()
 
 plt.tight_layout()

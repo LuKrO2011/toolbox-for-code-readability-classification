@@ -3,16 +3,35 @@ import unittest
 from pathlib import Path
 
 from src.readability_preprocessing.extractors.method_extractor import OverwriteMode
-from src.readability_preprocessing.main import _run_stratified_sampling, \
-    _run_extract_files, _run_extract_methods, _run_convert_csv, \
-    _run_convert_two_folders, \
-    _run_combine_datasets, _run_download, _run_upload, _run_extract_sampled, \
-    _run_craft_surveys, _run_extract_diff, _run_remove_comments
-from tests.readability_preprocessing.utils.utils import DirTest, RES_DIR, \
-    ENCODED_BW_DIR, METHODS_ORIGINAL_ADD_COMMAND_DIR, \
-    CHECKSTYLED_DIR, RAW_BW_DIR, RAW_KROD_DIR, SAMPLED_DIR_2_2, \
-    METHODS_ORIGINAL_DIR, SELECTED_CLASSES_DIR, EXTRACTED_DIR, EXTRACTED_2_DIR, \
-    SAMPLE_AMOUNT_FILE
+from src.readability_preprocessing.main import (
+    _run_combine_datasets,
+    _run_convert_csv,
+    _run_convert_two_folders,
+    _run_craft_surveys,
+    _run_download,
+    _run_extract_diff,
+    _run_extract_files,
+    _run_extract_methods,
+    _run_extract_sampled,
+    _run_remove_comments,
+    _run_stratified_sampling,
+    _run_upload,
+)
+from tests.readability_preprocessing.utils.utils import (
+    CHECKSTYLED_DIR,
+    ENCODED_BW_DIR,
+    EXTRACTED_2_DIR,
+    EXTRACTED_DIR,
+    METHODS_ORIGINAL_ADD_COMMAND_DIR,
+    METHODS_ORIGINAL_DIR,
+    RAW_BW_DIR,
+    RAW_KROD_DIR,
+    RES_DIR,
+    SAMPLE_AMOUNT_FILE,
+    SAMPLED_DIR_2_2,
+    SELECTED_CLASSES_DIR,
+    DirTest,
+)
 
 
 class TestRunMain(DirTest):
@@ -141,15 +160,16 @@ class TestRunMain(DirTest):
         _run_download(parsed_args)
 
         # Assert that the dataset has been downloaded successfully
-        self.assertNotEqual(len(os.listdir(self.output_dir)), 0)
+        assert len(os.listdir(self.output_dir)) != 0
 
     @unittest.skip("Uploads a dataset to HuggingFace Hub. Requires authentication.")
     def test_run_upload(self):
         token = str(RES_DIR / "credentials/huggingface_token.txt")
 
         class MockParsedArgs:
-            def __init__(self, dir_path: Path = ENCODED_BW_DIR,
-                         token_path: str = token):
+            def __init__(
+                self, dir_path: Path = ENCODED_BW_DIR, token_path: str = token
+            ):
                 self.name = "LuKrO/test"
                 self.input = str(dir_path)
                 self.token_file = token_path
@@ -177,7 +197,7 @@ class TestRunMain(DirTest):
         _run_craft_surveys(parsed_args)
 
         # Assert that the surveys have been crafted successfully
-        self.assertNotEqual(len(os.listdir(self.output_dir)), 0)
+        assert len(os.listdir(self.output_dir)) != 0
 
     def test_run_extract_diff(self):
         class MockParsedArgs:
@@ -202,4 +222,3 @@ class TestRunMain(DirTest):
 
         # Remove comments within the test
         _run_remove_comments(parsed_args)
-

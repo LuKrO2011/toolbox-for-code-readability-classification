@@ -384,9 +384,7 @@ def filter_and_sort(
 
     # Sort the repositories
     sorted_dict = sorted(data.values(), key=sorting_criteria.custom_sort_key)
-    data = {item["full_name"]: item for item in sorted_dict}
-
-    return data
+    return {item["full_name"]: item for item in sorted_dict}
 
 
 def _get_latest_commit(full_name: str, default_branch: str) -> str:

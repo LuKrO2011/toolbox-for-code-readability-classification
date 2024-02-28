@@ -1,10 +1,7 @@
 import logging
-import os
 
-from datasets import load_from_disk, load_dataset
+from datasets import load_dataset, load_from_disk
 from huggingface_hub import login
-
-from src.readability_preprocessing.utils.utils import image_to_bytes
 
 
 def get_huggingface_token(file_path: str) -> str:
@@ -13,9 +10,8 @@ def get_huggingface_token(file_path: str) -> str:
     :param file_path: Path to the file containing the token
     :return: HuggingFace token
     """
-    with open(file_path, 'r') as file:
-        token = file.read().strip()
-    return token
+    with open(file_path) as file:
+        return file.read().strip()
 
 
 def upload_dataset(dataset_dir: str, dataset_name: str, token_file: str) -> None:
@@ -33,8 +29,9 @@ def upload_dataset(dataset_dir: str, dataset_name: str, token_file: str) -> None
     logging.info(f"Uploaded dataset '{dataset_name}' to the HuggingFace Hub.")
 
 
-def download_dataset(dataset_name: str, dataset_dir: str,
-                     token_file: str | None = None) -> None:
+def download_dataset(
+    dataset_name: str, dataset_dir: str, token_file: str | None = None
+) -> None:
     """
     Downloads a HuggingFace dataset from the HuggingFace Hub.
     :param dataset_name: The name of the dataset

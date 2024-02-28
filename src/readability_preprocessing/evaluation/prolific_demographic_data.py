@@ -2,10 +2,12 @@ from pathlib import Path
 
 from matplotlib import pyplot as plt
 
-from readability_preprocessing.evaluation.prolific_groups import load_submissions, \
-    filter_submissions_by_status, Submission
-from readability_preprocessing.evaluation.utils import DEFAULT_SURVEY_DIR, \
-    load_json_file, SURVEY_DATA_DIR, DEMOGRAPHIC_DATA_DIR
+from readability_preprocessing.evaluation.prolific_groups import Submission
+from readability_preprocessing.evaluation.utils import (
+    DEFAULT_SURVEY_DIR,
+    SURVEY_DATA_DIR,
+    load_json_file,
+)
 from readability_preprocessing.utils.utils import list_files_with_name
 
 DEMOGRAPHICS_FILE_NAME = "demographics.json"
@@ -16,15 +18,20 @@ class Answer:
     A class to represent an answer option for a demographic question in the survey.
     """
 
-    def __init__(self, options: list[str], attributes: list[any],
-                 inputPositions: list[int], correctChoices: list[any]):
+    def __init__(
+        self,
+        options: list[str],
+        attributes: list[any],
+        inputPositions: list[int],
+        correctChoices: list[any],
+    ):
         self.options = options
         self.attributes = attributes
         self.inputPositions = inputPositions
         self.correctChoices = correctChoices
 
     @staticmethod
-    def from_dict(obj: any) -> 'Answer':
+    def from_dict(obj: any) -> "Answer":
         assert isinstance(obj, dict)
         options = obj.get("options")
         attributes = obj.get("attributes")
@@ -38,8 +45,9 @@ class Question:
     A class to represent a demographic question in the survey.
     """
 
-    def __init__(self, id: int, content: str, type: str, answer: Answer,
-                 parentQuestionId: any):
+    def __init__(
+        self, id: int, content: str, type: str, answer: Answer, parentQuestionId: any
+    ):
         self.id = id
         self.content = content
         self.type = type
@@ -47,7 +55,7 @@ class Question:
         self.parentQuestionId = parentQuestionId
 
     @staticmethod
-    def from_dict(obj: any) -> 'Question':
+    def from_dict(obj: any) -> "Question":
         assert isinstance(obj, dict)
         id = obj.get("id")
         content = obj.get("content")
@@ -67,7 +75,7 @@ class InnerSolution:
         self.selected = selected
 
     @staticmethod
-    def from_dict(obj: any) -> 'InnerSolution':
+    def from_dict(obj: any) -> "InnerSolution":
         assert isinstance(obj, dict)
         input = obj.get("input")
         selected = obj.get("selected")
@@ -85,7 +93,7 @@ class Solution:
         self.solution = solution
 
     @staticmethod
-    def from_dict(obj: any) -> 'Solution':
+    def from_dict(obj: any) -> "Solution":
         assert isinstance(obj, dict)
         questionId = obj.get("questionId")
         rater = obj.get("rater")
@@ -103,13 +111,13 @@ class Demographics:
         self.solutions = solutions
 
     @staticmethod
-    def from_dict(obj: any) -> 'Demographics':
+    def from_dict(obj: any) -> "Demographics":
         assert isinstance(obj, dict)
         questions = [Question.from_dict(question) for question in obj.get("questions")]
         solutions = [Solution.from_dict(solution) for solution in obj.get("solutions")]
         return Demographics(questions, solutions)
 
-    def filter_by_question_id(self, question_id: int) -> 'Demographics':
+    def filter_by_question_id(self, question_id: int) -> "Demographics":
         """
         Filter the demographics (questions and solutions) for a specific question
         :param question_id: The id of the question
@@ -117,8 +125,12 @@ class Demographics:
         """
         return Demographics(
             [question for question in self.questions if question.id == question_id],
-            [solution for solution in self.solutions if
-             solution.questionId == question_id])
+            [
+                solution
+                for solution in self.solutions
+                if solution.questionId == question_id
+            ],
+        )
 
     def pie_plot(self, question_id: int) -> None:
         """
@@ -145,7 +157,7 @@ class Demographics:
         sizes = list(answer_counts.values())
 
         # Create pie chart
-        plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
+        plt.pie(sizes, labels=labels, autopct="%1.1f%%", startangle=90)
         plt.title(question.content)
         plt.show()
 
@@ -157,7 +169,9 @@ class Demographics:
         """
         filtered_demographics = self.filter_by_question_id(question_id)
         print(
-            f"Question {question_id} has {len(filtered_demographics.solutions)} solutions")
+            f"Question {question_id} has "
+            f"{len(filtered_demographics.solutions)} solutions"
+        )
 
 
 def load_demographics(input_path: Path = DEFAULT_SURVEY_DIR) -> list[Demographics]:
@@ -204,14 +218,20 @@ class ExtendedSolution(Solution):
     A class to represent a demographic solution in the survey with additional data.
     """
 
-    def __init__(self, questionId: int, rater: str, innerSolution: InnerSolution,
-                 submission: Submission):
+    def __init__(
+        self,
+        questionId: int,
+        rater: str,
+        innerSolution: InnerSolution,
+        submission: Submission,
+    ):
         super().__init__(questionId, rater, innerSolution)
         self.submission = submission
 
 
-def extend_solutions(demographics: Demographics,
-                     submissions: list[Submission]) -> Demographics:
+def extend_solutions(
+    demographics: Demographics, submissions: list[Submission]
+) -> Demographics:
     """
     Match the demographic data to the submissions
     :param demographics: The demographic data
@@ -223,8 +243,10 @@ def extend_solutions(demographics: Demographics,
         submission = None  # TODO
         if submission is not None:
             extended_solutions.append(
-                ExtendedSolution(solution.questionId, solution.rater,
-                                 solution.solution, submission))
+                ExtendedSolution(
+                    solution.questionId, solution.rater, solution.solution, submission
+                )
+            )
         else:
             print(f"Submission not found for participant {solution.rater}")
     return Demographics(demographics.questions, extended_solutions)

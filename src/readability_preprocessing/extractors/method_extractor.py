@@ -34,8 +34,14 @@ class MethodExtractorConfig:
     A configuration class for the MethodExtractor.
     """
 
-    def __init__(self, overwrite_mode: OverwriteMode, include_method_comments: bool,
-                 comments_required: bool, remove_indentation: bool, require_body: bool):
+    def __init__(
+        self,
+        overwrite_mode: OverwriteMode,
+        include_method_comments: bool,
+        comments_required: bool,
+        remove_indentation: bool,
+        require_body: bool,
+    ):
         self.overwrite_mode = overwrite_mode
         self.include_method_comments = include_method_comments
         self.comments_required = comments_required
@@ -86,11 +92,7 @@ class MethodExtractor:
                 if os.path.isdir(file_or_dir):
                     self.extract_methods_from_dir(file_or_dir, output_dir)
 
-    def extract_methods_from_file(
-        self,
-        input_file: str,
-        output_dir: str
-    ) -> None:
+    def extract_methods_from_file(self, input_file: str, output_dir: str) -> None:
         """
         Extracts java methods from a file and stores each in a separate file.
         :param input_file: The input file.
@@ -106,8 +108,10 @@ class MethodExtractor:
         output_subdir = os.path.join(output_dir, os.path.basename(input_file))
 
         # Check if we skip the file
-        if (os.path.exists(
-            output_subdir) and self.config.overwrite_mode == OverwriteMode.SKIP):
+        if (
+            os.path.exists(output_subdir)
+            and self.config.overwrite_mode == OverwriteMode.SKIP
+        ):
             logging.info(
                 "Skipping file %s, because the output directory %s already exists.",
                 input_file,
@@ -158,8 +162,9 @@ class MethodExtractor:
         try:
             parse_tree = javalang.parse.parse(code_text)
         except JavaSyntaxError as e:
-            logging.warning("Could not parse file %s: %s at %s", file, e.description,
-                            e.at)
+            logging.warning(
+                "Could not parse file %s: %s at %s", file, e.description, e.at
+            )
             logging.warning(e)
             return {}
         except Exception as e:
@@ -169,7 +174,6 @@ class MethodExtractor:
 
         # Iterate over the methods in the parse tree
         for _, method_node in parse_tree.filter(MethodDeclaration):
-
             # Check if the method has a body
             if self.config.require_body and method_node.body is None:
                 continue
@@ -185,8 +189,11 @@ class MethodExtractor:
                     endline = self._calculate_end_line_from_start(codelines, startline)
                     endpos = Position(endline, 0)
                 except InvalidBraceCountException as e:
-                    logging.warning("Could not find end line of method %s in file %s.",
-                                    method_node.name, file)
+                    logging.warning(
+                        "Could not find end line of method %s in file %s.",
+                        method_node.name,
+                        file,
+                    )
                     logging.warning(e)
                     continue
 
@@ -201,8 +208,7 @@ class MethodExtractor:
             # Check if COMMENTS_REQUIRED is True and the method has a comment
             if self.config.comments_required and not first_line.startswith("/"):
                 logging.info(
-                    "Skipping method %s, because it has no comment.",
-                    method_node.name
+                    "Skipping method %s, because it has no comment.", method_node.name
                 )
                 continue
 
@@ -211,8 +217,9 @@ class MethodExtractor:
         return methods
 
     @staticmethod
-    def _get_method_start_end(parse_tree: list, method_node: MethodDeclaration
-                              ) -> tuple[str, str, int, int]:
+    def _get_method_start_end(
+        parse_tree: list, method_node: MethodDeclaration
+    ) -> tuple[str, str, int, int]:
         """
         Get the start and end position of a method in the source code.
         :param parse_tree: The full parse tree.
@@ -229,22 +236,26 @@ class MethodExtractor:
             if startpos is None and node == method_node:
                 startpos = node.position
                 startline = node.position.line if node.position is not None else None
-            if (startpos is not None and method_node not in path and
-                startpos is not node.position):
+            if (
+                startpos is not None
+                and method_node not in path
+                and startpos is not node.position
+            ):
                 endpos = node.position
                 endline = node.position.line if node.position is not None else None
                 break
         return startpos, endpos, startline, endline
 
-    def _get_method_text(self,
-                         codelines: list[str],
-                         startpos: str,
-                         endpos: str,
-                         startline: int,
-                         endline: int,
-                         include_method_comments: bool = True,
-                         remove_indentation: bool = True,
-                         ) -> tuple[str, int | None, int | None, Any]:
+    def _get_method_text(
+        self,
+        codelines: list[str],
+        startpos: str,
+        endpos: str,
+        startline: int,
+        endline: int,
+        include_method_comments: bool = True,
+        remove_indentation: bool = True,
+    ) -> tuple[str, int | None, int | None, Any]:
         """
         Get the text of a method, including any comments before the method.
         :param codelines: The code lines.
@@ -263,7 +274,8 @@ class MethodExtractor:
 
         # Fetch the method code
         endline_index = self._calculate_actual_end_line(
-            codelines[startline_index:endline_index], startline_index)
+            codelines[startline_index:endline_index], startline_index
+        )
         meth_text = "<ST>".join(codelines[startline_index:endline_index])
         meth_text = meth_text[: meth_text.rfind("}") + 1]
 
@@ -345,8 +357,7 @@ class MethodExtractor:
         return "\n".join(meth_lines)
 
     @staticmethod
-    def _calculate_end_line_from_start(meth_lines: list[str],
-                                       start_line: int) -> int:
+    def _calculate_end_line_from_start(meth_lines: list[str], start_line: int) -> int:
         """
         Calculate the end position of the method from the start position by counting
         the braces.
@@ -366,7 +377,8 @@ class MethodExtractor:
 
             if brace_count < 0:
                 raise InvalidBraceCountException(
-                    "Invalid brace count: %d" % brace_count)
+                    "Invalid brace count: %d" % brace_count
+                )
 
             last_line_index += 1
 
@@ -379,8 +391,7 @@ class MethodExtractor:
 
         # The last line is the line after the last line with a brace
         # because the parser also always overshoots the end of the method
-        last_line = last_line_index + 1
-        return last_line
+        return last_line_index + 1
 
     @staticmethod
     def _calculate_actual_end_line(meth_lines: list[str], startline_index: int) -> int:
@@ -394,19 +405,22 @@ class MethodExtractor:
 
         # Remove any trailing whitespace and comments
         while last_line >= 0 and meth_lines[last_line].strip().startswith(
-            ("/", "*", "@")):
+            ("/", "*", "@")
+        ):
             last_line -= 1
 
         return last_line + 1 + startline_index
 
 
-def extract_methods(input_dir: str, output_dir: str,
-                    overwrite_mode: OverwriteMode = OverwriteMode.OVERWRITE,
-                    include_method_comments: bool = True,
-                    comments_required: bool = True,
-                    remove_indentation: bool = True,
-                    require_body: bool = True
-                    ) -> None:
+def extract_methods(
+    input_dir: str,
+    output_dir: str,
+    overwrite_mode: OverwriteMode = OverwriteMode.OVERWRITE,
+    include_method_comments: bool = True,
+    comments_required: bool = True,
+    remove_indentation: bool = True,
+    require_body: bool = True,
+) -> None:
     """
     Extracts java methods from their classes and stores each in a separate file.
     :param input_dir: The input directory.
@@ -424,7 +438,7 @@ def extract_methods(input_dir: str, output_dir: str,
             include_method_comments=include_method_comments,
             comments_required=comments_required,
             remove_indentation=remove_indentation,
-            require_body=require_body
+            require_body=require_body,
         )
     )
 
@@ -435,8 +449,9 @@ def extract_methods(input_dir: str, output_dir: str,
 
         # Create a subfolder for each directory in the output directory
         output_subdir = os.path.join(output_dir, directory)
-        method_extractor.extract_methods_from_dir(os.path.join(input_dir, directory),
-                                                  output_subdir)
+        method_extractor.extract_methods_from_dir(
+            os.path.join(input_dir, directory), output_subdir
+        )
 
 
 class InvalidBraceCountException(Exception):

@@ -2,13 +2,13 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import List, Any
+from typing import Any
 
 import yaml
 from yaml import SafeLoader
 
 
-def store_as_txt(stratas: List[List[str]], output_dir: str) -> None:
+def store_as_txt(stratas: list[list[str]], output_dir: str) -> None:
     """
     Store the sampled Java code snippet paths in a txt file.
     :param stratas: The sampled Java code snippet paths
@@ -22,7 +22,7 @@ def store_as_txt(stratas: List[List[str]], output_dir: str) -> None:
                 file.write(f"{snippet}\n")
 
 
-def list_java_files(directory: str) -> List[str]:
+def list_java_files(directory: str) -> list[str]:
     """
     List all Java files in a directory.
     :param directory: The directory to search for Java files
@@ -30,7 +30,7 @@ def list_java_files(directory: str) -> List[str]:
     """
     java_files = []
 
-    for root, dirs, files in os.walk(directory):
+    for root, _dirs, files in os.walk(directory):
         for file in files:
             if file.endswith(".java"):
                 java_files.append(os.path.abspath(os.path.join(root, file)))
@@ -38,7 +38,7 @@ def list_java_files(directory: str) -> List[str]:
     return java_files
 
 
-def list_java_files_path(directory: Path) -> List[Path]:
+def list_java_files_path(directory: Path) -> list[Path]:
     """
     List all Java files in a directory as Path objects.
     :param directory: The directory to search for Java files
@@ -46,7 +46,7 @@ def list_java_files_path(directory: Path) -> List[Path]:
     """
     java_files = []
 
-    for root, dirs, files in os.walk(directory):
+    for root, _dirs, files in os.walk(directory):
         for file in files:
             if file.endswith(".java"):
                 java_files.append(Path(os.path.join(root, file)))
@@ -54,7 +54,7 @@ def list_java_files_path(directory: Path) -> List[Path]:
     return java_files
 
 
-def list_files_with_name(directory: Path, name: str) -> List[Path]:
+def list_files_with_name(directory: Path, name: str) -> list[Path]:
     """
     List the paths of all files with a specific name in a directory and its
     subdirectories.
@@ -64,7 +64,7 @@ def list_files_with_name(directory: Path, name: str) -> List[Path]:
     """
     files = []
 
-    for current_path in directory.rglob('*'):
+    for current_path in directory.rglob("*"):
         if current_path.is_file() and current_path.name == name:
             files.append(current_path)
 
@@ -139,7 +139,7 @@ def num_files(dir: str) -> int:
     :return: The number of files.
     """
     num_files = 0
-    for root, dirs, files in os.walk(dir):
+    for _root, _dirs, files in os.walk(dir):
         num_files += len(files)
     return num_files
 
@@ -150,8 +150,9 @@ def list_non_hidden(dir: str) -> list[str]:
     :param dir: The directory to list the files from.
     :return: The list of non-hidden files.
     """
-    return [f for f in os.listdir(dir) if
-            not f.startswith(".") and not f.endswith(".log")]
+    return [
+        f for f in os.listdir(dir) if not f.startswith(".") and not f.endswith(".log")
+    ]
 
 
 def load_yaml_file(path: Path) -> dict[str, Any]:
@@ -181,14 +182,14 @@ def load_yaml_file(path: Path) -> dict[str, Any]:
     return dic
 
 
-def load_txt_file(path: Path) -> List[str]:
+def load_txt_file(path: Path) -> list[str]:
     """
     Loads a txt file line by line to a list of strings.
     :param path: The path to the txt file.
     :return: Returns the loaded txt as list of strings.
     """
     # Read file
-    with open(path, "r") as file:
+    with open(path) as file:
         lines = file.readlines()
 
     # Return list

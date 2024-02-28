@@ -1,8 +1,8 @@
 # File path to the JSON data
 import json
 import os
-from pathlib import Path
 import re
+from pathlib import Path
 
 import pandas as pd
 
@@ -33,15 +33,16 @@ def load_repos(input_path: Path = DEFAULT_REPOS_INPUT, top_k: int = None) -> dic
     :return: A dictionary of repos
     """
     # Load the JSON data
-    with open(input_path, 'r') as file:
+    with open(input_path) as file:
         data = json.load(file)
 
     # Get the 10 repos with the most forks
     if top_k is not None:
-        sorted_data = sorted(data.values(), key=lambda x: x.get('forks', 0),
-                             reverse=True)
+        sorted_data = sorted(
+            data.values(), key=lambda x: x.get("forks", 0), reverse=True
+        )
         data = sorted_data[:top_k]
-        data = {repo.get('name'): repo for repo in data}
+        data = {repo.get("name"): repo for repo in data}
 
     return data
 
@@ -52,9 +53,8 @@ def load_json_file(file_path):
     :param file_path: The path to the JSON file
     :return: A Python object parsed from the JSON file
     """
-    with open(file_path, 'r') as file:
-        content = json.load(file)
-    return content
+    with open(file_path) as file:
+        return json.load(file)
 
 
 def load_csv_file(file_path):
@@ -72,8 +72,9 @@ def load_csv_files(file_paths):
     :param file_paths: The paths to the CSV files
     :return: The combined CSV files as a DataFrame
     """
-    return pd.concat([load_csv_file(file_path) for file_path in file_paths],
-                     ignore_index=True)
+    return pd.concat(
+        [load_csv_file(file_path) for file_path in file_paths], ignore_index=True
+    )
 
 
 def load_ids_from_txt(file_path):
@@ -83,9 +84,9 @@ def load_ids_from_txt(file_path):
     :param file_path: The path to the txt file
     :return: A list of ids
     """
-    with open(file_path, 'r', encoding='utf-8') as file:
+    with open(file_path, encoding="utf-8") as file:
         # Split by regular and full-width commas, remove non-breaking space characters
-        ids = [id.replace('\u00A0', '').strip() for id in
-               re.split(r'[，,]', file.read())]
-    ids = [id for id in ids if id]
-    return ids
+        ids = [
+            id.replace("\u00A0", "").strip() for id in re.split(r"[，,]", file.read())
+        ]
+    return [id for id in ids if id]

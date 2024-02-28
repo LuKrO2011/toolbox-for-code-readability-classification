@@ -4,8 +4,9 @@ import shutil
 from pathlib import Path
 
 
-def extract_sampled(input_dirs: list[Path], output_dir: Path,
-                    sampling_dir: Path) -> None:
+def extract_sampled(
+    input_dirs: list[Path], output_dir: Path, sampling_dir: Path
+) -> None:
     """
     Extracts the sampled files from the input directories into the output directory.
     The sampling is specified by the files in the sampling directory.
@@ -38,14 +39,15 @@ def extract_sampled(input_dirs: list[Path], output_dir: Path,
     for idx, stratum_contents in enumerate(strata_contents):
         logging.info(f"{idx}: first stratum entry relative: {stratum_contents[0]}")
 
-    stratas_with_names = list(zip(strata_names, strata_contents))
+    stratas_with_names = list(zip(strata_names, strata_contents, strict=False))
 
     # Copy the files to the output directory
     _copy_files_to_output(input_dirs, output_dir, stratas_with_names)
 
 
-def _create_subdirectories(output_dir: Path, sampling_file: Path,
-                           input_dirs: list[Path]) -> None:
+def _create_subdirectories(
+    output_dir: Path, sampling_file: Path, input_dirs: list[Path]
+) -> None:
     """
     Creates the subdirectories for the given sampling file and input directories.
     :param output_dir: The output directory.
@@ -63,8 +65,9 @@ def _create_subdirectories(output_dir: Path, sampling_file: Path,
         sub_sub_dir_name.mkdir(parents=True, exist_ok=True)
 
 
-def _copy_files_to_output(input_dirs: list[Path], output_dir: Path,
-                          stratas_with_names: list) -> None:
+def _copy_files_to_output(
+    input_dirs: list[Path], output_dir: Path, stratas_with_names: list
+) -> None:
     """
     Copies the files to the output directories.
     :param input_dirs: The directories to extract the sampled files from.
@@ -73,18 +76,19 @@ def _copy_files_to_output(input_dirs: list[Path], output_dir: Path,
     :return: None.
     """
     for input_dir in input_dirs:
-        for root, dirs, files in os.walk(input_dir):
+        for root, _dirs, files in os.walk(input_dir):
             for file_name in files:
                 absolute_file_path = os.path.join(root, file_name)
                 absolute_file_path = str(Path(absolute_file_path).absolute())
 
-                _copy_matching_files(absolute_file_path, stratas_with_names, output_dir,
-                                     input_dir)
+                _copy_matching_files(
+                    absolute_file_path, stratas_with_names, output_dir, input_dir
+                )
 
 
-def _copy_matching_files(input_file_path: str, stratas_with_names: list,
-                         output_dir: Path,
-                         input_dir: Path) -> None:
+def _copy_matching_files(
+    input_file_path: str, stratas_with_names: list, output_dir: Path, input_dir: Path
+) -> None:
     """
     Copies the files to the output directories.
     :param input_file_path: The input file path.
@@ -96,15 +100,11 @@ def _copy_matching_files(input_file_path: str, stratas_with_names: list,
     for name, stratum in stratas_with_names:
         if _check_path_in(input_file_path, stratum):
             new_file_name = _get_new_file_name(
-                file_path=input_file_path,
-                input_dir=input_dir
+                file_path=input_file_path, input_dir=input_dir
             )
 
             output_file_path = os.path.join(
-                output_dir,
-                name.stem,
-                input_dir.stem,
-                new_file_name
+                output_dir, name.stem, input_dir.stem, new_file_name
             )
             shutil.copy(input_file_path, output_file_path)
 
@@ -120,9 +120,7 @@ def _get_new_file_name(file_path: str, input_dir: Path) -> str:
     relative_file_path = Path(file_path).relative_to(input_dir.absolute())
 
     # Replace the path separators with underscores
-    new_file_name = relative_file_path.as_posix().replace("/", "_")
-
-    return new_file_name
+    return relative_file_path.as_posix().replace("/", "_")
 
 
 def _get_common_path(strata_contents: list[list[str]]) -> str:
@@ -135,9 +133,7 @@ def _get_common_path(strata_contents: list[list[str]]) -> str:
     strata_contents = [file for stratum in strata_contents for file in stratum]
 
     # Get the common path
-    common_path = os.path.commonpath(strata_contents)
-
-    return common_path
+    return os.path.commonpath(strata_contents)
 
 
 def _to_relative_paths(strata_contents: list[list[str]]) -> list[list[str]]:
@@ -153,8 +149,13 @@ def _to_relative_paths(strata_contents: list[list[str]]) -> list[list[str]]:
     common_path = Path(common_path)
     last_common_folder = common_path.parts[-1]
 
-    return [[_to_relative_path(absolute_path, last_common_folder) for absolute_path in
-             stratum] for stratum in strata_contents]
+    return [
+        [
+            _to_relative_path(absolute_path, last_common_folder)
+            for absolute_path in stratum
+        ]
+        for stratum in strata_contents
+    ]
 
 
 def _to_relative_path(absolute_path: str, relative_to_dir: str) -> str:
@@ -168,7 +169,8 @@ def _to_relative_path(absolute_path: str, relative_to_dir: str) -> str:
 
     # Remove everything after the first occurrence of the relative_to_dir
     relative_to_path = absolute_path.parts[
-                       :absolute_path.parts.index(relative_to_dir) + 1]
+        : absolute_path.parts.index(relative_to_dir) + 1
+    ]
     relative_to_path = Path(*relative_to_path)
 
     # Get the path relative to relative_to_path
@@ -184,7 +186,7 @@ def _check_path_in(path: str, paths: list[str]) -> bool:
     :param paths: The list of paths.
     :return: True if the path is in the list of paths, False otherwise.
     """
-    return any([_is_path_in(path_to_check, path) for path_to_check in paths])
+    return any(_is_path_in(path_to_check, path) for path_to_check in paths)
 
 
 def _is_path_in(path: str, path_to_check: str) -> bool:

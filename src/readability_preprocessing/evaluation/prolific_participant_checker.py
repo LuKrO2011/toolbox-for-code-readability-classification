@@ -11,4 +11,3 @@ for file_path in dir_path.glob("*.txt"):
 ids_unique = len(ids) == len(set(ids))
 print(f"Number of ids: {len(ids)}")
 print(f"The ids are unique: {ids_unique}")
-

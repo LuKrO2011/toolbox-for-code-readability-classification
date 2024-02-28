@@ -4,17 +4,26 @@ import os
 
 import numpy as np
 
-from tests.readability_preprocessing.utils.utils import DirTest, assert_lines_equal, \
-    METHODS_ORIGINAL_DIR, CSV_DIR, JAR_OUTPUTS_DIR, SAMPLED_DIR
-from src.readability_preprocessing.utils.csv import load_features_from_csv
 from src.readability_preprocessing.sampling.stratified_sampling import (
-    _extract_features, _calculate_similarity_matrix,
-    _normalize_features, _parse_feature_output,
-    calculate_features, StratifiedSampler)
+    StratifiedSampler,
+    _calculate_similarity_matrix,
+    _extract_features,
+    _normalize_features,
+    _parse_feature_output,
+    calculate_features,
+)
+from src.readability_preprocessing.utils.csv import load_features_from_csv
+from tests.readability_preprocessing.utils.utils import (
+    CSV_DIR,
+    JAR_OUTPUTS_DIR,
+    METHODS_ORIGINAL_DIR,
+    SAMPLED_DIR,
+    DirTest,
+    assert_lines_equal,
+)
 
 
 class TestCalculateFeatures:
-
     def test_parse_feature_output(self):
         feature_string_file = JAR_OUTPUTS_DIR / "AreaShop/AddCommand.java/execute.txt"
         with open(feature_string_file) as f:
@@ -41,7 +50,9 @@ class TestCalculateFeatures:
             assert features[feature] >= 0.0 or math.isnan(features[feature])
 
     def test_extract_features_empty(self):
-        code_snippet = METHODS_ORIGINAL_DIR / "AreaShop/AreaShopInterface.java/debugI.java"
+        code_snippet = (
+            METHODS_ORIGINAL_DIR / "AreaShop/AreaShopInterface.java/debugI.java"
+        )
         features = _extract_features(str(code_snippet.absolute()))
 
         assert isinstance(features, dict)
@@ -53,11 +64,7 @@ class TestCalculateFeatures:
         assert not all(math.isnan(feature) for feature in features.values())
 
     def test_normalize_features(self):
-        features = [
-            [1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-            [7.0, 8.0, 9.0]
-        ]
+        features = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]
 
         normalized_features = _normalize_features(features)
 
@@ -68,11 +75,13 @@ class TestCalculateFeatures:
                 assert 0.0 <= value <= 1.0
 
     def test_calculate_cosine_similarity_matrix(self):
-        features = np.array([
-            [0.12309149, 0.20739034, 0.26726124],
-            [0.49236596, 0.51847585, 0.53452248],
-            [0.86164044, 0.82956135, 0.80178373]
-        ])
+        features = np.array(
+            [
+                [0.12309149, 0.20739034, 0.26726124],
+                [0.49236596, 0.51847585, 0.53452248],
+                [0.86164044, 0.82956135, 0.80178373],
+            ]
+        )
         similarity_matrix = _calculate_similarity_matrix(features, metric="cosine")
 
         epsilon = 1e-8
@@ -89,11 +98,13 @@ class TestCalculateFeatures:
                 assert -1.0 <= value <= 1.0
 
     def test_calculate_euclid_similarity_matrix(self):
-        features = np.array([
-            [0.12309149, 0.20739034, 0.26726124],
-            [0.49236596, 0.51847585, 0.53452248],
-            [0.86164044, 0.82956135, 0.80178373]
-        ])
+        features = np.array(
+            [
+                [0.12309149, 0.20739034, 0.26726124],
+                [0.49236596, 0.51847585, 0.53452248],
+                [0.86164044, 0.82956135, 0.80178373],
+            ]
+        )
         similarity_matrix = _calculate_similarity_matrix(features, metric="euclidean")
 
         epsilon = 1e-8
@@ -107,14 +118,16 @@ class TestCalculateFeatures:
         assert abs(similarity_matrix[1, 2] - similarity_matrix[2, 1]) < epsilon
         for row in similarity_matrix:
             for value in row:
-                assert 0 <= value
+                assert value >= 0
 
     def test_calculate_jaccard_similarity_matrix(self):
-        features = np.array([
-            [0.12309149, 0.20739034, 0.26726124],
-            [0.49236596, 0.51847585, 0.53452248],
-            [0.86164044, 0.82956135, 0.80178373]
-        ])
+        features = np.array(
+            [
+                [0.12309149, 0.20739034, 0.26726124],
+                [0.49236596, 0.51847585, 0.53452248],
+                [0.86164044, 0.82956135, 0.80178373],
+            ]
+        )
         similarity_matrix = _calculate_similarity_matrix(features, metric="jaccard")
 
         epsilon = 1e-8
@@ -137,7 +150,7 @@ class TestCalculateFeatures:
 
         assert isinstance(features, dict)
         assert len(features) == 4
-        for paths in features.keys():
+        for paths in features:
             assert isinstance(paths, str)
         for feature in features.values():
             assert isinstance(feature, dict)
@@ -149,56 +162,44 @@ class TestCalculateFeatures:
 
 
 class TestStratifiedSampling(DirTest):
-
     def setUp(self):
         super().setUp()
         self.sampler = StratifiedSampler(output_dir=self.output_dir)
 
     def test_save_merge_distances(self):
         expected_merge_distances = [
-            {
-                "new_num_stratas": 3,
-                "merge_distance": 0.1,
-                "diff_to_prev": 0.0
-            },
-            {
-                "new_num_stratas": 2,
-                "merge_distance": 0.2,
-                "diff_to_prev": -0.1
-            },
+            {"new_num_stratas": 3, "merge_distance": 0.1, "diff_to_prev": 0.0},
+            {"new_num_stratas": 2, "merge_distance": 0.2, "diff_to_prev": -0.1},
             {
                 "new_num_stratas": 1,
                 "merge_distance": 0.3,
-                "diff_to_prev": -0.09999999999999998  # -0.1
-            }
+                "diff_to_prev": -0.09999999999999998,  # -0.1
+            },
         ]
 
         # Mock the linkage_matrix
-        linkage_matrix = np.array([
-            [-1, -1, 0.1],
-            [-1, -1, 0.2],
-            [-1, -1, 0.3]
-        ])
+        linkage_matrix = np.array([[-1, -1, 0.1], [-1, -1, 0.2], [-1, -1, 0.3]])
 
         self.sampler._save_merge_distances(linkage_matrix)
 
         assert os.path.exists(os.path.join(self.output_dir, "merge_distances.json"))
-        with open(os.path.join(self.output_dir, "merge_distances.json"), "r") as f:
+        with open(os.path.join(self.output_dir, "merge_distances.json")) as f:
             merge_distances = json.load(f)
             assert merge_distances == expected_merge_distances
 
     def test_save_merge_distances_large(self):
         # Load the linkage matrix
         linkage_matrix = np.load(
-            os.path.join(SAMPLED_DIR, "linkage_matrix.npy"), allow_pickle=True)
+            os.path.join(SAMPLED_DIR, "linkage_matrix.npy"), allow_pickle=True
+        )
 
         # Calculate the merge distances
         self.sampler._save_merge_distances(linkage_matrix)
-        with open(os.path.join(self.output_dir, "merge_distances.json"), "r") as f:
+        with open(os.path.join(self.output_dir, "merge_distances.json")) as f:
             actual_merge_distances = json.load(f)
 
         # Load the expected merge distances
-        with open(os.path.join(SAMPLED_DIR, "merge_distances.json"), "r") as f:
+        with open(os.path.join(SAMPLED_DIR, "merge_distances.json")) as f:
             expected_merge_distances = json.load(f)
 
         assert actual_merge_distances == expected_merge_distances
@@ -209,51 +210,63 @@ class TestStratifiedSampling(DirTest):
         max_num_stratas = 3
         num_snippets = 4
         features = load_features_from_csv(dir)
-        self.sampler.sample(features=features,
-                            max_num_stratas=max_num_stratas,
-                            num_snippets=num_snippets)
+        self.sampler.sample(
+            features=features,
+            max_num_stratas=max_num_stratas,
+            num_snippets=num_snippets,
+        )
 
         output_dir_content = os.listdir(self.output_dir)
         assert "merge_distances.json" in output_dir_content
 
         assert "2_stratas_2" in output_dir_content
         subfolder_content = os.listdir(os.path.join(self.output_dir, "2_stratas_2"))
-        assert 'stratum0.txt' in subfolder_content
+        assert "stratum0.txt" in subfolder_content
         assert_lines_equal(
-            os.path.join(self.output_dir, "2_stratas_2", "stratum0.txt"), 2)
-        assert 'stratum1.txt' in subfolder_content
+            os.path.join(self.output_dir, "2_stratas_2", "stratum0.txt"), 2
+        )
+        assert "stratum1.txt" in subfolder_content
         assert_lines_equal(
-            os.path.join(self.output_dir, "2_stratas_2", "stratum1.txt"), 2)
+            os.path.join(self.output_dir, "2_stratas_2", "stratum1.txt"), 2
+        )
 
         assert "2_stratas_all" in output_dir_content
         subfolder_content = os.listdir(os.path.join(self.output_dir, "2_stratas_all"))
-        assert 'stratum0.txt' in subfolder_content
+        assert "stratum0.txt" in subfolder_content
         assert_lines_equal(
-            os.path.join(self.output_dir, "2_stratas_all", "stratum0.txt"), 2)
-        assert 'stratum1.txt' in subfolder_content
+            os.path.join(self.output_dir, "2_stratas_all", "stratum0.txt"), 2
+        )
+        assert "stratum1.txt" in subfolder_content
         assert_lines_equal(
-            os.path.join(self.output_dir, "2_stratas_all", "stratum1.txt"), 6)
+            os.path.join(self.output_dir, "2_stratas_all", "stratum1.txt"), 6
+        )
 
         assert "3_stratas_2" in output_dir_content
         subfolder_content = os.listdir(os.path.join(self.output_dir, "3_stratas_2"))
-        assert 'stratum0.txt' in subfolder_content
+        assert "stratum0.txt" in subfolder_content
         assert_lines_equal(
-            os.path.join(self.output_dir, "3_stratas_2", "stratum0.txt"), 2)
-        assert 'stratum1.txt' in subfolder_content
+            os.path.join(self.output_dir, "3_stratas_2", "stratum0.txt"), 2
+        )
+        assert "stratum1.txt" in subfolder_content
         assert_lines_equal(
-            os.path.join(self.output_dir, "3_stratas_2", "stratum1.txt"), 2)
-        assert 'stratum2.txt' in subfolder_content
+            os.path.join(self.output_dir, "3_stratas_2", "stratum1.txt"), 2
+        )
+        assert "stratum2.txt" in subfolder_content
         assert_lines_equal(
-            os.path.join(self.output_dir, "3_stratas_2", "stratum2.txt"), 2)
+            os.path.join(self.output_dir, "3_stratas_2", "stratum2.txt"), 2
+        )
 
         assert "3_stratas_all" in output_dir_content
         subfolder_content = os.listdir(os.path.join(self.output_dir, "3_stratas_all"))
-        assert 'stratum0.txt' in subfolder_content
+        assert "stratum0.txt" in subfolder_content
         assert_lines_equal(
-            os.path.join(self.output_dir, "3_stratas_all", "stratum0.txt"), 2)
-        assert 'stratum1.txt' in subfolder_content
+            os.path.join(self.output_dir, "3_stratas_all", "stratum0.txt"), 2
+        )
+        assert "stratum1.txt" in subfolder_content
         assert_lines_equal(
-            os.path.join(self.output_dir, "3_stratas_all", "stratum1.txt"), 2)
-        assert 'stratum2.txt' in subfolder_content
+            os.path.join(self.output_dir, "3_stratas_all", "stratum1.txt"), 2
+        )
+        assert "stratum2.txt" in subfolder_content
         assert_lines_equal(
-            os.path.join(self.output_dir, "3_stratas_all", "stratum2.txt"), 4)
+            os.path.join(self.output_dir, "3_stratas_all", "stratum2.txt"), 4
+        )

@@ -76,20 +76,27 @@ class DirTest(unittest.TestCase):
 @unittest.skip("Does not test own code.")
 def own_load_from_disk():
     # Test loading a dataset from a directory
-    dataset = load_from_disk("D:\PyCharm_Projects_D\styler2.0\krod")
-    dataset = dataset['train'].to_list()
+    dataset = load_from_disk(r"D:\PyCharm_Projects_D\styler2.0\krod")
+    dataset = dataset["train"].to_list()
     assert len(dataset) >= 10000
 
 
 def assert_lines_equal(file: str, num_expected_lines: int):
-    with open(file, "r") as f:
+    with open(file) as f:
         lines = f.readlines()
     assert len(lines) == num_expected_lines
 
 
 def assert_content_equal(file1: str | Path, file2: str | Path):
-    with open(file1, "r") as f:
+    with open(file1) as f:
         lines1 = f.readlines()
-    with open(file2, "r") as f:
+    with open(file2) as f:
         lines2 = f.readlines()
+
+    # Remove the last \n if it exists
+    if lines1[-1].endswith("\n"):
+        lines1[-1] = lines1[-1][:-1]
+    if lines2[-1].endswith("\n"):
+        lines2[-1] = lines2[-1][:-1]
+
     assert lines1 == lines2

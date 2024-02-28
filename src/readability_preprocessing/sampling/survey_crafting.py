@@ -7,8 +7,11 @@ from pathlib import Path
 import numpy as np
 
 from readability_preprocessing.extractors.diff_extractor import compare_java_files
-from readability_preprocessing.utils.utils import list_non_hidden, load_yaml_file, \
-    load_txt_file
+from readability_preprocessing.utils.utils import (
+    list_non_hidden,
+    load_txt_file,
+    load_yaml_file,
+)
 
 default_sample_amount: dict[str, int] = {
     "stratum0": 2,
@@ -25,17 +28,20 @@ def permutation_matrix(start_idx: int, matrix_size: int) -> np.ndarray:
     :param matrix_size: The size of the permutation matrix.
     :return: The permutation matrix.
     """
-    matrix = [[(i + start_idx, (i + j) % matrix_size) for j in range(matrix_size)]
-              for i in range(matrix_size)]
+    matrix = [
+        [(i + start_idx, (i + j) % matrix_size) for j in range(matrix_size)]
+        for i in range(matrix_size)
+    ]
 
     # Transpose the matrix to get the desired output
-    matrix = list(map(list, zip(*matrix)))
+    matrix = list(map(list, zip(*matrix, strict=True)))
 
     return np.array(matrix)
 
 
-def permutation_matrix_2(start_idx: int, sub_matrix_size: int,
-                         width: int) -> np.ndarray:
+def permutation_matrix_2(
+    start_idx: int, sub_matrix_size: int, width: int
+) -> np.ndarray:
     """
     Create a permutation matrix of the given size. Therefore, multiple permutation
     matrices are combined.
@@ -48,8 +54,11 @@ def permutation_matrix_2(start_idx: int, sub_matrix_size: int,
     width_end_idx = start_idx + width_matrix_count
     sub_matrices = []
     for i in range(start_idx, width_end_idx):
-        sub_matrices.append(permutation_matrix(start_idx=i * sub_matrix_size,
-                                               matrix_size=sub_matrix_size))
+        sub_matrices.append(
+            permutation_matrix(
+                start_idx=i * sub_matrix_size, matrix_size=sub_matrix_size
+            )
+        )
     return np.concatenate(sub_matrices, axis=1)
 
 
@@ -65,9 +74,11 @@ def permutation_matrix_3(sub_matrix_size: int, width: int, height: int) -> np.nd
     height_matrix_count = height // sub_matrix_size
     sub_matrices = []
     for i in range(height_matrix_count):
-        sub_matrices.append(permutation_matrix_2(start_idx=i * 2,
-                                                 sub_matrix_size=sub_matrix_size,
-                                                 width=width))
+        sub_matrices.append(
+            permutation_matrix_2(
+                start_idx=i * 2, sub_matrix_size=sub_matrix_size, width=width
+            )
+        )
 
     return np.concatenate(sub_matrices, axis=0)
 
@@ -153,7 +164,7 @@ class NoSnippet(Snippet):
         Get the path of the snippet.
         :return: The path of the snippet.
         """
-        return None
+        return
 
 
 class RDH:
@@ -191,9 +202,9 @@ class RDH:
         """
         if name in self.snippets:
             return self.snippets[name]
-        else:
-            logging.warning(f"Snippet {name} not found in rdh {self.name}.")
-            return None
+
+        logging.warning(f"Snippet {name} not found in rdh {self.name}.")
+        return None
 
 
 class Method:
@@ -236,8 +247,9 @@ class Method:
         not_diff = []
         for rdh in self.rdhs.values():
             if not isinstance(rdh, NoSnippet):
-                is_diff = compare_java_files(self.nomod.get_path(root),
-                                             rdh.get_path(root))
+                is_diff = compare_java_files(
+                    self.nomod.get_path(root), rdh.get_path(root)
+                )
                 if not is_diff:
                     not_diff.append(rdh)
         return not_diff
@@ -250,10 +262,9 @@ class Method:
         """
         if variant == "none":
             return self.nomod
-        elif variant == "methods":
+        if variant == "methods":
             return self.original
-        else:
-            return self.rdhs[variant]
+        return self.rdhs[variant]
 
 
 class Stratum:
@@ -292,14 +303,17 @@ class SurveyCrafter:
     given output directory.
     """
 
-    def __init__(self, input_dir: str,
-                 output_dir: str,
-                 snippets_per_sheet: int = 20,
-                 num_sheets: int = 10,
-                 sample_amount_path: Path = None,
-                 original_name: str = "methods",
-                 nomod_name: str = "none",
-                 exclude_path: Path = None):
+    def __init__(
+        self,
+        input_dir: str,
+        output_dir: str,
+        snippets_per_sheet: int = 20,
+        num_sheets: int = 10,
+        sample_amount_path: Path = None,
+        original_name: str = "methods",
+        nomod_name: str = "none",
+        exclude_path: Path = None,
+    ):
         """
         Initialize the survey crafter.
         :param input_dir: The input directory with the stratas, rdhs and snippets.
@@ -350,8 +364,10 @@ class SurveyCrafter:
         self._store_methods(methods, "chosen_methods.txt")
         logging.info("Original method names of the sampled methods:")
         for method in methods:
-            logging.info(f"{method.original.stratum.name}/{method.original.rdh.name}/"
-                         f"{method.original.name}")
+            logging.info(
+                f"{method.original.stratum.name}/{method.original.rdh.name}/"
+                f"{method.original.name}"
+            )
 
         # Compare each rdh to the nomod to get the not different snippets
         no_mod_snippets: list[Snippet] = []
@@ -361,11 +377,11 @@ class SurveyCrafter:
         # Log information about the not different snippets
         self._store_snippets(no_mod_snippets, "no_mod_snippets.txt")
         logging.info(
-            f"Strata: Number of not different snippets: {len(no_mod_snippets)}")
+            f"Strata: Number of not different snippets: {len(no_mod_snippets)}"
+        )
         logging.info("Original method names of the not different snippets:")
         for snippet in no_mod_snippets:
-            logging.info(f"{snippet.stratum.name}/{snippet.rdh.name}/"
-                         f"{snippet.name}")
+            logging.info(f"{snippet.stratum.name}/{snippet.rdh.name}/{snippet.name}")
 
         # Shuffle the methods to make sure all stratas are equally represented
         random.shuffle(methods)
@@ -417,11 +433,14 @@ class SurveyCrafter:
     def _validate_configuration(self):
         # Check that the num_sheets and snippets_per_sheet are a multiple of num_rdhs
         if self.num_sheets % self.num_rdhs != 0:
-            raise ValueError("The number of sheets must be a multiple of the number of "
-                             "rdhs.")
+            raise ValueError(
+                "The number of sheets must be a multiple of the number of rdhs."
+            )
         if self.snippets_per_sheet % self.num_rdhs != 0:
-            raise ValueError("The number of snippets per sheet must be a multiple of "
-                             "the number of rdhs.")
+            raise ValueError(
+                "The number of snippets per sheet must be a multiple of "
+                "the number of rdhs."
+            )
 
         # Check that the num_stratas length is equal to the sample_amount length
         if len(self.sample_amount) != self.num_stratas:
@@ -429,11 +448,14 @@ class SurveyCrafter:
 
         # Check that the sample amount summed up is <= num_rdhs * num_stratas
         if sum(self.sample_amount.values()) > self.num_rdhs * self.num_stratas:
-            raise ValueError("The sample amount summed up must be less than or equal "
-                             "to the number of rdhs times the number of stratas.")
+            raise ValueError(
+                "The sample amount summed up must be less than or equal "
+                "to the number of rdhs times the number of stratas."
+            )
 
-    def _create_methods(self, rdhs: dict[str, RDH], original_rdh: RDH,
-                        nomod_rdh: RDH) -> list[Method]:
+    def _create_methods(
+        self, rdhs: dict[str, RDH], original_rdh: RDH, nomod_rdh: RDH
+    ) -> list[Method]:
         """
         Create the methods from the given rdhs, original and nomod.
         :param rdhs: The rdhs to create the methods from.
@@ -461,7 +483,7 @@ class SurveyCrafter:
         """
         snippet = rdh.get_snippet(name)
         if snippet is None:
-            snippet = NoSnippet(name, rdh)
+            return NoSnippet(name, rdh)
         return snippet
 
     def _create_rdh(self, strata_name: str, rdh_name: str) -> RDH:
@@ -472,9 +494,11 @@ class SurveyCrafter:
         :return: The rdh.
         """
         snippet_names = list_non_hidden(
-            os.path.join(self.input_dir, strata_name, rdh_name))
-        snippets = {snippet_name: Snippet(snippet_name) for snippet_name in
-                    snippet_names}
+            os.path.join(self.input_dir, strata_name, rdh_name)
+        )
+        snippets = {
+            snippet_name: Snippet(snippet_name) for snippet_name in snippet_names
+        }
         return RDH(rdh_name, snippets)
 
     def _load_rdhs(self, strata_names: list[str]) -> list[str]:
@@ -496,8 +520,7 @@ class SurveyCrafter:
         :return: The strata names and probabilities.
         """
         # Load the strata names as the names of the subdirectories
-        strata_names = list_non_hidden(self.input_dir)
-        return strata_names
+        return list_non_hidden(self.input_dir)
 
     def _write_output(self, surveys: list[Survey]) -> None:
         """
@@ -518,17 +541,18 @@ class SurveyCrafter:
                 old_name = snippet.name
                 new_name = f"{j}_{stratum}_{rdh}_{old_name}"
                 if isinstance(snippet, NoSnippet):
-                    logging.warning(f"Survey {i}: Snippet {j}: "
-                                    f"{stratum}/{rdh}/{old_name} not found.")
+                    logging.warning(
+                        f"Survey {i}: Snippet {j}: "
+                        f"{stratum}/{rdh}/{old_name} not found."
+                    )
 
                     # Replace the first _ with / and remove everything after second _
                     source_path = old_name.replace("_", "/", 1).split("_")[0]
-                    logging.info(f"None path:   "
-                                 f"none/none/{source_path}")
-                    logging.info(f"Source path: "
-                                 f"{rdh}/{rdh}/{source_path}")
-                    logging.info(f"Goal path:   "
-                                 f"sheet_{i}/{j}_{stratum}_{rdh}_{old_name}")
+                    logging.info(f"None path:   none/none/{source_path}")
+                    logging.info(f"Source path: {rdh}/{rdh}/{source_path}")
+                    logging.info(
+                        f"Goal path:   sheet_{i}/{j}_{stratum}_{rdh}_{old_name}"
+                    )
                 else:
                     shutil.copy(
                         os.path.join(self.input_dir, stratum, rdh, old_name),
@@ -542,9 +566,11 @@ class SurveyCrafter:
         :param methods: The methods to sample from.
         :return: The sampled surveys.
         """
-        permutations = permutation_matrix_3(sub_matrix_size=self.num_rdhs,
-                                            width=self.snippets_per_sheet,
-                                            height=self.num_sheets)
+        permutations = permutation_matrix_3(
+            sub_matrix_size=self.num_rdhs,
+            width=self.snippets_per_sheet,
+            height=self.num_sheets,
+        )
         surveys = []
         for i in range(self.num_sheets):
             surveys.append(self._craft_sheet(methods, permutations[i]))
@@ -566,8 +592,9 @@ class SurveyCrafter:
 
         return Survey(snippets)
 
-    def sample_methods(self, strata: dict[str, Stratum],
-                       sample_amount: dict[str, int] = None) -> list[Method]:
+    def sample_methods(
+        self, strata: dict[str, Stratum], sample_amount: dict[str, int] = None
+    ) -> list[Method]:
         """
         Sample methods from the given rdh name.
         :param strata: The strata to sample from.
@@ -575,14 +602,14 @@ class SurveyCrafter:
         :return: The sampled methods.
         """
         # Initialize the sample amount
-        sample_amount = (sample_amount or self.sample_amount.copy())
+        sample_amount = sample_amount or self.sample_amount.copy()
         sampled = []
 
         # Iterate over the strata and sample the methods
         for stratum in strata.values():
             methods = stratum.methods
             sampled_methods = []
-            for i in range(sample_amount[stratum.name]):
+            for _i in range(sample_amount[stratum.name]):
                 chosen = None
                 while chosen is None or self._in_excluded(chosen):
                     chosen = methods.pop(random.randint(0, len(methods) - 1))
@@ -602,8 +629,9 @@ class SurveyCrafter:
             int_to_key[i] = rdh_name
         self.int_to_key = int_to_key
 
-    def _pick_snippet(self, methods: list[Method], index: int,
-                      variant: str | int) -> Snippet:
+    def _pick_snippet(
+        self, methods: list[Method], index: int, variant: str | int
+    ) -> Snippet:
         """
         Obtain the variant of the method at the given index.
         :param methods: The methods to sample from.
@@ -615,8 +643,9 @@ class SurveyCrafter:
             variant = self.int_to_key[variant]
         return methods[index].pick_variant(variant)
 
-    def _store_sampled_methods(self, methods: list[Method],
-                               filename: str = "chosen_methods.txt") -> None:
+    def _store_sampled_methods(
+        self, methods: list[Method], filename: str = "chosen_methods.txt"
+    ) -> None:
         """
         Store the originals of the sampled methods in a txt file in the output
         directory. The format is stratum/rdh/method.
@@ -625,9 +654,11 @@ class SurveyCrafter:
         """
         with open(os.path.join(self.output_dir, filename), "w") as file:
             for method in methods:
-                file.write(f"{method.original.stratum.name}/"
-                           f"{method.original.rdh.name}/"
-                           f"{method.original.name}\n")
+                file.write(
+                    f"{method.original.stratum.name}/"
+                    f"{method.original.rdh.name}/"
+                    f"{method.original.name}\n"
+                )
 
     def _store_methods(self, methods: list[Method], filename: str) -> None:
         """
@@ -638,9 +669,11 @@ class SurveyCrafter:
         """
         with open(os.path.join(self.output_dir, filename), "w") as file:
             for method in methods:
-                file.write(f"{method.original.stratum.name}/"
-                           f"{method.original.rdh.name}/"
-                           f"{method.original.name}\n")
+                file.write(
+                    f"{method.original.stratum.name}/"
+                    f"{method.original.rdh.name}/"
+                    f"{method.original.name}\n"
+                )
 
     def _store_snippets(self, snippets: list[Snippet], filename: str) -> None:
         """
@@ -651,9 +684,11 @@ class SurveyCrafter:
         """
         with open(os.path.join(self.output_dir, filename), "w") as file:
             for snippet in snippets:
-                file.write(f"{snippet.stratum.name}/"
-                           f"{snippet.rdh.name}/"
-                           f"{snippet.name}\n")
+                file.write(
+                    f"{snippet.stratum.name}/"
+                    f"{snippet.rdh.name}/"
+                    f"{snippet.name}\n"
+                )
 
     def _in_excluded(self, chosen: Method) -> bool:
         """
@@ -662,12 +697,16 @@ class SurveyCrafter:
         :param chosen: The chosen method.
         :return: True if the chosen method is in the excluded list, False otherwise.
         """
-        in_excluded = f"{chosen.original.stratum.name}/" \
-                      f"{chosen.original.rdh.name}/" \
-                      f"{chosen.original.name}" in self.exclude
+        in_excluded = (
+            f"{chosen.original.stratum.name}/"
+            f"{chosen.original.rdh.name}/"
+            f"{chosen.original.name}" in self.exclude
+        )
         if in_excluded:
-            logging.info(f"Skipping excluded method: "
-                         f"{chosen.original.stratum.name}/"
-                         f"{chosen.original.rdh.name}/"
-                         f"{chosen.original.name}")
+            logging.info(
+                f"Skipping excluded method: "
+                f"{chosen.original.stratum.name}/"
+                f"{chosen.original.rdh.name}/"
+                f"{chosen.original.name}"
+            )
         return in_excluded

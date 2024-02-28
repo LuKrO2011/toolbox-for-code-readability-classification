@@ -1,6 +1,6 @@
 import random
 
-from datasets import load_dataset, Dataset
+from datasets import load_dataset
 
 
 def balance_dataset(dataset: list[dict]) -> list[dict]:
@@ -10,7 +10,7 @@ def balance_dataset(dataset: list[dict]) -> list[dict]:
     :return: The balanced dataset.
     """
     # Get the number of samples for each score
-    scores = [x['score'] for x in dataset]
+    scores = [x["score"] for x in dataset]
     score_counts = {score: scores.count(score) for score in set(scores)}
 
     # Get the score with the least amount of samples
@@ -19,7 +19,7 @@ def balance_dataset(dataset: list[dict]) -> list[dict]:
 
     # Get the score with the most amount of samples
     max_score = max(score_counts, key=score_counts.get)
-    max_count = score_counts[max_score]
+    score_counts[max_score]
 
     # Print the number of samples to remove
     for score, count in score_counts.items():
@@ -29,7 +29,7 @@ def balance_dataset(dataset: list[dict]) -> list[dict]:
     balanced_dataset = []
     for score in set(scores):
         # Get the samples with the current score
-        samples = [x for x in dataset if x['score'] == score]
+        samples = [x for x in dataset if x["score"] == score]
 
         if score_counts[score] == min_count:
             # If the score has min count, add all
@@ -45,8 +45,8 @@ def filter_out_duplicates(dataset: dict[str, dict]) -> dict[str, dict]:
     """
     Filters out duplicates from the dataset.
     For each name without "_rdh" in the end, check if there is a name with "_rdh" in the
-    end. If there is, compare the code_snippets of the two samples. If they are the same,
-    remove both samples from the dataset.
+    end. If there is, compare the code_snippets of the two samples.
+    If they are the same, remove both samples from the dataset.
     :param dataset: The dataset to filter.
     :return: The filtered dataset.
     """
@@ -75,7 +75,7 @@ def filter_out_duplicates(dataset: dict[str, dict]) -> dict[str, dict]:
         # If the sample is in a pair, check if the code snippets are the same
         else:
             pair_samples = [dataset[name] for name in pair_name]
-            if pair_samples[0]['code_snippet'] != pair_samples[1]['code_snippet']:
+            if pair_samples[0]["code_snippet"] != pair_samples[1]["code_snippet"]:
                 filtered_dataset.update({name: sample})
             else:
                 num_removed += 1
@@ -88,9 +88,9 @@ def filter_out_duplicates(dataset: dict[str, dict]) -> dict[str, dict]:
 random.seed(42)
 ds = load_dataset("se2p/code-readability-krod")  # download_mode="force_redownload",
 #                   verification_mode=VerificationMode.NO_CHECKS)
-ds = ds['train']
+ds = ds["train"]
 ds_as_list = ds.to_list()
-ds_dict = {x['name']: x for x in ds_as_list}
+ds_dict = {x["name"]: x for x in ds_as_list}
 ds_without_duplicates = filter_out_duplicates(ds_dict)
 ds_without_duplicates_as_list = list(ds_without_duplicates.values())
 balanced_ds = balance_dataset(ds_without_duplicates_as_list)

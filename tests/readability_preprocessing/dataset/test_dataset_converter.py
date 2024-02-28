@@ -1,10 +1,12 @@
 import os
 
 from datasets import Dataset
+
 from src.readability_preprocessing.dataset.dataset_converter import (
     BWCodeLoader,
     BWCsvLoader,
     CsvFolderToDataset,
+    DatasetType,
     DornCodeLoader,
     DornCsvLoader,
     KrodCodeLoader,
@@ -12,7 +14,7 @@ from src.readability_preprocessing.dataset.dataset_converter import (
     ScalabrioCsvLoader,
     TwoFoldersToDataset,
     convert_dataset_csv,
-    convert_dataset_two_folders, DatasetType
+    convert_dataset_two_folders,
 )
 from tests.readability_preprocessing.utils.utils import DirTest
 
@@ -22,7 +24,8 @@ class TestDataConversion(DirTest):
 
     def _check_if_dataset_was_saved(self):
         assert os.path.exists(
-            os.path.join(self.output_dir, "data-00000-of-00001.arrow"))
+            os.path.join(self.output_dir, "data-00000-of-00001.arrow")
+        )
         assert os.path.exists(os.path.join(self.output_dir, "dataset_info.json"))
         assert os.path.exists(os.path.join(self.output_dir, "state.json"))
 
@@ -115,7 +118,7 @@ class TestDataConversion(DirTest):
             csv=csv,
             snippets_dir=snippets_dir,
             output_path=self.output_dir,
-            dataset_type=DatasetType.BW
+            dataset_type=DatasetType.BW,
         )
 
         # Check if the dataset was saved successfully
@@ -129,9 +132,7 @@ class TestDataConversion(DirTest):
 
         # Load the data
         convert_dataset_two_folders(
-            original=original,
-            rdh=rdh,
-            output_path=self.output_dir
+            original=original, rdh=rdh, output_path=self.output_dir
         )
 
         # Check if the dataset was saved successfully

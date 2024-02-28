@@ -26,7 +26,7 @@ for filename in java_files:
 
 # Count the occurrences of each name
 name_counts = {}
-for variant, name in cleaned_names:
+for _variant, name in cleaned_names:
     if name in name_counts:
         name_counts[name] += 1
     else:
@@ -45,7 +45,7 @@ print("All counts are 10:", all_counts_are_10)
 
 # Count the occurrences of each variant for each name
 name_variant_counts = {}
-for variant, name in cleaned_names:
+for _variant, name in cleaned_names:
     if name not in name_variant_counts:
         name_variant_counts[name] = {}
 
@@ -96,7 +96,7 @@ for i in range(num_sheets):
 
     # Count the occurrences of each name
     name_counts = {}
-    for variant, name in cleaned_names:
+    for _variant, name in cleaned_names:
         if name in name_counts:
             name_counts[name] += 1
         else:

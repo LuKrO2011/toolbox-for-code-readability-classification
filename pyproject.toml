@@ -24,10 +24,10 @@ matplotlib = "^3.8.2"
 black = "^22.12.0"
 isort = { version = "^5.12.0", extras = ["pyproject"] }
 mypy = "^0.991"
-pre-commit = "^3.0.0"
+pre-commit = "^3.6.2"
 pylint = "^2.15.10"
 pyupgrade = "^3.3.1"
-ruff = "^0.0.235"
+ruff = "^0.2.2"
 
 
 [tool.poetry.group.test.dependencies]
@@ -98,9 +98,9 @@ directory = "cov_html"
 
 [tool.ruff]
 line-length = 88
-select = ["B", "C", "E", "F", "W", "C4", "C90", "ISC", "PD", "PLE", "PT", "RET", "SIM", "TID", "UP"]
-ignore = []
-show-source = true
+lint.select = ["B", "C", "E", "F", "W", "C4", "C90", "ISC", "PD", "PLE", "PT", "RET", "SIM", "TID", "UP"]
+lint.ignore = []
+output-format = "full"
 exclude = [
   "docs",
   ".venv",
@@ -110,7 +110,7 @@ exclude = [
 ]
 target-version = "py311"
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 max-complexity = 10
 
 

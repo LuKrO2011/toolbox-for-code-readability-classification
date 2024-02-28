@@ -3,8 +3,11 @@ import random
 from dataclasses import dataclass
 from pathlib import Path
 
-from readability_preprocessing.utils.utils import list_java_files_path, \
-    load_code, store_code
+from readability_preprocessing.utils.utils import (
+    list_java_files_path,
+    load_code,
+    store_code,
+)
 
 
 @dataclass
@@ -40,18 +43,18 @@ class CommentsRemover:
         :return: The java code without comments.
         """
         # Remove block comments
-        if self.bccheck and self.bcopen != '':
+        if self.bccheck and self.bcopen != "":
             output = self.remove_block_comments(code)
         else:
             output = code
 
         # Remove line comments
-        if self.comcheck and self.comment != '':
+        if self.comcheck and self.comment != "":
             output = self.remove_line_comments(output)
 
         # Remove extra newlines
-        output = output.replace('\n\n', '\n').lstrip('\n')
-        output = output.strip('\n')
+        output = output.replace("\n\n", "\n").lstrip("\n")
+        output = output.strip("\n")
 
         self.arr = []
         return output
@@ -62,15 +65,14 @@ class CommentsRemover:
         :param code: The java code with comments.
         :return: The java code without line comments.
         """
-        lines = code.split('\n')
+        lines = code.split("\n")
         for line in lines:
             rem = self._remove_comments_from_line(line)
             if not rem.strip():
-                rem = '\n'
+                rem = "\n"
             self.arr.append(rem)
 
-        code = '\n'.join(self.arr)
-        return code
+        return "\n".join(self.arr)
 
     def _remove_comments_from_line(self, line: str) -> str:
         """
@@ -78,20 +80,17 @@ class CommentsRemover:
         :param line: The line of java code with comments.
         :return: The line of java code without comments.
         """
-        if self.esc == '':
+        if self.esc == "":
             self.esc = None
 
         if self.comment in line:
-            comment_indexes = [i for i in range(len(line)) if
-                               line.startswith(self.comment, i)]
+            comment_indexes = [
+                i for i in range(len(line)) if line.startswith(self.comment, i)
+            ]
             if self._should_remove_comment():
-                output = self._extract_comment_free_line(line, comment_indexes)
-            else:
-                output = line
-        else:
-            output = line
-
-        return output
+                return self._extract_comment_free_line(line, comment_indexes)
+            return line
+        return line
 
     def _extract_comment_free_line(self, line: str, comment_indexes: list) -> str:
         """
@@ -131,11 +130,11 @@ class CommentsRemover:
         :param line: The line of java code with comments.
         :return: True if the quote is valid, False otherwise.
         """
-        if not self.esccheck or self.esc == '':
+        if not self.esccheck or self.esc == "":
             return True
-        esc_slice = line[i - len(self.esc):i]
+        esc_slice = line[i - len(self.esc) : i]
         is_escaped = esc_slice == self.esc
-        line_minus_escaped = line[i - 2 * len(self.esc):i - len(self.esc)]
+        line_minus_escaped = line[i - 2 * len(self.esc) : i - len(self.esc)]
         return not is_escaped or (is_escaped and line_minus_escaped == self.esc)
 
     def _find_block_comment_indexes(self, full: str) -> tuple:
@@ -149,13 +148,20 @@ class CommentsRemover:
         o, c = -1, -1
         while (o := full.find(self.bcopen, o + 1)) != -1:
             bc_open_indexes.append(o)
-        if self.bcclose != '':
+        if self.bcclose != "":
             while (c := full.find(self.bcclose, c + 1)) != -1:
                 bc_close_indexes.append(c)
         return bc_open_indexes, bc_close_indexes
 
-    def _check_quotes(self, i: int, full: str, bc_open_indexes: list,
-                      bc_close_indexes: list, d: int, s: int) -> tuple:
+    def _check_quotes(
+        self,
+        i: int,
+        full: str,
+        bc_open_indexes: list,
+        bc_close_indexes: list,
+        d: int,
+        s: int,
+    ) -> tuple:
         """
         Checks the double quotes and single quotes in the given java code.
         :param i: The index of the character in the java code.
@@ -168,19 +174,23 @@ class CommentsRemover:
         """
         if full[i] == '"' and self._is_valid_double_quote(i, full, d, s):
             d += 1
-        elif full[i] == '"' and self._is_valid_double_quote(i, full, d, s,
-                                                            closing=True):
+        elif full[i] == '"' and self._is_valid_double_quote(
+            i, full, d, s, closing=True
+        ):
             d -= 1
-        if full[i] == "'" and self._is_valid_single_quote(i, full, d, s,
-                                                          bc_open_indexes):
+        if full[i] == "'" and self._is_valid_single_quote(
+            i, full, d, s, bc_open_indexes
+        ):
             s += 1
-        elif full[i] == "'" and self._is_valid_single_quote(i, full, d, s,
-                                                            bc_close_indexes):
+        elif full[i] == "'" and self._is_valid_single_quote(
+            i, full, d, s, bc_close_indexes
+        ):
             s -= 1
         return d, s
 
-    def _is_valid_double_quote(self, i: int, full: str, d: int, s: int,
-                               closing=False) -> bool:
+    def _is_valid_double_quote(
+        self, i: int, full: str, d: int, s: int, closing=False
+    ) -> bool:
         """
         Checks if the given quote is valid.
         :param i: The index of the quote in the line.
@@ -191,12 +201,15 @@ class CommentsRemover:
         :return: True if the quote is valid, False otherwise.
         """
         return (
-            full[i] == '"' and
-            self._is_valid_quote(full, i)
-        ) and d == 0 and s == 0 and (not closing or d == 1)
+            (full[i] == '"' and self._is_valid_quote(full, i))
+            and d == 0
+            and s == 0
+            and (not closing or d == 1)
+        )
 
-    def _is_valid_single_quote(self, i: int, full: str, d: int, s: int,
-                               bc_indexes: list) -> bool:
+    def _is_valid_single_quote(
+        self, i: int, full: str, d: int, s: int, bc_indexes: list
+    ) -> bool:
         """
         Checks if the given single quote is valid.
         :param i: The index of the single quote in the line.
@@ -207,9 +220,11 @@ class CommentsRemover:
         :return: True if the single quote is valid, False otherwise.
         """
         return (
-            full[i] == "'" and
-            self._is_valid_quote(full, i)
-        ) and d == 0 and s == 0 and (i not in bc_indexes)
+            (full[i] == "'" and self._is_valid_quote(full, i))
+            and d == 0
+            and s == 0
+            and (i not in bc_indexes)
+        )
 
     def remove_block_comments(self, full: str) -> str:
         """
@@ -222,10 +237,9 @@ class CommentsRemover:
         d, s, bc, record = 0, 0, 0, 0
 
         for i in range(len(full)):
-            d, s = self._check_quotes(i, full, bc_open_indexes,
-                                      bc_close_indexes, d, s)
+            d, s = self._check_quotes(i, full, bc_open_indexes, bc_close_indexes, d, s)
 
-            if full[i] == '\n':
+            if full[i] == "\n":
                 d = 0
                 s = 0
 
@@ -233,7 +247,7 @@ class CommentsRemover:
                 output += full[record:i]
                 i += len(self.bcopen) - 1
                 bc = 1
-            elif self.bcclose != '' and i in bc_close_indexes and bc == 1:
+            elif self.bcclose != "" and i in bc_close_indexes and bc == 1:
                 if self._should_remove_comment():
                     record = i + len(self.bcclose)
                     i += len(self.bcclose) - 1
@@ -241,7 +255,7 @@ class CommentsRemover:
                 else:
                     index = bc_close_indexes.index(i)
                     bc_open_pos = bc_open_indexes[index]
-                    output += full[bc_open_pos:i + len(self.bcclose)]
+                    output += full[bc_open_pos : i + len(self.bcclose)]
                     record = i + len(self.bcclose)
                     i += len(self.bcclose) - 1
                     bc = 0
@@ -258,8 +272,9 @@ class CommentsRemover:
         return random.random() < self.config.probability
 
 
-def remove_comments(input_dir: Path, output_dir: Path,
-                    probability: float = 0.1) -> None:
+def remove_comments(
+    input_dir: Path, output_dir: Path, probability: float = 0.1
+) -> None:
     """
     Removes comments from the java files in the input directory and stores the result
     in the output directory.
@@ -267,11 +282,7 @@ def remove_comments(input_dir: Path, output_dir: Path,
     :param output_dir: The output directory.
     :param probability: The probability of removing a comment.
     """
-    comments_remover = CommentsRemover(
-        CommentsRemoverConfig(
-            probability=probability
-        )
-    )
+    comments_remover = CommentsRemover(CommentsRemoverConfig(probability=probability))
 
     java_files = list_java_files_path(input_dir)
     for file in java_files:

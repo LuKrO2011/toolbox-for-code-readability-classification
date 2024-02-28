@@ -1,12 +1,12 @@
 import logging
 import os
-from typing import Dict
 
 HEADER_PATH = os.path.join(os.path.dirname(__file__), "../../res/header.csv")
 
 
-def append_features_to_csv(filename: str, snippet_path: str,
-                           features: dict[str, float]) -> None:
+def append_features_to_csv(
+    filename: str, snippet_path: str, features: dict[str, float]
+) -> None:
     """
     Append the extracted features to a CSV file.
     :param filename: The path to the CSV file
@@ -33,7 +33,7 @@ def append_features_to_csv(filename: str, snippet_path: str,
         csv_file.write("\n")
 
 
-def load_features_from_csv(csv_file_path: str) -> Dict[str, Dict[str, float]]:
+def load_features_from_csv(csv_file_path: str) -> dict[str, dict[str, float]]:
     """
     Load the extracted features from a CSV file.
     :param csv_file_path: The path to the CSV file
@@ -45,8 +45,7 @@ def load_features_from_csv(csv_file_path: str) -> Dict[str, Dict[str, float]]:
 
     # Load the features from the CSV file
     features = {}
-    with open(csv_file_path, 'r') as csv_file:
-
+    with open(csv_file_path) as csv_file:
         # Read the header
         header = csv_file.readline().strip().split(",")
 
@@ -78,7 +77,5 @@ def load_header(path: str = HEADER_PATH) -> list[str]:
     :return: The header of the CSV file
     """
     # Load the header
-    with open(path, "r") as header_file:
-        header = header_file.readline().strip().split(",")
-
-    return header
+    with open(path) as header_file:
+        return header_file.readline().strip().split(",")

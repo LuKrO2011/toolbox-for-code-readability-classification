@@ -1,11 +1,10 @@
 import os
 
 from src.readability_preprocessing.extractors.file_extractor import extract_files
-from tests.readability_preprocessing.utils.utils import DirTest, CHECKSTYLED_DIR
+from tests.readability_preprocessing.utils.utils import CHECKSTYLED_DIR, DirTest
 
 
 class TestExtractFiles(DirTest):
-
     def test_extract_files(self):
         extract_files(CHECKSTYLED_DIR.absolute(), self.output_dir)
 

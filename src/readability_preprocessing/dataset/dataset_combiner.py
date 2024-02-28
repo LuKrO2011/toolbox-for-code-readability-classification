@@ -17,8 +17,9 @@ def _load_datasets(paths: list[str]) -> list[Dataset]:
     return datasets
 
 
-def _remove_ambiguous_samples(dataset: Dataset,
-                              percent_to_remove: float = 0.5) -> Dataset:
+def _remove_ambiguous_samples(
+    dataset: Dataset, percent_to_remove: float = 0.5
+) -> Dataset:
     """
     Removes the samples from the dataset that have an ambiguous readability score.
     Ambiguous readability scores are the percent_to_remove% in the middle of the
@@ -50,8 +51,9 @@ def _remove_ambiguous_samples(dataset: Dataset,
     return dataset.from_list(filtered_samples)
 
 
-def combine_datasets(dataset_paths: list[str], output_path: str,
-                     percent_to_remove: float | None = 0.5) -> None:
+def combine_datasets(
+    dataset_paths: list[str], output_path: str, percent_to_remove: float | None = 0.5
+) -> None:
     """
     Combines the datasets from the specified paths and saves the combined dataset to
     the output path.
@@ -62,8 +64,10 @@ def combine_datasets(dataset_paths: list[str], output_path: str,
     """
     datasets = _load_datasets(dataset_paths)
     if percent_to_remove is not None:
-        datasets = [_remove_ambiguous_samples(dataset, percent_to_remove)
-                    for dataset in datasets]
+        datasets = [
+            _remove_ambiguous_samples(dataset, percent_to_remove)
+            for dataset in datasets
+        ]
     combined_dataset = concatenate_datasets(datasets)
     combined_dataset.save_to_disk(output_path)
 

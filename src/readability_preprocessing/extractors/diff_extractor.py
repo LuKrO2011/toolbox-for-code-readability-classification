@@ -1,18 +1,17 @@
 import difflib
+import json
 import logging
 import os
 from pathlib import Path
-from typing import List
-import json
 
 
-def _read_file(file_path: Path) -> List[str]:
+def _read_file(file_path: Path) -> list[str]:
     """
     Read the contents of a file.
     :param file_path: The path to the file
     :return: The contents of the file
     """
-    with open(file_path, 'r', encoding='utf-8') as file:
+    with open(file_path, encoding="utf-8") as file:
         return file.readlines()
 
 
@@ -49,15 +48,14 @@ def compare_java_files(file1_path: Path, file2_path: Path) -> bool:
     diff = list(differ.compare(normalized_lines1, normalized_lines2))
 
     changed_lines = []
-    for idx, line in enumerate(diff):
-        if line.startswith('-') or line.startswith('+') or line.startswith('?'):
+    for _idx, line in enumerate(diff):
+        if line.startswith("-") or line.startswith("+") or line.startswith("?"):
             changed_lines.append(line)
 
-    return True if len(changed_lines) > 0 else False
+    return bool(len(changed_lines) > 0)
 
 
 class Snippet:
-
     def __init__(self, name: str):
         """
         Initialize the snippet.
@@ -93,7 +91,6 @@ class Snippet:
 
 
 class RDH:
-
     def __init__(self, name: str):
         """
         Initialize the RDH.
@@ -121,7 +118,6 @@ class RDH:
 
 
 class Stratum:
-
     def __init__(self, name: str):
         """
         Initialize the stratum.
@@ -148,14 +144,14 @@ class Stratum:
         self.methods_dir = methods
 
 
-def _load(input_path: Path, methods_dir_name: str) -> List[Stratum]:
+def _load(input_path: Path, methods_dir_name: str) -> list[Stratum]:
     """
     Load the stratas from the input path. Adds the rdhs and methods to the stratas.
     :param input_path: The path to the input directory (stratas)
     :param methods_dir_name: The name of the directory containing the methods
     :return: The stratas
     """
-    stratas: List[Stratum] = []
+    stratas: list[Stratum] = []
 
     # Load the stratas
     for stratum_path in input_path.iterdir():
@@ -193,8 +189,9 @@ def _load(input_path: Path, methods_dir_name: str) -> List[Stratum]:
     return stratas
 
 
-def get_diffs(input_path: Path, methods_dir_name: str = "methods") -> tuple[
-    list[Snippet], list[Snippet]]:
+def get_diffs(
+    input_path: Path, methods_dir_name: str = "methods"
+) -> tuple[list[Snippet], list[Snippet]]:
     """
     Get the snippets that are different from their original methods and the snippets
     that are not different from their original methods.
@@ -215,7 +212,9 @@ def get_diffs(input_path: Path, methods_dir_name: str = "methods") -> tuple[
             for snippet in rdh.snippets.values():
                 methods_dir = stratum.methods_dir
                 assert methods_dir is not None
-                method_path = input_path / stratum.name / methods_dir.name / snippet.name
+                method_path = (
+                    input_path / stratum.name / methods_dir.name / snippet.name
+                )
                 snippet_path = snippet.get_path(input_path)
 
                 # Check if the method exists
@@ -259,11 +258,12 @@ class Statistic:
             "total": self.different + self.not_different,
             "not_different_abs": self.not_different,
             "different_abs": self.different,
-            "not_different_rel": self.not_different / (
-                self.different + self.not_different),
+            "not_different_rel": self.not_different
+            / (self.different + self.not_different),
             "different_rel": self.different / (self.different + self.not_different),
-            "sub_statistics": [sub_statistic.json() for sub_statistic in
-                               self.sub_statistics]
+            "sub_statistics": [
+                sub_statistic.json() for sub_statistic in self.sub_statistics
+            ],
         }
 
     def add_sub_statistic(self, sub_statistic):
@@ -287,9 +287,11 @@ def _store_statistics(output_path: Path, statistics: dict[str, Statistic]) -> No
         json.dump([statistic.json() for statistic in statistics.values()], f, indent=2)
 
 
-def _add_stratum_statistics(different: dict[str, list[Snippet]],
-                            not_different: dict[str, list[Snippet]],
-                            statistics: dict[str, Statistic]) -> dict[str, Statistic]:
+def _add_stratum_statistics(
+    different: dict[str, list[Snippet]],
+    not_different: dict[str, list[Snippet]],
+    statistics: dict[str, Statistic],
+) -> dict[str, Statistic]:
     """
     Add a list of statistics for each stratum to the statistics.
     :param different: The snippets that are different from their original
@@ -298,13 +300,18 @@ def _add_stratum_statistics(different: dict[str, list[Snippet]],
     :return: The statistics with the statistics for each stratum
     """
     for stratum in different:
-        statistics[stratum] = Statistic(stratum, len(different[stratum]),
-                                        len(not_different[stratum]))
+        statistics[stratum] = Statistic(
+            stratum, len(different[stratum]), len(not_different[stratum])
+        )
     return statistics
 
 
-def _store_paths(input_path: Path, output_path: Path | None, different: list[Snippet],
-                 not_different: list[Snippet]) -> None:
+def _store_paths(
+    input_path: Path,
+    output_path: Path | None,
+    different: list[Snippet],
+    not_different: list[Snippet],
+) -> None:
     """
     Store the paths of the snippets that are different from their original methods and
     the snippets that are not different from their original methods in two txt files.
@@ -330,8 +337,9 @@ def _store_paths(input_path: Path, output_path: Path | None, different: list[Sni
                 f.write(f"{snippet.get_path(input_path)}\n")
 
 
-def _group_by_stratum(snippets: list[Snippet], strata_names: list[str] = None) -> dict[
-    str, list[Snippet]]:
+def _group_by_stratum(
+    snippets: list[Snippet], strata_names: list[str] = None
+) -> dict[str, list[Snippet]]:
     """
     Group the snippets by their strata.
     :param snippets: The snippets that are not different from their original
@@ -352,8 +360,9 @@ def _group_by_stratum(snippets: list[Snippet], strata_names: list[str] = None) -
     return grouped_snippets
 
 
-def _group_by_rdh(stratas: dict[str, list[Snippet]], rdh_names: list[str] = None) -> \
-    dict[str, dict[str, list[Snippet]]]:
+def _group_by_rdh(
+    stratas: dict[str, list[Snippet]], rdh_names: list[str] = None
+) -> dict[str, dict[str, list[Snippet]]]:
     """
     Group the snippets (grouped by their strata) additionally by their rdhs.
     :param stratas: The snippets grouped by their strata
@@ -378,10 +387,11 @@ def _group_by_rdh(stratas: dict[str, list[Snippet]], rdh_names: list[str] = None
     return grouped_snippets
 
 
-def _add_rdh_sub_statistics(statistics: dict[str, Statistic],
-                            different: dict[str, dict[str, list[Snippet]]],
-                            not_different: dict[str, dict[str, list[Snippet]]]) -> \
-    dict[str, Statistic]:
+def _add_rdh_sub_statistics(
+    statistics: dict[str, Statistic],
+    different: dict[str, dict[str, list[Snippet]]],
+    not_different: dict[str, dict[str, list[Snippet]]],
+) -> dict[str, Statistic]:
     """
     Add a list of statistics for each rdh to the statistic of the stratum.
     :param different: The snippets that are different from their original
@@ -392,15 +402,17 @@ def _add_rdh_sub_statistics(statistics: dict[str, Statistic],
     for stratum in different:
         for rdh in different[stratum]:
             statistics[stratum].add_sub_statistic(
-                Statistic(rdh, len(different[stratum][rdh]),
-                          len(not_different[stratum][rdh])))
+                Statistic(
+                    rdh, len(different[stratum][rdh]), len(not_different[stratum][rdh])
+                )
+            )
 
     return statistics
 
 
-def compare_to_folder(input_path: Path,
-                      output_path: Path | None = None,
-                      methods_dir_name: str = "methods") -> None:
+def compare_to_folder(
+    input_path: Path, output_path: Path | None = None, methods_dir_name: str = "methods"
+) -> None:
     """
     Compare the files of all rdhs in the stratas of the input directory to the files in
     the methods directory.
@@ -421,15 +433,13 @@ def compare_to_folder(input_path: Path,
     statistics = {"overall": Statistic("overall", len(different), len(not_different))}
 
     # Create statistics for each stratum
-    strata_names = list(
-        set([snippet.stratum.name for snippet in different + not_different]))
+    strata_names = list({snippet.stratum.name for snippet in different + not_different})
     s_not_different = _group_by_stratum(not_different, strata_names)
     s_different = _group_by_stratum(different, strata_names)
     statistics = _add_stratum_statistics(s_different, s_not_different, statistics)
 
     # Create statistics for each rdh
-    rdh_names = list(
-        set([snippet.rdh.name for snippet in different + not_different]))
+    rdh_names = list({snippet.rdh.name for snippet in different + not_different})
     rdh_not_different = _group_by_rdh(s_not_different, rdh_names)
     rdh_different = _group_by_rdh(s_different, rdh_names)
     statistics = _add_rdh_sub_statistics(statistics, rdh_different, rdh_not_different)

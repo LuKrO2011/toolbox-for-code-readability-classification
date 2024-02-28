@@ -56,6 +56,11 @@ Activate the virtual environment:
 poetry shell
 ----
 
+For Developers: Activate the pre-commit hooks:
+----
+pre-commit install
+----
+
 If you want to use the <<Sample>> command, you additionally need to install https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html[Java 17].
 
 Now you're ready to use the source code readability preprocessing tool.

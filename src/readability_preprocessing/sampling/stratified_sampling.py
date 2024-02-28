@@ -4,16 +4,15 @@ import math
 import os
 import subprocess
 from pathlib import Path
-from typing import List, Dict
-
-import fastcluster
-from fastcluster import ward, linkage
-from scipy.cluster.hierarchy import fcluster
 
 import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.metrics.pairwise import euclidean_distances
-from sklearn.metrics.pairwise import pairwise_distances
+from fastcluster import linkage
+from scipy.cluster.hierarchy import fcluster
+from sklearn.metrics.pairwise import (
+    cosine_similarity,
+    euclidean_distances,
+    pairwise_distances,
+)
 
 from src.readability_preprocessing.utils.csv import append_features_to_csv, load_header
 from src.readability_preprocessing.utils.utils import list_java_files
@@ -32,12 +31,12 @@ def _parse_feature_output(feature_string: str) -> dict[str, float]:
     :param feature_string: The output of the feature extraction JAR file
     :return: The extracted features as a dictionary
     """
-    feature_lines = feature_string.split('\n')[1:]
+    feature_lines = feature_string.split("\n")[1:]
     feature_data = {}
     header_feature_names = load_header()
 
     # Initialize the feature dictionary with NaN values
-    for idx, header_feature_name in enumerate(header_feature_names[1:]):
+    for _idx, header_feature_name in enumerate(header_feature_names[1:]):
         feature_data[header_feature_name] = np.nan
 
     # Parse the feature lines
@@ -63,21 +62,30 @@ def _extract_features(snippet_path: str) -> dict[str, float]:
     :param snippet_path: Path to the Java code snippet
     :return: Extracted features
     """
-    feature_extraction_command = ["java", "-cp", FEATURE_JAR_PATH, EXTRACT_METRICS_CMD,
-                                  snippet_path]
-    process = subprocess.Popen(feature_extraction_command, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE, text=True, cwd=WORKING_DIR)
+    feature_extraction_command = [
+        "java",
+        "-cp",
+        FEATURE_JAR_PATH,
+        EXTRACT_METRICS_CMD,
+        snippet_path,
+    ]
+    process = subprocess.Popen(
+        feature_extraction_command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        cwd=WORKING_DIR,
+    )
     stdout, _ = process.communicate()
     feature_string = stdout.strip()
 
     # Parse the extracted features into a dictionary
-    features = _parse_feature_output(feature_string)
-
-    return features
+    return _parse_feature_output(feature_string)
 
 
-def _normalize_features(features: List[List[float]], epsilon=1e-8) -> np.ndarray[
-    [float]]:
+def _normalize_features(
+    features: list[list[float]], epsilon=1e-8
+) -> np.ndarray[[float]]:
     """
     Normalizes the features. NaN values are replaced with zero.
     An epsilon value is added to the L2 norm to avoid NaN for zero-norm vectors.
@@ -94,13 +102,12 @@ def _normalize_features(features: List[List[float]], epsilon=1e-8) -> np.ndarray
     normed_features = np.linalg.norm(features_array_without_nans, axis=0) + epsilon
 
     # Normalize the feature vectors along the columns (features) with epsilon
-    normalized_features = features_array_without_nans / normed_features
-
-    return normalized_features
+    return features_array_without_nans / normed_features
 
 
-def _calculate_similarity_matrix(features: np.ndarray[float], metric="cosine") -> \
-    np.ndarray[[float]]:
+def _calculate_similarity_matrix(
+    features: np.ndarray[float], metric="cosine"
+) -> np.ndarray[[float]]:
     """
     Calculate the similarity matrix for a given list of Java code snippets.
     :param features: List of extracted features
@@ -114,14 +121,17 @@ def _calculate_similarity_matrix(features: np.ndarray[float], metric="cosine") -
     elif metric == "euclidean":
         similarity_matrix = euclidean_distances(features)
     else:
-        raise ValueError(f"Unknown metric: {metric}. Valid metrics are: cosine, "
-                         f"jaccard, euclidean.")
+        raise ValueError(
+            f"Unknown metric: {metric}. Valid metrics are: cosine, "
+            f"jaccard, euclidean."
+        )
 
     return similarity_matrix
 
 
-def calculate_features(input_dir: str, output_dir: str = None) -> Dict[
-    str, Dict[str, float]]:
+def calculate_features(
+    input_dir: str, output_dir: str = None
+) -> dict[str, dict[str, float]]:
     """
     Extract features from a list of Java code snippets.
     :param input_dir: The directory containing the Java code snippets
@@ -141,14 +151,17 @@ def calculate_features(input_dir: str, output_dir: str = None) -> Dict[
 
         # Store the features of the snippet, if an output directory is specified
         if output_dir is not None:
-            append_features_to_csv(os.path.join(output_dir, CSV_NAME), path,
-                                   features_of_snippet)
+            append_features_to_csv(
+                os.path.join(output_dir, CSV_NAME), path, features_of_snippet
+            )
 
         logging.info(f"Extracted features from {path}.")
         features.update({path: features_of_snippet})
 
-    logging.info(f"Extracted features from {len(java_code_snippet_paths)} Java code "
-                 f"snippets.")
+    logging.info(
+        f"Extracted features from {len(java_code_snippet_paths)} Java code "
+        f"snippets."
+    )
 
     return features
 
@@ -159,9 +172,12 @@ class StratifiedSampler:
     def __init__(self, output_dir: str):
         self.output_dir = output_dir
 
-    def sample(self, features: Dict[str, Dict[str, float]],
-               max_num_stratas: int = 20,
-               num_snippets: int = 400) -> None:
+    def sample(
+        self,
+        features: dict[str, dict[str, float]],
+        max_num_stratas: int = 20,
+        num_snippets: int = 400,
+    ) -> None:
         """
         Perform stratified sampling on a list of features extracted from Java code
         snippets.
@@ -181,21 +197,27 @@ class StratifiedSampler:
         similarity_matrix = _calculate_similarity_matrix(normalized_features)
 
         # Dump the similarity matrix to a file
-        np.save(os.path.join(self.output_dir, "similarity_matrix.npy"),
-                similarity_matrix)
+        np.save(
+            os.path.join(self.output_dir, "similarity_matrix.npy"), similarity_matrix
+        )
 
         # Perform stratified sampling
-        self._stratified_sampling(java_code_snippets_paths=java_code_snippet_paths,
-                                  similarity_matrix=similarity_matrix,
-                                  metric="cosine",
-                                  max_num_stratas=max_num_stratas,
-                                  num_snippets=num_snippets)
+        self._stratified_sampling(
+            java_code_snippets_paths=java_code_snippet_paths,
+            similarity_matrix=similarity_matrix,
+            metric="cosine",
+            max_num_stratas=max_num_stratas,
+            num_snippets=num_snippets,
+        )
 
-    def _stratified_sampling(self, java_code_snippets_paths: List[str],
-                             similarity_matrix: np.ndarray[[float]],
-                             metric="cosine",
-                             max_num_stratas: int = 20,
-                             num_snippets: int = 400) -> None:
+    def _stratified_sampling(
+        self,
+        java_code_snippets_paths: list[str],
+        similarity_matrix: np.ndarray[[float]],
+        metric="cosine",
+        max_num_stratas: int = 20,
+        num_snippets: int = 400,
+    ) -> None:
         """
         Perform stratified sampling based on the similarity matrix.
         The sampling is performed by first splitting the Java snippets into
@@ -210,11 +232,13 @@ class StratifiedSampler:
         """
         if len(java_code_snippets_paths) != similarity_matrix.shape[0]:
             raise ValueError(
-                "Number of code snippets must match the rows of the similarity matrix.")
+                "Number of code snippets must match the rows of the similarity matrix."
+            )
 
         if metric != "cosine":
             raise ValueError(
-                f"Unsupported metric: {metric}. Valid metrics are: cosine.")
+                f"Unsupported metric: {metric}. Valid metrics are: cosine."
+            )
 
         # Perform Ward's hierarchical clustering to create a dendrogram/linkage matrix
         linkage_matrix = linkage(similarity_matrix, method="ward", metric="cosine")
@@ -227,13 +251,20 @@ class StratifiedSampler:
 
         # Save the clusters from max_num_stratas to 2
         for num_stratas in range(max_num_stratas, 1, -1):
-            self._save_cluster(linkage_matrix, num_stratas, java_code_snippets_paths,
-                               snippets_per_stratum=math.ceil(
-                                   num_snippets / num_stratas))
+            self._save_cluster(
+                linkage_matrix,
+                num_stratas,
+                java_code_snippets_paths,
+                snippets_per_stratum=math.ceil(num_snippets / num_stratas),
+            )
 
-    def _save_cluster(self, linkage_matrix: np.ndarray[[float]], num_stratas: int,
-                      java_code_snippets_paths: List[str],
-                      snippets_per_stratum: int) -> None:
+    def _save_cluster(
+        self,
+        linkage_matrix: np.ndarray[[float]],
+        num_stratas: int,
+        java_code_snippets_paths: list[str],
+        snippets_per_stratum: int,
+    ) -> None:
         """
         Save the clusters to a file.
         :param linkage_matrix: The linkage matrix
@@ -246,7 +277,7 @@ class StratifiedSampler:
         stratas = [[] for _ in range(num_stratas)]
 
         # Add the Java code snippets to the stratas
-        clusters = fcluster(linkage_matrix, num_stratas, criterion='maxclust')
+        clusters = fcluster(linkage_matrix, num_stratas, criterion="maxclust")
 
         # Add the Java code snippets to the stratas
         for snippet_idx, stratum_idx in enumerate(clusters):
@@ -257,16 +288,15 @@ class StratifiedSampler:
         # Remove random snippets from the stratas, if they contain too many snippets
         for stratum_idx, stratum in enumerate(stratas):
             if len(stratum) > snippets_per_stratum:
-                stratas[stratum_idx] = np.random.choice(stratum,
-                                                        snippets_per_stratum,
-                                                        replace=False)
+                stratas[stratum_idx] = np.random.choice(
+                    stratum, snippets_per_stratum, replace=False
+                )
             else:
                 stratas[stratum_idx] = stratum
 
         self._save_clusters(stratas, f"{num_stratas}_stratas_{snippets_per_stratum}")
 
-    def _save_clusters(self, stratas: List[List[str]], subdir_name: str
-                       ) -> None:
+    def _save_clusters(self, stratas: list[list[str]], subdir_name: str) -> None:
         """
         Save the clusters to files in a subdirectory.
         :param stratas: The stratas to save
@@ -284,9 +314,9 @@ class StratifiedSampler:
                 for snippet in stratum:
                     f.write(snippet + "\n")
 
-    def _save_merge_distances(self, linkage_matrix: np.ndarray[[float]],
-                              stratas_limit: int = 20
-                              ) -> None:
+    def _save_merge_distances(
+        self, linkage_matrix: np.ndarray[[float]], stratas_limit: int = 20
+    ) -> None:
         """
         Calculate and save the merge distances.
         :param linkage_matrix: The linkage matrix
@@ -304,11 +334,18 @@ class StratifiedSampler:
         merge_distances_and_diffs = []
         for idx in range(1, len(merge_distances) + 1):
             merge_distance = merge_distances[idx - 1]
-            diff = merge_distances[idx] - merge_distance if idx < len(
-                merge_distances) else 0.0
+            diff = (
+                merge_distances[idx] - merge_distance
+                if idx < len(merge_distances)
+                else 0.0
+            )
             merge_distances_and_diffs.append(
-                {"new_num_stratas": idx, "merge_distance": merge_distance,
-                 "diff_to_prev": diff})
+                {
+                    "new_num_stratas": idx,
+                    "merge_distance": merge_distance,
+                    "diff_to_prev": diff,
+                }
+            )
 
         # Invert the list of dictionaries
         merge_distances_and_diffs = merge_distances_and_diffs[::-1]

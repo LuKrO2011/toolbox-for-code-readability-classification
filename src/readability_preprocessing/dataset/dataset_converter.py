@@ -15,8 +15,7 @@ def _get_snippet_name(file_name: str, prefix: str) -> str:
     """
     file_name = file_name.split(".")[0]
     file_name = file_name.replace("Snippet", "")
-    file_name = f"{prefix}{file_name}"
-    return file_name
+    return f"{prefix}{file_name}"
 
 
 class CodeLoader(ABC):
@@ -192,8 +191,7 @@ class KrodCodeLoader(CodeLoader):
             file_name = file_name[1:]
         file_name = file_name.replace(".java", "")
         file_name = file_name.replace(" ", "")
-        file_name = file_name + self.name_appendix
-        return file_name
+        return file_name + self.name_appendix
 
     def get_snippet_name(self, file_name: str) -> str:
         """
@@ -404,12 +402,21 @@ class TwoFoldersToDataset:
         # Combine the scores and the code snippets into a list
         data = []
         for _, code_snippet in original_code_snippets.items():
-            data.append({"name": self.code_loader.get_snippet_name(_),
-                         "code_snippet": code_snippet,
-                         "score": original_score})
+            data.append(
+                {
+                    "name": self.code_loader.get_snippet_name(_),
+                    "code_snippet": code_snippet,
+                    "score": original_score,
+                }
+            )
         for _, code_snippet in rdh_code_snippets.items():
-            data.append({"name": self.rdh_loader.get_snippet_name(_),
-                         "code_snippet": code_snippet, "score": rdh_score})
+            data.append(
+                {
+                    "name": self.rdh_loader.get_snippet_name(_),
+                    "code_snippet": code_snippet,
+                    "score": rdh_score,
+                }
+            )
 
         # Log the number of loaded code snippets
         logging.info(f"Loaded {len(data)} code snippets with estimated scores")
@@ -529,8 +536,8 @@ class DatasetType(Enum):
         """
         try:
             return cls[value.upper()]
-        except KeyError:
-            raise ValueError(f"{value} is not a valid DatasetType")
+        except KeyError as err:
+            raise ValueError(f"{value} is not a valid DatasetType") from err
 
 
 def _build_csv_folder_to_dataset(dataset_type: DatasetType) -> CsvFolderToDataset:
@@ -543,20 +550,18 @@ def _build_csv_folder_to_dataset(dataset_type: DatasetType) -> CsvFolderToDatase
         return CsvFolderToDataset(
             csv_loader=ScalabrioCsvLoader(), code_loader=ScalabrioCodeLoader()
         )
-    elif dataset_type == DatasetType.BW:
-        return CsvFolderToDataset(
-            csv_loader=BWCsvLoader(), code_loader=BWCodeLoader()
-        )
-    elif dataset_type == DatasetType.DORN:
+    if dataset_type == DatasetType.BW:
+        return CsvFolderToDataset(csv_loader=BWCsvLoader(), code_loader=BWCodeLoader())
+    if dataset_type == DatasetType.DORN:
         return CsvFolderToDataset(
             csv_loader=DornCsvLoader(), code_loader=DornCodeLoader()
         )
-    else:
-        raise ValueError(f"Dataset type {dataset_type} not supported.")
+    raise ValueError(f"Dataset type {dataset_type} not supported.")
 
 
-def convert_dataset_csv(csv: str, snippets_dir: str, output_path: str,
-                        dataset_type: DatasetType):
+def convert_dataset_csv(
+    csv: str, snippets_dir: str, output_path: str, dataset_type: DatasetType
+):
     """
     Loads the data and converts it to the HuggingFace format.
     :param csv: Path to the CSV file containing the scores.
@@ -579,8 +584,13 @@ def convert_dataset_csv(csv: str, snippets_dir: str, output_path: str,
     logging.info(f"Saved {len(dataset)} to {output_path}")
 
 
-def convert_dataset_two_folders(original: str, rdh: str, output_path: str,
-                                original_score: float = 4.5, rdh_score: float = 1.5):
+def convert_dataset_two_folders(
+    original: str,
+    rdh: str,
+    output_path: str,
+    original_score: float = 4.5,
+    rdh_score: float = 1.5,
+):
     """
     Loads the data and converts it to the HuggingFace format.
     :param original: Path to the directory containing the original code
@@ -598,10 +608,12 @@ def convert_dataset_two_folders(original: str, rdh: str, output_path: str,
         original_loader=KrodCodeLoader(),
         rdh_loader=KrodCodeLoader(name_appendix="_rdh"),
     )
-    dataset = data_loader.convert_to_dataset(original_data_dir=original,
-                                             rdh_data_dir=rdh,
-                                             original_score=original_score,
-                                             rdh_score=rdh_score)
+    dataset = data_loader.convert_to_dataset(
+        original_data_dir=original,
+        rdh_data_dir=rdh,
+        original_score=original_score,
+        rdh_score=rdh_score,
+    )
 
     # Store the dataset
     dataset.save_to_disk(os.path.join(output_path))
@@ -611,7 +623,9 @@ def convert_dataset_two_folders(original: str, rdh: str, output_path: str,
 
 
 if __name__ == "__main__":
-    convert_dataset_csv(csv=os.path.join(SCALABRIO_DATA_DIR, "scores.csv"),
-                        snippets_dir=os.path.join(SCALABRIO_DATA_DIR, "Snippets"),
-                        output_path=os.path.join(SCALABRIO_DATA_DIR, output_name),
-                        dataset_type=DatasetType.SCALABRIO)
+    convert_dataset_csv(
+        csv=os.path.join(SCALABRIO_DATA_DIR, "scores.csv"),
+        snippets_dir=os.path.join(SCALABRIO_DATA_DIR, "Snippets"),
+        output_path=os.path.join(SCALABRIO_DATA_DIR, output_name),
+        dataset_type=DatasetType.SCALABRIO,
+    )

@@ -12,16 +12,22 @@ from readability_preprocessing.extractors.sampled_extractor import extract_sampl
 from readability_preprocessing.rdh.comments_remover import remove_comments
 from readability_preprocessing.sampling.survey_crafting import SurveyCrafter
 from src.readability_preprocessing.dataset.dataset_combiner import combine_datasets
-from src.readability_preprocessing.dataset.dataset_converter import convert_dataset_csv, \
-    convert_dataset_two_folders, DatasetType
+from src.readability_preprocessing.dataset.dataset_converter import (
+    DatasetType,
+    convert_dataset_csv,
+    convert_dataset_two_folders,
+)
 from src.readability_preprocessing.extractors.file_extractor import extract_files
-from src.readability_preprocessing.extractors.method_extractor import extract_methods, \
-    OverwriteMode
-from src.readability_preprocessing.sampling.stratified_sampling import \
-    calculate_features, StratifiedSampler
+from src.readability_preprocessing.extractors.method_extractor import (
+    OverwriteMode,
+    extract_methods,
+)
+from src.readability_preprocessing.sampling.stratified_sampling import (
+    StratifiedSampler,
+    calculate_features,
+)
 from src.readability_preprocessing.utils.csv import load_features_from_csv
-from src.readability_preprocessing.utils.dataset import upload_dataset, \
-    download_dataset
+from src.readability_preprocessing.utils.dataset import download_dataset, upload_dataset
 
 DEFAULT_LOG_FILE_NAME = "readability-preprocessing"
 DEFAULT_LOG_FILE = f"{DEFAULT_LOG_FILE_NAME}.log"
@@ -54,9 +60,7 @@ def _setup_logging(log_file: str = DEFAULT_LOG_FILE, overwrite: bool = False) ->
     console_handler.setLevel(logging_level)
 
     # Define the log format
-    formatter = logging.Formatter(
-        "%(asctime)s %(name)s %(levelname)s %(message)s"
-    )
+    formatter = logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
     file_handler.setFormatter(formatter)
     console_handler.setFormatter(formatter)
 
@@ -76,6 +80,7 @@ class Tasks(Enum):
     """
     Enum for the different tasks of the readability preprocessing toolbox.
     """
+
     SAMPLE = "SAMPLE"
     EXTRACT_SAMPLED = "EXTRACT_SAMPLED"
     EXTRACT_FILES = "EXTRACT_FILES"
@@ -113,7 +118,7 @@ def _set_up_arg_parser() -> ArgumentParser:
         required=True,
         type=Path,
         help="Path to the folder containing java files to sample from or to a csv file "
-             "containing the paths and features of the java files.",
+        "containing the paths and features of the java files.",
     )
     sample_parser.add_argument(
         "--output",
@@ -121,7 +126,7 @@ def _set_up_arg_parser() -> ArgumentParser:
         required=False,
         type=Path,
         help="Path to the folder where the intermediate results and the final sampling "
-             "result should be stored. If not specified, the results are not stored.",
+        "result should be stored. If not specified, the results are not stored.",
     )
     sample_parser.add_argument(
         "--num-stratas",
@@ -162,7 +167,7 @@ def _set_up_arg_parser() -> ArgumentParser:
         "-o",
         required=True,
         type=str,
-        help="Path to the folder where the sampled, extracted methods should be stored.",
+        help="Path to the folder where the sampled, extracted methods are stored.",
     )
 
     # Parser for extracting files
@@ -220,7 +225,7 @@ def _set_up_arg_parser() -> ArgumentParser:
         "-nic",
         required=False,
         default=False,
-        action='store_true',
+        action="store_true",
         help="Whether to remove the comments from the methods.",
     )
     extract_methods_parser.add_argument(
@@ -228,7 +233,7 @@ def _set_up_arg_parser() -> ArgumentParser:
         "-cnr",
         required=False,
         default=False,
-        action='store_true',
+        action="store_true",
         help="Whether to include methods that do not have comments.",
     )
     extract_methods_parser.add_argument(
@@ -236,7 +241,7 @@ def _set_up_arg_parser() -> ArgumentParser:
         "-nri",
         required=False,
         default=False,
-        action='store_true',
+        action="store_true",
         help="Whether to not remove the indentation from the methods.",
     )
 
@@ -384,7 +389,7 @@ def _set_up_arg_parser() -> ArgumentParser:
         required=False,
         type=str,
         help="Path to the file containing your HuggingFace token. If not specified, "
-             "the dataset must be public.",
+        "the dataset must be public.",
     )
 
     # Parser for crafting survey sheets from the stratas/rdh/method files
@@ -458,14 +463,14 @@ def _set_up_arg_parser() -> ArgumentParser:
         "-i",
         required=True,
         type=str,
-        help="Path to the folder containing the stratas (with rdhs and methods)."
+        help="Path to the folder containing the stratas (with rdhs and methods).",
     )
     extract_diff_parser.add_argument(
         "--output",
         "-o",
         required=False,
         type=str,
-        help="Path to the folder where the diffs should be stored."
+        help="Path to the folder where the diffs should be stored.",
     )
     extract_diff_parser.add_argument(
         "--methods-dir-name",
@@ -473,7 +478,7 @@ def _set_up_arg_parser() -> ArgumentParser:
         required=False,
         type=str,
         default="methods",
-        help="Name of the directory containing the original methods to compare against."
+        help="Name of the directory containing original methods to compare against.",
     )
 
     # Parser for removing comments
@@ -490,7 +495,7 @@ def _set_up_arg_parser() -> ArgumentParser:
         "-o",
         required=True,
         type=str,
-        help="Path to the folder where the java files without comments should be stored.",
+        help="Path to the folder where the java files without comments are stored.",
     )
     remove_comments_parser.add_argument(
         "--probability",
@@ -522,9 +527,8 @@ def _run_stratified_sampling(args: Any) -> None:
     logging.info(f"Number of snippets: {num_snippets}")
 
     # Create the save directory, if it does not exist
-    if output_dir is not None:
-        if not os.path.isdir(output_dir):
-            os.makedirs(output_dir)
+    if output_dir is not None and not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
 
     # If the input is a csv file, read the paths and features from the csv file
     if input_dir.suffix == ".csv":
@@ -533,9 +537,9 @@ def _run_stratified_sampling(args: Any) -> None:
         features = calculate_features(input_dir, output_dir)
 
     # Perform stratified sampling
-    StratifiedSampler(output_dir=output_dir).sample(features=features,
-                                                    max_num_stratas=num_stratas,
-                                                    num_snippets=num_snippets)
+    StratifiedSampler(output_dir=output_dir).sample(
+        features=features, max_num_stratas=num_stratas, num_snippets=num_snippets
+    )
 
 
 def _run_extract_sampled(parsed_args: Any) -> None:
@@ -560,8 +564,9 @@ def _run_extract_sampled(parsed_args: Any) -> None:
         os.makedirs(output_dir)
 
     # Extract the files
-    extract_sampled(input_dirs=input_dirs, output_dir=output_dir,
-                    sampling_dir=sampling_dir)
+    extract_sampled(
+        input_dirs=input_dirs, output_dir=output_dir, sampling_dir=sampling_dir
+    )
 
 
 def _run_extract_files(parsed_args: Any) -> None:
@@ -585,8 +590,9 @@ def _run_extract_files(parsed_args: Any) -> None:
         os.makedirs(output_dir)
 
     # Extract the files
-    extract_files(input_dir=input_dir, output_dir=output_dir,
-                  non_violated=non_violated_subdir)
+    extract_files(
+        input_dir=input_dir, output_dir=output_dir, non_violated=non_violated_subdir
+    )
 
 
 def _run_extract_methods(parsed_args: Any) -> None:
@@ -614,11 +620,14 @@ def _run_extract_methods(parsed_args: Any) -> None:
     os.makedirs(output_dir, exist_ok=True)
 
     # Extract the methods
-    extract_methods(input_dir=input_dir, output_dir=output_dir,
-                    overwrite_mode=overwrite_mode,
-                    include_method_comments=include_method_comments,
-                    comments_required=comments_required,
-                    remove_indentation=remove_indentation)
+    extract_methods(
+        input_dir=input_dir,
+        output_dir=output_dir,
+        overwrite_mode=overwrite_mode,
+        include_method_comments=include_method_comments,
+        comments_required=comments_required,
+        remove_indentation=remove_indentation,
+    )
 
 
 def _run_convert_csv(parsed_args: Any) -> None:
@@ -639,8 +648,12 @@ def _run_convert_csv(parsed_args: Any) -> None:
     logging.info(f"Output path: {output_path}")
     logging.info(f"Dataset type: {dataset_type}")
 
-    convert_dataset_csv(snippets_dir=snippets_dir, csv=csv, output_path=output_path,
-                        dataset_type=dataset_type)
+    convert_dataset_csv(
+        snippets_dir=snippets_dir,
+        csv=csv,
+        output_path=output_path,
+        dataset_type=dataset_type,
+    )
 
 
 def _run_convert_two_folders(parsed_args: Any) -> None:
@@ -662,11 +675,13 @@ def _run_convert_two_folders(parsed_args: Any) -> None:
     logging.info(f"Not readable score: {not_readable_score}")
     logging.info(f"Output path: {output_path}")
 
-    convert_dataset_two_folders(original=readable_snippets_dir,
-                                rdh=not_readable_snippets_dir,
-                                original_score=readable_score,
-                                rdh_score=not_readable_score,
-                                output_path=output_path)
+    convert_dataset_two_folders(
+        original=readable_snippets_dir,
+        rdh=not_readable_snippets_dir,
+        original_score=readable_score,
+        rdh_score=not_readable_score,
+        output_path=output_path,
+    )
 
 
 def _run_combine_datasets(parsed_args: Any) -> None:
@@ -707,9 +722,9 @@ def _run_download(parsed_args: Any) -> None:
     logging.info(f"Dataset directory: {dataset_dir}")
     logging.info(f"Token file: {token_file}")
 
-    download_dataset(dataset_name=dataset_name,
-                     dataset_dir=dataset_dir,
-                     token_file=token_file)
+    download_dataset(
+        dataset_name=dataset_name, dataset_dir=dataset_dir, token_file=token_file
+    )
 
 
 def _run_upload(parsed_args: Any) -> None:
@@ -727,9 +742,9 @@ def _run_upload(parsed_args: Any) -> None:
     logging.info(f"Dataset name: {dataset_name}")
     logging.info(f"Token file: {token_file}")
 
-    upload_dataset(dataset_dir=dataset_dir,
-                   dataset_name=dataset_name,
-                   token_file=token_file)
+    upload_dataset(
+        dataset_dir=dataset_dir, dataset_name=dataset_name, token_file=token_file
+    )
 
 
 def _run_craft_surveys(parsed_args: Any) -> None:
@@ -762,14 +777,16 @@ def _run_craft_surveys(parsed_args: Any) -> None:
         os.makedirs(output_dir)
 
     # Craft the survey sheets
-    survey_crafter = SurveyCrafter(input_dir=input_dir,
-                                   output_dir=output_dir,
-                                   snippets_per_sheet=snippets_per_sheet,
-                                   num_sheets=num_sheets,
-                                   sample_amount_path=sample_amount_path,
-                                   original_name=original_name,
-                                   nomod_name=nomod_name,
-                                   exclude_path=exclude_path)
+    survey_crafter = SurveyCrafter(
+        input_dir=input_dir,
+        output_dir=output_dir,
+        snippets_per_sheet=snippets_per_sheet,
+        num_sheets=num_sheets,
+        sample_amount_path=sample_amount_path,
+        original_name=original_name,
+        nomod_name=nomod_name,
+        exclude_path=exclude_path,
+    )
     survey_crafter.craft_surveys()
 
 
@@ -789,8 +806,9 @@ def _run_extract_diff(parsed_args: Any) -> None:
     logging.info(f"Methods directory name: {methods_dir_name}")
 
     # Extract the diffs
-    compare_to_folder(input_path=input_dir, output_path=output_dir,
-                      methods_dir_name=methods_dir_name)
+    compare_to_folder(
+        input_path=input_dir, output_path=output_dir, methods_dir_name=methods_dir_name
+    )
 
 
 def _run_remove_comments(parsed_args: Any) -> None:

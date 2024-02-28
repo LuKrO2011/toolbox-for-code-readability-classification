@@ -7,8 +7,9 @@ OUTPUT_DIR = r"D:\PyCharm_Projects_D\styler2.0\extracted"
 NON_VIOLATED = "non_violated"
 
 
-def get_processed_projects(input_dir: str, non_violated: str = NON_VIOLATED) -> (
-    list[str], list[str]):
+def get_processed_projects(
+    input_dir: str, non_violated: str = NON_VIOLATED
+) -> (list[str], list[str]):
     """
     Separates successfully processed projects from not successfully processed projects.
     :param input_dir: The input directory.
@@ -34,8 +35,12 @@ def get_processed_projects(input_dir: str, non_violated: str = NON_VIOLATED) -> 
     return successfully_processed, not_successfully_processed
 
 
-def copy_files(input_paths: str, output_dir: str, file_type: str = None,
-               non_violated: str = NON_VIOLATED) -> None:
+def copy_files(
+    input_paths: str,
+    output_dir: str,
+    file_type: str = None,
+    non_violated: str = NON_VIOLATED,
+) -> None:
     """
     Copies the files from the input paths to the output directory.
     :param input_paths: The paths of the files to copy.
@@ -77,8 +82,9 @@ def delete_empty_dirs(input_dir: str) -> None:
             os.rmdir(directory)
 
 
-def extract_files(input_dir: str, output_dir: str,
-                  non_violated: str = NON_VIOLATED) -> None:
+def extract_files(
+    input_dir: str, output_dir: str, non_violated: str = NON_VIOLATED
+) -> None:
     """
     Extracts all successfully processed files.
     :param input_dir: The input directory.
@@ -88,16 +94,21 @@ def extract_files(input_dir: str, output_dir: str,
     :return: None
     """
     # Get the successfully processed and not successfully processed projects
-    processed, not_processed = get_processed_projects(input_dir=input_dir,
-                                                      non_violated=non_violated)
+    processed, not_processed = get_processed_projects(
+        input_dir=input_dir, non_violated=non_violated
+    )
     logging.info("Successfully processed: %d \n %s", len(processed), processed)
     logging.info(
         "Not successfully processed: %d \n %s", len(not_processed), not_processed
     )
 
     # Copy the successfully processed projects to the output directory
-    copy_files(input_paths=processed, output_dir=output_dir, file_type=".java",
-               non_violated=non_violated)
+    copy_files(
+        input_paths=processed,
+        output_dir=output_dir,
+        file_type=".java",
+        non_violated=non_violated,
+    )
     logging.info(
         "Copied %d successfully processed dirs to %s.", len(processed), output_dir
     )

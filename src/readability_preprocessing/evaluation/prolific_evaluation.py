@@ -1,18 +1,23 @@
+from itertools import combinations
 from pathlib import Path
 
 import numpy as np
-from datasets import Dataset
-from matplotlib import pyplot as plt, pyplot
 import scipy.stats as stats
-from itertools import combinations
-import datasets
+from datasets import Dataset
+from matplotlib import pyplot
+from matplotlib import pyplot as plt
 
-from readability_preprocessing.evaluation.utils import DEFAULT_SURVEY_DIR, \
-    load_json_file, SURVEY_DATA_DIR, PLOT_DIR, DATASET_DIR
+from readability_preprocessing.evaluation.utils import (
+    DATASET_DIR,
+    DEFAULT_SURVEY_DIR,
+    PLOT_DIR,
+    SURVEY_DATA_DIR,
+    load_json_file,
+)
 
 DEMOGRAPHICS_FILE_NAME = "demographics.json"
-PLOT_X_LABEL = 'Applied Readability Decreasing Heuristic'
-PLOT_Y_LABEL = 'Readability Rating'
+PLOT_X_LABEL = "Applied Readability Decreasing Heuristic"
+PLOT_Y_LABEL = "Readability Rating"
 
 
 class Rate:
@@ -20,8 +25,9 @@ class Rate:
     A class representing a single rate.
     """
 
-    def __init__(self, comment, rate, rater, raterExternalId, raterExternalSystem,
-                 solutions):
+    def __init__(
+        self, comment, rate, rater, raterExternalId, raterExternalSystem, solutions
+    ):
         self.comment = comment
         self.rate = rate
         self.rater = rater
@@ -30,9 +36,16 @@ class Rate:
         self.solutions = solutions
 
     def __str__(self):
-        return (f"Rate(comment={self.comment}, rate={self.rate}, rater={self.rater}, "
-                f"raterExternalId={self.raterExternalId}, raterExternalSystem={self.raterExternalSystem}, "
-                f"solutions={self.solutions})")
+        return (
+            f"Rate("
+            f"comment={self.comment}, "
+            f"rate={self.rate}, "
+            f"rater={self.rater}, "
+            f"raterExternalId={self.raterExternalId}, "
+            f"raterExternalSystem={self.raterExternalSystem}, "
+            f"solutions={self.solutions}"
+            f")"
+        )
 
 
 class SnippetData:
@@ -46,15 +59,20 @@ class SnippetData:
         self.from_line = from_line
         self.to_line = to_line
         self.questions = questions
-        self.rates = [Rate(**rate_data) for rate_data in rates if
-                      rate_data.get('rate') is not None]
+        self.rates = [
+            Rate(**rate_data)
+            for rate_data in rates
+            if rate_data.get("rate") is not None
+        ]
         self.stratum = None
         self.rdh = None
 
     def __str__(self):
-        return (f"JsonData(path={self.path}, from_line={self.from_line}, "
-                f"to_line={self.to_line}, questions={self.questions}, "
-                f"rates={self.rates})")
+        return (
+            f"JsonData(path={self.path}, from_line={self.from_line}, "
+            f"to_line={self.to_line}, questions={self.questions}, "
+            f"rates={self.rates})"
+        )
 
     @staticmethod
     def from_json(path, fromLine, toLine, questions, rates):
@@ -69,8 +87,7 @@ class SnippetData:
         """
         return SnippetData(path, fromLine, toLine, questions, rates)
 
-    def create_box_plot(self,
-                        title: str = None):
+    def create_box_plot(self, title: str = None):
         """
         Create a box plot for the rates of the snippet
         :param title: The title of the box plot
@@ -84,12 +101,12 @@ class SnippetData:
         # Plotting
         plt.figure(figsize=(6, 8))
         plt.boxplot(rates)
-        plt.xticks([1], ['Overall'])
-        plt.ylabel('Rate')
+        plt.xticks([1], ["Overall"])
+        plt.ylabel("Rate")
         plt.title(title)
 
         # Update y-axis labels
-        plt.yticks(plt.yticks()[0], ['{:.2f}'.format(rate) for rate in plt.yticks()[0]])
+        plt.yticks(plt.yticks()[0], [f"{rate:.2f}" for rate in plt.yticks()[0]])
 
         # Show the plot
         plt.show()
@@ -103,16 +120,17 @@ class SnippetData:
         rates = [rate.rate for rate in self.rates]
 
         # Calculate the statistics
-        statistics = {
-            'min': min(rates),
-            'max': max(rates),
-            'mean': sum(rates) / len(rates),
-            'median': sorted(rates)[len(rates) // 2],
-            'std': (sum([(rate - sum(rates) / len(rates)) ** 2 for rate in rates]) / (
-                len(rates) - 1)) ** 0.5
+        return {
+            "min": min(rates),
+            "max": max(rates),
+            "mean": sum(rates) / len(rates),
+            "median": sorted(rates)[len(rates) // 2],
+            "std": (
+                sum([(rate - sum(rates) / len(rates)) ** 2 for rate in rates])
+                / (len(rates) - 1)
+            )
+            ** 0.5,
         }
-
-        return statistics
 
     def mean(self) -> float:
         """
@@ -123,7 +141,6 @@ class SnippetData:
 
 
 class RDH:
-
     def __init__(self, name: str):
         """
         Initialize the RDH.
@@ -150,7 +167,7 @@ class RDH:
             ratings.extend([rate.rate for rate in snippet.rates])
         return ratings
 
-    def calculate_statistics(self, mode: str = 'mean') -> dict[str, float]:
+    def calculate_statistics(self, mode: str = "mean") -> dict[str, float]:
         """
         Calculate the statistics of the rates of the RDH.
         The mode can be 'mean', 'median', 'min', 'max', 'std'.
@@ -159,8 +176,9 @@ class RDH:
         :return: A dictionary containing the statistics
         """
         # Get the snippet statistics
-        snippet_statistics = [snippet.calculate_statistics() for snippet in
-                              self.snippets.values()]
+        snippet_statistics = [
+            snippet.calculate_statistics() for snippet in self.snippets.values()
+        ]
 
         # Get the mode value for each statistic
         mode_values = []
@@ -168,20 +186,25 @@ class RDH:
             mode_values.append(statistic[mode])
 
         # Calculate the statistics
-        statistics = {
-            'min': min(mode_values),
-            'max': max(mode_values),
-            'mean': sum(mode_values) / len(mode_values),
-            'median': sorted(mode_values)[len(mode_values) // 2],
-            'std': (sum([(value - sum(mode_values) / len(mode_values)) ** 2 for value in
-                         mode_values]) / (len(mode_values) - 1)) ** 0.5
+        return {
+            "min": min(mode_values),
+            "max": max(mode_values),
+            "mean": sum(mode_values) / len(mode_values),
+            "median": sorted(mode_values)[len(mode_values) // 2],
+            "std": (
+                sum(
+                    [
+                        (value - sum(mode_values) / len(mode_values)) ** 2
+                        for value in mode_values
+                    ]
+                )
+                / (len(mode_values) - 1)
+            )
+            ** 0.5,
         }
-
-        return statistics
 
 
 class Stratum:
-
     def __init__(self, name: str):
         """
         Initialize the stratum.
@@ -199,8 +222,9 @@ class Stratum:
         self.rdhs[rdh.name] = rdh
 
 
-def load_snippet_datas(input_path: Path = DEFAULT_SURVEY_DIR,
-                       assign_stratum_and_rdh: bool = True) -> list[SnippetData]:
+def load_snippet_datas(
+    input_path: Path = DEFAULT_SURVEY_DIR, assign_stratum_and_rdh: bool = True
+) -> list[SnippetData]:
     """
     Load all json files in the directory and return a list of SnippetData objects
     :param input_path: The path to the directory containing the JSON files
@@ -208,17 +232,20 @@ def load_snippet_datas(input_path: Path = DEFAULT_SURVEY_DIR,
     :return: A list of SnippetData objects
     """
     # Get all the file paths
-    file_paths = [file_path for file_path in input_path.iterdir()
-                  if file_path.suffix == '.json'
-                  and file_path.name != DEMOGRAPHICS_FILE_NAME]
+    file_paths = [
+        file_path
+        for file_path in input_path.iterdir()
+        if file_path.suffix == ".json" and file_path.name != DEMOGRAPHICS_FILE_NAME
+    ]
 
     # Load the JSON data
-    json_objects = [SnippetData.from_json(**load_json_file(file_path)) for file_path in
-                    file_paths]
+    json_objects = [
+        SnippetData.from_json(**load_json_file(file_path)) for file_path in file_paths
+    ]
 
     if assign_stratum_and_rdh:
         for json_object in json_objects:
-            split_path = json_object.path.split('_')
+            split_path = json_object.path.split("_")
             json_object.stratum = split_path[1]
             json_object.rdh = split_path[2]
 
@@ -244,15 +271,14 @@ def group_into_strats(json_objects: list[SnippetData]) -> dict[str, Stratum]:
 
     # Add snippets to RDHs
     for json_object in json_objects:
-        stratas[json_object.stratum].rdhs[
-            json_object.rdh].add_snippet(json_object)
+        stratas[json_object.stratum].rdhs[json_object.rdh].add_snippet(json_object)
 
     return stratas
 
 
-def data_and_cat_from_ratings(ratings: dict[list[int]],
-                              order: list[str] = None) -> tuple[
-    list[list[int]], list[str]]:
+def data_and_cat_from_ratings(
+    ratings: dict[list[int]], order: list[str] = None
+) -> tuple[list[list[int]], list[str]]:
     """
     Extract the data and categories from the ratings
     :param ratings: The ratings as a dictionary of lists
@@ -260,13 +286,18 @@ def data_and_cat_from_ratings(ratings: dict[list[int]],
     :return: A tuple containing the data and categories
     """
     if order is None:
-        order = ['methods', 'none']
+        order = ["methods", "none"]
 
     # Sort the ratings by name
-    ratings = {
-        k: v for k, v in sorted(ratings.items(), key=lambda item: (
-            order.index(item[0]) if item[0] in order else float('inf'), item[0]))
-    }
+    ratings = dict(
+        sorted(
+            ratings.items(),
+            key=lambda item: (
+                order.index(item[0]) if item[0] in order else float("inf"),
+                item[0],
+            ),
+        )
+    )
 
     # Extract the data and categories
     data = list(ratings.values())
@@ -274,8 +305,9 @@ def data_and_cat_from_ratings(ratings: dict[list[int]],
     return data, categories
 
 
-def create_box_plot(ratings: dict[list[int]],
-                    title: str = 'Box Plot of Ratings') -> pyplot:
+def create_box_plot(
+    ratings: dict[list[int]], title: str = "Box Plot of Ratings"
+) -> pyplot:
     """
     Create a box plot for the given ratings
     :param ratings: The ratings as a dictionary of lists
@@ -296,14 +328,21 @@ def create_box_plot(ratings: dict[list[int]],
 
     # Add a mean line
     means = [np.mean(values) for values in data]
-    plt.plot(range(1, len(categories) + 1), means, marker='o', linestyle='-',
-             color='red', label='Mean')
+    plt.plot(
+        range(1, len(categories) + 1),
+        means,
+        marker="o",
+        linestyle="-",
+        color="red",
+        label="Mean",
+    )
 
     return plt
 
 
-def create_bar_plot(ratings: dict[list[int]],
-                    title: str = 'Bar Plot of Ratings') -> pyplot:
+def create_bar_plot(
+    ratings: dict[list[int]], title: str = "Bar Plot of Ratings"
+) -> pyplot:
     """
     Create a bar plot for the mean of the given ratings
     :param ratings: The ratings as a dictionary of lists
@@ -335,8 +374,9 @@ def calculate_mode(data: list[int]) -> int:
     return max(set(data), key=data.count)
 
 
-def create_violin_plot(ratings: dict[list[int]],
-                       title: str = 'Violin Plot of Ratings') -> pyplot:
+def create_violin_plot(
+    ratings: dict[list[int]], title: str = "Violin Plot of Ratings"
+) -> pyplot:
     """
     Create a violin plot for the given ratings
     :param ratings: The ratings as a dictionary of lists
@@ -357,25 +397,31 @@ def create_violin_plot(ratings: dict[list[int]],
     plt.subplots_adjust(bottom=0.5)
 
     # Add mean values as text
-    for i, category in enumerate(categories):
+    for i, _category in enumerate(categories):
         mean_value = round(sum(data[i]) / len(data[i]), 2)
-        plt.text(i + 1, mean_value + 0.1, f' {mean_value:.2f}', color='black')
+        plt.text(i + 1, mean_value + 0.1, f" {mean_value:.2f}", color="black")
 
     # Add a yellow dot for the mode value of each category
-    for i, category in enumerate(categories):
+    for i, _category in enumerate(categories):
         mode_value = calculate_mode(data[i])
-        plt.scatter(i + 1, mode_value, color='yellow', zorder=3)
+        plt.scatter(i + 1, mode_value, color="yellow", zorder=3)
 
     # Add a horizontal line at the mean value of the first category
     first_category_mean = round(sum(data[0]) / len(data[0]), 2)
-    plt.axhline(y=first_category_mean, color='red', linestyle='--',
-                label=f'Mean of {categories[0]}', alpha=0.5)
+    plt.axhline(
+        y=first_category_mean,
+        color="red",
+        linestyle="--",
+        label=f"Mean of {categories[0]}",
+        alpha=0.5,
+    )
 
     return plt
 
 
-def normalize_ratings(ratings: dict[list[int]], sub: float = 0, div: float = 1) -> dict[
-    list[int]]:
+def normalize_ratings(
+    ratings: dict[list[int]], sub: float = 0, div: float = 1
+) -> dict[list[int]]:
     """
     Normalize the ratings by the given key
     :param ratings: The ratings as a dictionary of lists
@@ -388,13 +434,15 @@ def normalize_ratings(ratings: dict[list[int]], sub: float = 0, div: float = 1) 
     for key, value in ratings.items():
         if key not in normalized_ratings:
             normalized_ratings[key] = []
-        normalized_ratings[key].extend(
-            [(rating - sub) / div for rating in value])
+        normalized_ratings[key].extend([(rating - sub) / div for rating in value])
     return normalized_ratings
 
 
-def create_normalized_bar_plot(ratings: dict[list[int]], normalize_by: str = 'methods',
-                               title: str = 'Box Plot of Ratings') -> pyplot:
+def create_normalized_bar_plot(
+    ratings: dict[list[int]],
+    normalize_by: str = "methods",
+    title: str = "Box Plot of Ratings",
+) -> pyplot:
     """
     Create a normalized box plot for the given ratings
     :param ratings: The ratings as a dictionary of lists
@@ -415,7 +463,7 @@ def extract_name(path: str) -> str:
     :param path: The path to the snippet
     :return: The name of the snippet
     """
-    return path.split('_')[-1]
+    return path.split("_")[-1]
 
 
 def load_stratas(input_path: Path) -> dict[str, Stratum]:
@@ -480,8 +528,9 @@ def combine_means_by_rdh(stratas: dict[str, Stratum]) -> dict[str, list[float]]:
         for rdh in stratum.rdhs.values():
             if rdh.name not in ratings:
                 ratings[rdh.name] = []
-            ratings[rdh.name].extend([snippet.mean() for snippet in
-                                      rdh.snippets.values()])
+            ratings[rdh.name].extend(
+                [snippet.mean() for snippet in rdh.snippets.values()]
+            )
     return ratings
 
 
@@ -492,7 +541,8 @@ def calculate_overall_score(ratings: dict[str, list[int]]) -> float:
     :return: The overall score
     """
     return sum([sum(rating) for rating in ratings.values()]) / sum(
-        [len(rating) for rating in ratings.values()])
+        [len(rating) for rating in ratings.values()]
+    )
 
 
 def plot_rdhs(stratas: dict[str, Stratum]) -> None:
@@ -512,8 +562,11 @@ def plot_rdhs(stratas: dict[str, Stratum]) -> None:
     plt.show()
 
     # Create a normalized box plot for the ratings of each RDH
-    plt = create_normalized_bar_plot(ratings, normalize_by='methods',
-                                     title="Box Plot of Relative Ratings with 'methods' as Baseline")
+    plt = create_normalized_bar_plot(
+        ratings,
+        normalize_by="methods",
+        title="Box Plot of Relative Ratings with 'methods' as Baseline",
+    )
 
     # Store the normalized box plot
     plt.savefig(PLOT_DIR / "all_strata_normalized_bar_plot.png")
@@ -538,10 +591,14 @@ def anova(ratings: dict[str, list[int]]) -> tuple[float, float]:
     alpha = 0.05
     if p_value < alpha:
         print(
-            "Reject the null hypothesis; there are significant differences between group means.")
+            "Reject the null hypothesis; there are significant differences "
+            "between group means."
+        )
     else:
         print(
-            "Fail to reject the null hypothesis; there are no significant differences between group means.")
+            "Fail to reject the null hypothesis; there are no significant differences "
+            "between group means."
+        )
 
     return statistic, p_value
 
@@ -581,8 +638,9 @@ def check_homogeneity_of_variance(ratings: dict[str, list[int]]) -> None:
     print()
 
 
-def ttest_ind(ratings: dict[str, list[int]], alpha: float = 0.05,
-              compare_to: str = 'none') -> None:
+def ttest_ind(
+    ratings: dict[str, list[int]], alpha: float = 0.05, compare_to: str = "none"
+) -> None:
     """
     Perform pairwise independent t-tests on the ratings.
     REQUIRES NORMALITY AND HOMOGENEITY OF VARIANCE!
@@ -602,8 +660,9 @@ def ttest_ind(ratings: dict[str, list[int]], alpha: float = 0.05,
             print()
 
 
-def mann_whitney_u(ratings: dict[str, list[int | float]], alpha: float = 0.05,
-                   compare_to: str = 'none') -> None:
+def mann_whitney_u(
+    ratings: dict[str, list[int | float]], alpha: float = 0.05, compare_to: str = "none"
+) -> None:
     """
     Perform pairwise independent t-tests on the ratings.
     :param ratings: The ratings
@@ -636,8 +695,9 @@ def get_combinations(n: int, start: int = 1) -> list[tuple[int]]:
     return combos
 
 
-def subgroup_chi2(ratings: dict[str, list[int]], alpha: float = 0.05,
-                  compare_to: str = 'none') -> None:
+def subgroup_chi2(
+    ratings: dict[str, list[int]], alpha: float = 0.05, compare_to: str = "none"
+) -> None:
     """
     Perform a chi-squared test on the ratings.
     Tries to find any significant differences between the amount of each rating
@@ -659,8 +719,9 @@ def subgroup_chi2(ratings: dict[str, list[int]], alpha: float = 0.05,
                     print(f"none-{key} {combo}")
 
 
-def binary_chi2(ratings: dict[str, list[int]], alpha: float = 0.05,
-                compare_to: str = 'none') -> None:
+def binary_chi2(
+    ratings: dict[str, list[int]], alpha: float = 0.05, compare_to: str = "none"
+) -> None:
     """
     Perform a chi-squared test on the ratings.
     Tries to find a split, so that the ratings can be split into two groups
@@ -696,12 +757,13 @@ def plot_distributions(ratings: dict[str, list[int]]) -> None:
     """
     for key, value in ratings.items():
         plt.hist(value, label=key)
-    plt.legend(loc='upper right')
+    plt.legend(loc="upper right")
     plt.show()
 
 
-def plot_distribution(ratings: list[int],
-                      title: str = 'Distribution of Ratings') -> None:
+def plot_distribution(
+    ratings: list[int], title: str = "Distribution of Ratings"
+) -> None:
     """
     Plot the distribution of the ratings
     :param ratings: The ratings
@@ -709,13 +771,14 @@ def plot_distribution(ratings: list[int],
     :return: None
     """
     # Set the bin edges to integer values
-    bin_edges = range(min(ratings),
-                      max(ratings) + 2)  # +2 to include the rightmost edge
-    plt.hist(ratings, bins=bin_edges, align='left', edgecolor='black')
+    bin_edges = range(
+        min(ratings), max(ratings) + 2
+    )  # +2 to include the rightmost edge
+    plt.hist(ratings, bins=bin_edges, align="left", edgecolor="black")
     plt.xticks(range(1, 6))
     plt.title(title)
-    plt.xlabel('Rating')
-    plt.ylabel('Frequency')
+    plt.xlabel("Rating")
+    plt.ylabel("Frequency")
     plt.show()
 
 
@@ -739,16 +802,17 @@ def list_pids(stratas: dict[str, Stratum]) -> list[str]:
     :return: A list of all PIDs
     """
     pids = []
-    for stratum, stratum_data in stratas.items():
-        for rdh, rdh_data in stratum_data.rdhs.items():
+    for _stratum, stratum_data in stratas.items():
+        for _rdh, rdh_data in stratum_data.rdhs.items():
             for snippet in rdh_data.snippets.values():
                 for rate in snippet.rates:
                     pids.append(rate.raterExternalId)
     return list(set(pids))
 
 
-def get_answers_by_pid(stratas: dict[str, Stratum], raterExternalId: str) -> dict[
-    str, int]:
+def get_answers_by_pid(
+    stratas: dict[str, Stratum], raterExternalId: str
+) -> dict[str, int]:
     """
     Get the answers of a specific rater for each snippet
     :param stratas: The stratas
@@ -756,8 +820,8 @@ def get_answers_by_pid(stratas: dict[str, Stratum], raterExternalId: str) -> dic
     :return: A dictionary containing the answers
     """
     answers = {}
-    for stratum, stratum_data in stratas.items():
-        for rdh, rdh_data in stratum_data.rdhs.items():
+    for _stratum, stratum_data in stratas.items():
+        for _rdh, rdh_data in stratum_data.rdhs.items():
             for snippet in rdh_data.snippets.values():
                 for rate in snippet.rates:
                     if rate.raterExternalId == raterExternalId:
@@ -773,8 +837,8 @@ def get_mean_answer_by_snippet(stratas: dict[str, Stratum], snippet: str) -> flo
     :return: The mean answer
     """
     answers = []
-    for stratum, stratum_data in stratas.items():
-        for rdh, rdh_data in stratum_data.rdhs.items():
+    for _stratum, stratum_data in stratas.items():
+        for _rdh, rdh_data in stratum_data.rdhs.items():
             if snippet in rdh_data.snippets:
                 for rate in rdh_data.snippets[snippet].rates:
                     answers.append(rate.rate)
@@ -796,8 +860,9 @@ def get_answer_deviation(stratas: dict[str, Stratum], raterExternalId: str) -> f
     return total_deviation_from_mean
 
 
-def filter_answers_by_deviation(stratas: dict[str, Stratum], min_deviation: float) -> \
-    list[str]:
+def filter_answers_by_deviation(
+    stratas: dict[str, Stratum], min_deviation: float
+) -> list[str]:
     """
     Filter the raters by the deviation of their answers from the mean for each snippet
     :param stratas: The stratas
@@ -832,8 +897,9 @@ def print_answers_by_pid(stratas: dict[str, Stratum], raterExternalId: str) -> N
     print(f"Total deviation from mean: {total_deviation_from_mean}")
 
 
-def load_code_snippet(name: str, input_path: Path = SURVEY_DATA_DIR,
-                      encoding='utf-8') -> str:
+def load_code_snippet(
+    name: str, input_path: Path = SURVEY_DATA_DIR, encoding="utf-8"
+) -> str:
     """
     Searches the subdirectories of the input path for the code snippet with the
     given name and returns the content of the file.
@@ -863,11 +929,11 @@ def export_huggingface_dataset(stratas: dict[str, Stratum], output_path: Path) -
 
     # Create the dataset
     dataset_dict = {
-        'name': [snippet.path for snippet in snippets],
-        'stratum': [snippet.stratum for snippet in snippets],
-        'rdh': [snippet.rdh for snippet in snippets],
-        'code_snippet': [load_code_snippet(snippet.path) for snippet in snippets],
-        'scores': [[rate.rate for rate in snippet.rates] for snippet in snippets],
+        "name": [snippet.path for snippet in snippets],
+        "stratum": [snippet.stratum for snippet in snippets],
+        "rdh": [snippet.rdh for snippet in snippets],
+        "code_snippet": [load_code_snippet(snippet.path) for snippet in snippets],
+        "scores": [[rate.rate for rate in snippet.rates] for snippet in snippets],
     }
 
     # dataset_dict = {
