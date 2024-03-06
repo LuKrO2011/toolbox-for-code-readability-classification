@@ -2,6 +2,10 @@ from pathlib import Path
 
 from matplotlib import pyplot as plt
 
+from readability_preprocessing.evaluation.font_utils import (
+    get_percentage_formatter,
+    set_custom_font,
+)
 from readability_preprocessing.evaluation.prolific_groups import Submission
 from readability_preprocessing.evaluation.utils import (
     DEFAULT_SURVEY_DIR,
@@ -11,6 +15,8 @@ from readability_preprocessing.evaluation.utils import (
 from readability_preprocessing.utils.utils import list_files_with_name
 
 DEMOGRAPHICS_FILE_NAME = "demographics.json"
+
+set_custom_font()
 
 
 class Answer:
@@ -132,12 +138,12 @@ class Demographics:
             ],
         )
 
-    def pie_plot(self, question_id: int) -> None:
+    def plot(self, question_id: int) -> None:
         """
-        Create and show a pie plot for the demographic data for a specific question.
+        Create and show a plot for the demographic data for a specific question.
         Assumes that the question is a single choice question.
         Assumes that the options are the same for all solutions.
-        :param question_id: The id of the question to create the pie plot for
+        :param question_id: The id of the question to create the plot for
         :return: None
         """
         # Filter demographics for the specified question_id
@@ -152,14 +158,104 @@ class Demographics:
             selected_option = solution.solution.selected[0]
             answer_counts[selected_option] = answer_counts.get(selected_option, 0) + 1
 
-        # Prepare data for pie chart
-        labels = [f"{option} ({5 - i})" for i, option in enumerate(answer_options)]
-        sizes = list(answer_counts.values())
+        # Print the answer counts with each option label
+        for i, option in enumerate(answer_options):
+            print(f"{option} ({5 - i}): {answer_counts.get(i, 0)}")
 
-        # Create pie chart
-        plt.pie(sizes, labels=labels, autopct="%1.1f%%", startangle=90)
-        plt.title(question.content)
+        # Prepare data for chart
+        labels = [f"{option} ({5 - i})" for i, option in enumerate(answer_options)][
+            ::-1
+        ]
+        sizes = [answer_counts.get(i, 0) for i in range(len(answer_options))][::-1]
+        total_responses = sum(sizes)
+        percentages = [size / total_responses * 100 for size in sizes]
+
+        # Create a bar chart
+        fig, ax = plt.subplots(figsize=(8, 2))
+        bars = ax.bar(labels, percentages)
+
+        # Add percentages to the bars
+        for bar, percentage in zip(bars, percentages, strict=False):
+            height = bar.get_height()
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                height,
+                f"{percentage:.1f}%",
+                ha="center",
+                va="bottom",
+            )
+
+        ax.set_ylabel("Participants in %")
+        ax.yaxis.set_major_formatter(get_percentage_formatter())
+        ax.set_yticks([0, 10, 20, 30, 40, 50])
+        ax.set_ylim(0, 50)
+        plt.savefig(
+            "survey_java_familiarity_bar.pdf", format="pdf", bbox_inches="tight"
+        )
         plt.show()
+
+        # # Prepare data for pie chart
+        # labels = [f"{option} ({5 - i})" for i, option in enumerate(answer_options)]
+        # colors = ["green", "lightgreen", "yellow", "orange", "red"]
+        # sizes = [answer_counts.get(i, 0) for i in range(len(answer_options))]
+        #
+        # # Sum the sizes to get the total number of participants
+        # sum = 0
+        # for idx, size in enumerate(sizes):
+        #     sizes[idx] = sum + size
+        #     sum += size
+        # sizes = sizes[::-1]
+        #
+        # # Create a stacked bar chart
+        # df = pd.DataFrame({'name': labels, 'value': sizes, 'color': colors})
+        # df['x'] = 0
+        # fig, ax = plt.subplots(figsize=(10, 5))
+        # bars = ax.barh(df['x'], df['value'], color=df['color'])
+        # for bar, label in zip(bars, sizes[::-1]):
+        #    width = bar.get_width()
+        #    ax.text(width, bar.get_y() + bar.get_height() / 2, f'{label}', ha='center',
+        #             va='center')
+        #
+        # ax.set_yticks([])
+        # ax.set_xlim(0, 250)
+        # fig.show()
+
+        # # Create waffle chart
+        # hatch_patterns = ['/', '\\', '|', '-', '+']
+        # plt.figure(
+        #     FigureClass=Waffle,
+        #     rows=5,
+        #     columns=20,
+        #     values=sizes,
+        #     legend={'loc': 'lower left', 'bbox_to_anchor': (1, -0.15)},
+        #     vertical=True,
+        #     labels=[f"{option} ({5 - i})" for i, option in enumerate(answer_options)],
+        #     # figsize=(10, 5),
+        #     # font_size=12,
+        # )
+        # # Save the waffle chart as a PDF
+        # plt.savefig("survey_java_familiarity_waffle.pdf", format="pdf",
+        #             bbox_inches="tight")
+        #
+        # # Display the waffle chart
+        # plt.show()
+
+        # Create tree map
+        # Add percentages to the labels
+        # labels = [
+        #     f"{option} ({5 - i}):\n{sizes[i] - sizes[i] / sum(sizes) * 100:.1f}%"
+        #     for i, option in enumerate(answer_options)]
+        # plt.figure(figsize=(8, 4))
+        # squarify.plot(
+        #     sizes,
+        #     label=labels,
+        #     color=["green", "lightgreen", "yellow", "orange", "red"],
+        #     alpha=0.7,
+        # )
+        # plt.axis("off")
+        # plt.savefig("survey_java_familiarity_treemap.pdf", format="pdf",
+        #             bbox_inches="tight")
+        # plt.show()
 
     def print_no_solutions(self, question_id: int) -> None:
         """
@@ -261,5 +357,5 @@ demographics = combine_demographics(demographics)
 # extended_demographics = extend_solutions(demographics, submissions)
 # extended_demographics.print_no_solutions(question_id)
 
-demographics.pie_plot(question_id)
+demographics.plot(question_id)
 demographics.print_no_solutions(question_id)

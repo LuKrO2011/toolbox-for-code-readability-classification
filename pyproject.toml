@@ -18,6 +18,8 @@ imgkit = "^1.2.3"
 datasets = "^2.14.6"
 javalang = "^0.13.0"
 matplotlib = "^3.8.2"
+squarify = "^0.4.3"
+pywaffle = "^1.1.0"
 
 
 [tool.poetry.group.dev.dependencies]

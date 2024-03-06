@@ -3,6 +3,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 from matplotlib import font_manager
+from matplotlib.ticker import FuncFormatter
 
 CURR_DIR = Path(os.path.dirname(os.path.relpath(__file__)))
 FONTS_DIR = CURR_DIR / "../../res/fonts"
@@ -35,3 +36,21 @@ def set_custom_font(
     plt.rcParams["font.size"] = font_size
 
     print(f"Font set to {font_name} with size {font_size}")
+
+
+def _percentage_formatter(x: float, pos: int) -> str:
+    """
+    Formats the given number as a percentage.
+    :param x: The number to format
+    :param pos: The position
+    :return: The formatted number
+    """
+    return f"{x}%"
+
+
+def get_percentage_formatter() -> FuncFormatter:
+    """
+    Returns a formatter for percentages.
+    :return: The formatter
+    """
+    return FuncFormatter(_percentage_formatter)

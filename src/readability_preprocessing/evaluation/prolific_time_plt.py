@@ -3,10 +3,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from readability_preprocessing.evaluation.font_utils import set_custom_font
 from readability_preprocessing.evaluation.utils import (
     DEMOGRAPHIC_DATA_DIR,
     load_csv_files,
 )
+
+set_custom_font()
 
 PILOT_TIMES = [
     "7:35",
@@ -63,24 +66,23 @@ print(f"Median time: {median_time:.0f} seconds")
 print(f"Mean - 1 std: {mean_time - std_time:.0f} seconds")
 
 # Plotting a historgram
+plt.subplots(figsize=(5, 3))
 plt.hist(time_taken.dt.total_seconds() // 60, bins=30)
 plt.xlabel("Time taken (minutes)")
 plt.ylabel("Number of participants")
-plt.title("Time taken to complete the survey")
 
 # Mean, median, mean - 1 std
 plt.axvline(mean_time // 60, color="orange", linestyle="dashed", linewidth=2)
-# plt.axvline((mean_time - std_time) // 60, color='red', linestyle='dashed',
-#             linewidth=2)
 
 # legend
 plt.legend(["Mean"])
 
+plt.savefig("survey_time_histogramm.pdf", format="pdf", bbox_inches="tight")
 plt.show()
 
 # Plot a box plot (orange line = median)
+plt.subplots(figsize=(3, 3))
 time_in_seconds = time_taken.dt.total_seconds()
-# plt.figure(figsize=(6, 8))
 plt.boxplot([pilot_times, time_in_seconds], medianprops={"color": "orange"})
 plt.xticks([1, 2], ["Pilot survey", "Prolific survey"])
 plt.ylabel("Time (minutes)")
@@ -97,4 +99,5 @@ plt.yticks(
     ],
 )
 
+plt.savefig("survey_times.pdf", format="pdf", bbox_inches="tight")
 plt.show()

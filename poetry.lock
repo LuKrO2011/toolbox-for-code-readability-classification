@@ -628,6 +628,16 @@ testing = ["covdefaults (>=2.3)", "coverage (>=7.3.2)", "diff-cover (>=8)", "pyt
 typing = ["typing-extensions (>=4.8)"]
 
 [[package]]
+name = "fontawesomefree"
+version = "6.5.1"
+description = "Font Awesome Free"
+optional = false
+python-versions = "*"
+files = [
+    {file = "fontawesomefree-6.5.1-py3-none-any.whl", hash = "sha256:8dec4a2ee37bf8e53379ebbf0d38cefec4e06c7c9227f59af39dbb7b1632817b"},
+]
+
+[[package]]
 name = "fonttools"
 version = "4.49.0"
 description = "Tools to manipulate font files"
@@ -1833,6 +1843,21 @@ files = [
 tokenize-rt = ">=5.2.0"
 
 [[package]]
+name = "pywaffle"
+version = "1.1.0"
+description = "PyWaffle is an open source, MIT-licensed Python package for plotting waffle charts."
+optional = false
+python-versions = "*"
+files = [
+    {file = "pywaffle-1.1.0-py2.py3-none-any.whl", hash = "sha256:28d7e677fd28857279355cb51396a508837b462b3d52d28710f73e0f8da5e6c0"},
+    {file = "pywaffle-1.1.0.tar.gz", hash = "sha256:ac2deba1db4775d7b6381e8d75416dfda1e7286f3cf1436bad50fc0616ac2996"},
+]
+
+[package.dependencies]
+fontawesomefree = "*"
+matplotlib = "*"
+
+[[package]]
 name = "pyyaml"
 version = "6.0.1"
 description = "YAML parser and emitter for Python"
@@ -2047,6 +2072,17 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 files = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
     {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
+]
+
+[[package]]
+name = "squarify"
+version = "0.4.3"
+description = "Pure Python implementation of the squarify treemap layout algorithm"
+optional = false
+python-versions = "*"
+files = [
+    {file = "squarify-0.4.3-py3-none-any.whl", hash = "sha256:bec7011e0c7f4103fe57a1c16a7c091d9dc1be0f23d774e1c568b748a6f818f6"},
+    {file = "squarify-0.4.3.tar.gz", hash = "sha256:54091f6ad175f7f201f8934574e647ce1b50dedc478c5fd968688eb7d7469f95"},
 ]
 
 [[package]]
@@ -2477,4 +2513,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11"
-content-hash = "1ab4f159d5c105a2b1efdc72f86296c30f52daabde9a87559056ecae4527911b"
+content-hash = "22eb76c85be6f713563911922ebc931eb73d208d6e872350212a9eb257b9c5ed"
