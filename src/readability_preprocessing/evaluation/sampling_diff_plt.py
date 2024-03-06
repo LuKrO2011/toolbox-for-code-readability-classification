@@ -1,9 +1,12 @@
 import matplotlib.pyplot as plt
 
+from readability_preprocessing.evaluation.font_utils import set_custom_font
 from readability_preprocessing.evaluation.utils import (
     NONE_DIFF_RESULTS_DIR,
     load_json_file,
 )
+
+set_custom_font()
 
 
 def generate_bar_chart(
@@ -26,7 +29,7 @@ def generate_bar_chart(
     # Adding labels, title, and legend
     # plt.xlabel('Stratum (and RDH)')
     plt.ylabel("Relative Frequency")
-    plt.title(headline)
+    # plt.title(headline)
 
     # Display the percentage values on top of the bars with smaller font size
     for i, v in enumerate(not_different):
@@ -38,7 +41,6 @@ def generate_bar_chart(
             va="bottom",
             color="black",
             fontweight="bold",
-            fontsize=8,
         )
 
     # Fix the y-scale to be between 0 and 1
@@ -54,12 +56,20 @@ def generate_bar_chart(
 
 diff_dir = NONE_DIFF_RESULTS_DIR / "statistics.json"
 diff_data = load_json_file(diff_dir)
+
+# Replace "stratum0" with "Stratum 0" for better readability
+for entry in diff_data[1:]:
+    entry["stratum"] = entry["stratum"].replace("stratum", "Stratum ")
+
+# Replace "overall" with "All"
+diff_data[0]["stratum"] = "All"
+
 generate_bar_chart(
     diff_data, headline='Relative Frequency of "Not Different" Cases Overall'
 )
-for stratum in diff_data[1:]:
-    generate_bar_chart(
-        stratum["sub_statistics"],
-        headline=f'Relative Frequency of "Not Different" Cases for '
-        f'{stratum["stratum"]}',
-    )
+# for stratum in diff_data[1:]:
+#     generate_bar_chart(
+#         stratum["sub_statistics"],
+#         headline=f'Relative Frequency of "Not Different" Cases for '
+#                  f'{stratum["stratum"]}',
+#     )
