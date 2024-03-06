@@ -2,6 +2,7 @@ import csv
 from datetime import datetime
 from pathlib import Path
 
+from readability_preprocessing.evaluation.font_utils import set_custom_font
 from readability_preprocessing.evaluation.utils import DEMOGRAPHIC_DATA_DIR
 
 
@@ -161,9 +162,13 @@ def plot_critical_times(
     """
     import matplotlib.pyplot as plt
 
+    set_custom_font()
+
+    plt.subplots(figsize=(5, 3))
+    plt.xlabel("Questionnaire")
+    plt.ylabel("Number of participants")
+    # plt.title(title)
     critical_times.items()
-    plt.xlabel("Survey group")
-    plt.title(title)
 
     # Change the labels to 1, 2, 3, ...
     plt.xticks(range(len(critical_times)), list(range(1, len(critical_times) + 1)))
@@ -171,6 +176,7 @@ def plot_critical_times(
     # Change the y-axis to 0, 1, 2, 3, ...
     plt.yticks(range(max(critical_times.values()) + 1))
 
+    plt.savefig("survey_time_less_than_180.pdf", format="pdf", bbox_inches="tight")
     plt.show()
 
 
