@@ -6,9 +6,10 @@ import scipy.stats as stats
 from datasets import Dataset
 from matplotlib import pyplot
 from matplotlib import pyplot as plt
+from matplotlib.lines import Line2D
 
+from readability_preprocessing.evaluation.font_utils import set_custom_font
 from readability_preprocessing.evaluation.utils import (
-    DATASET_DIR,
     DEFAULT_SURVEY_DIR,
     PLOT_DIR,
     SURVEY_DATA_DIR,
@@ -16,8 +17,8 @@ from readability_preprocessing.evaluation.utils import (
 )
 
 DEMOGRAPHICS_FILE_NAME = "demographics.json"
-PLOT_X_LABEL = "Applied Readability Decreasing Heuristic"
-PLOT_Y_LABEL = "Readability Rating"
+PLOT_X_LABEL = "Applied Readability Decreasing Modifications"
+PLOT_Y_LABEL = "Readability rating"
 
 
 class Rate:
@@ -108,7 +109,7 @@ class SnippetData:
         # Update y-axis labels
         plt.yticks(plt.yticks()[0], [f"{rate:.2f}" for rate in plt.yticks()[0]])
 
-        # Show the plot
+        plt.savefig("box_plot.pdf", format="pdf", bbox_inches="tight")
         plt.show()
 
     def calculate_statistics(self) -> dict[str, float]:
@@ -286,7 +287,7 @@ def data_and_cat_from_ratings(
     :return: A tuple containing the data and categories
     """
     if order is None:
-        order = ["methods", "none"]
+        order = ["original", "just-pretty-print"]
 
     # Sort the ratings by name
     ratings = dict(
@@ -318,7 +319,7 @@ def create_box_plot(
 
     # Create box plot
     plt.boxplot(data, labels=categories)
-    plt.title(title)
+    # plt.title(title)
     plt.xlabel(PLOT_X_LABEL)
     plt.ylabel(PLOT_Y_LABEL)
 
@@ -350,12 +351,13 @@ def create_bar_plot(
     :return: None
     """
     data, categories = data_and_cat_from_ratings(ratings)
+    plt.subplots(figsize=(7, 7))
 
     # Create bar plot
     means = [np.mean(values) for values in data]
     plt.bar(categories, means)
-    plt.title(title)
-    plt.xlabel(PLOT_X_LABEL)
+    # plt.title(title)
+    # plt.xlabel(PLOT_X_LABEL)
     plt.ylabel(PLOT_Y_LABEL)
 
     # Adjust category label display
@@ -385,11 +387,13 @@ def create_violin_plot(
     """
     data, categories = data_and_cat_from_ratings(ratings)
 
+    plt.subplots(figsize=(7, 7))
+
     # Create violin plot
     plt.violinplot(data, showmeans=True, showmedians=False)
     plt.xticks(range(1, len(categories) + 1), categories)
-    plt.title(title)
-    plt.xlabel(PLOT_X_LABEL)
+    # plt.title(title)
+    # plt.xlabel(PLOT_X_LABEL)
     plt.ylabel(PLOT_Y_LABEL)
 
     # Adjust category label display
@@ -404,7 +408,7 @@ def create_violin_plot(
     # Add a yellow dot for the mode value of each category
     for i, _category in enumerate(categories):
         mode_value = calculate_mode(data[i])
-        plt.scatter(i + 1, mode_value, color="yellow", zorder=3)
+        plt.scatter(i + 1, mode_value, color="tab:blue", zorder=3, s=10)
 
     # Add a horizontal line at the mean value of the first category
     first_category_mean = round(sum(data[0]) / len(data[0]), 2)
@@ -414,6 +418,32 @@ def create_violin_plot(
         linestyle="--",
         label=f"Mean of {categories[0]}",
         alpha=0.5,
+    )
+
+    # Add legend for mean and yellow dots
+    plt.legend(
+        handles=[
+            Line2D(
+                [0],
+                [0],
+                marker="o",
+                color="w",
+                markerfacecolor="tab:blue",
+                markersize=5,
+                label="Mode of each configuration",
+            ),
+            Line2D(
+                [],
+                [],
+                linestyle="-",
+                color="tab:blue",
+                label="Mean of each configuration",
+            ),
+            Line2D(
+                [0], [0], color="red", linestyle="--", label=f"Mean of {categories[0]}"
+            ),
+        ],
+        loc="lower right",
     )
 
     return plt
@@ -440,7 +470,7 @@ def normalize_ratings(
 
 def create_normalized_bar_plot(
     ratings: dict[list[int]],
-    normalize_by: str = "methods",
+    normalize_by: str = "original",
     title: str = "Box Plot of Ratings",
 ) -> pyplot:
     """
@@ -553,23 +583,29 @@ def plot_rdhs(stratas: dict[str, Stratum]) -> None:
     """
     ratings = combine_by_rdh(stratas)
 
+    # Replace "none" with "just-pretty-print"
+    ratings["just-pretty-print"] = ratings.pop("none")
+
+    # Replace "methods" with "original"
+    ratings["original"] = ratings.pop("methods")
+
     # Create a box plot for the ratings of each RDH
     title = "Violin Plot of Ratings for All Strata"
     plt = create_violin_plot(ratings, title)
 
     # Store the violin plot
-    plt.savefig(PLOT_DIR / "all_strata_violin_plot.png")
+    plt.savefig("survey_ratings_violin_all.pdf", format="pdf", bbox_inches="tight")
     plt.show()
 
     # Create a normalized box plot for the ratings of each RDH
     plt = create_normalized_bar_plot(
         ratings,
-        normalize_by="methods",
-        title="Box Plot of Relative Ratings with 'methods' as Baseline",
+        normalize_by="original",
+        # title="Box Plot of Relative Ratings with 'methods' as Baseline",
     )
 
     # Store the normalized box plot
-    plt.savefig(PLOT_DIR / "all_strata_normalized_bar_plot.png")
+    plt.savefig("survey_ratings_bar_all.pdf", format="pdf", bbox_inches="tight")
     plt.show()
 
 
@@ -758,6 +794,7 @@ def plot_distributions(ratings: dict[str, list[int]]) -> None:
     for key, value in ratings.items():
         plt.hist(value, label=key)
     plt.legend(loc="upper right")
+    plt.savefig("distributions.pdf", format="pdf", bbox_inches="tight")
     plt.show()
 
 
@@ -779,6 +816,7 @@ def plot_distribution(
     plt.title(title)
     plt.xlabel("Rating")
     plt.ylabel("Frequency")
+    plt.savefig("distribution.pdf", format="pdf", bbox_inches="tight")
     plt.show()
 
 
@@ -946,8 +984,19 @@ def export_huggingface_dataset(stratas: dict[str, Stratum], output_path: Path) -
     dataset.save_to_disk(output_path)
 
 
+set_custom_font()
 stratas = load_stratas(SURVEY_DATA_DIR)
-# plot_rdhs(stratas)
+
+# Replace "none" with "just-pretty-print"
+for stratum in stratas.values():
+    for rdh in stratum.rdhs.values():
+        if "none" in rdh.snippets:
+            rdh.snippets["just-pretty-print"] = rdh.snippets.pop("none")
+
+    if "none" in stratum.rdhs:
+        stratum.rdhs["just-pretty-print"] = stratum.rdhs.pop("none")
+
+plot_rdhs(stratas)
 # for stratum in stratas.keys():
 #     plot_rdhs_of_stratum(stratas, stratum)
 
@@ -982,4 +1031,4 @@ stratas = load_stratas(SURVEY_DATA_DIR)
 #     print_answers_by_pid(stratas, pid)
 #     print()
 
-export_huggingface_dataset(stratas, DATASET_DIR)
+# export_huggingface_dataset(stratas, DATASET_DIR)
