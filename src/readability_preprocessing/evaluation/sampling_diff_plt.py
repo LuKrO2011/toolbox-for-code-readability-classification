@@ -9,9 +9,7 @@ from readability_preprocessing.evaluation.utils import (
 set_custom_font()
 
 
-def generate_bar_chart(
-    data: list, headline: str = 'Relative Frequency of "Not Different" Cases'
-) -> None:
+def generate_bar_chart(data: list) -> None:
     """
     Generates a bar chart for the relative frequency of 'not_different' cases overall,
     for each stratum, and for each stratum and rdh.
@@ -22,14 +20,17 @@ def generate_bar_chart(
     strata_labels = [entry["stratum"] for entry in data]
     not_different = [entry["not_different_rel"] for entry in data]
 
+    # Reduce the figure size
+    plt.subplots(figsize=(6, 2))  # Adjust the height of the plot
+
     # Create a bar chart for 'different' cases
     # fig, ax = plt.subplots(figsize=(10, 8))  # Increase the height of the plot
     plt.bar(strata_labels, not_different, color="lightcoral", edgecolor="black")
 
     # Adding labels, title, and legend
     # plt.xlabel('Stratum (and RDH)')
-    plt.ylabel("Relative Frequency")
-    # plt.title(headline)
+    plt.ylabel("Frequency")
+    # plt.title("Relative Frequency of 'Not Different' Cases")
 
     # Display the percentage values on top of the bars with smaller font size
     for i, v in enumerate(not_different):
@@ -44,13 +45,14 @@ def generate_bar_chart(
         )
 
     # Fix the y-scale to be between 0 and 1
-    plt.ylim(0, 1)
+    plt.ylim(0, 0.3)
 
-    plt.xticks(rotation=45, ha="right")  # Rotate x-axis labels for better readability
+    # plt.xticks(rotation=45, ha="right")  # Rotate x-axis labels for better readability
     # plt.subplots_adjust(bottom=0.2)  # Increase space at the bottom
 
     # Show the plot
-    plt.tight_layout()
+    # plt.tight_layout()
+    plt.savefig("myImagePDF.pdf", format="pdf", bbox_inches="tight")
     plt.show()
 
 
@@ -64,9 +66,8 @@ for entry in diff_data[1:]:
 # Replace "overall" with "All"
 diff_data[0]["stratum"] = "All"
 
-generate_bar_chart(
-    diff_data, headline='Relative Frequency of "Not Different" Cases Overall'
-)
+generate_bar_chart(diff_data)
+
 # for stratum in diff_data[1:]:
 #     generate_bar_chart(
 #         stratum["sub_statistics"],
