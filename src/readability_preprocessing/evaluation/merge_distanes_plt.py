@@ -4,6 +4,10 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
+from readability_preprocessing.evaluation.font_utils import set_custom_font
+
+set_custom_font()
+
 CURR_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
 ROOT_DIR = CURR_DIR / "../../../"
 # INPUT_PATH = ROOT_DIR / 'tests/res/sampled/merge_distances.json'
@@ -25,37 +29,6 @@ num_stratas = [entry["new_num_stratas"] for entry in data]
 merge_distances = [entry["merge_distance"] for entry in data]
 diff_to_prev = [entry["diff_to_prev"] for entry in data]
 
-# Create the plot with two y-axes
-fig, ax1 = plt.subplots(figsize=(8, 6))
-
-# Plot merge distances on the first y-axis
-ax1.plot(
-    num_stratas,
-    merge_distances,
-    marker="o",
-    linestyle="-",
-    color="b",
-    label="Merge Distances",
-)
-ax1.set_xlabel("Number of Strata")
-ax1.set_ylabel("Merge Distances", color="b")
-ax1.tick_params("y", colors="b")
-ax1.grid(True)
-
-# Create a second y-axis for diff_to_prev
-if PLOT_DIFF_TO_PREV:
-    ax2 = ax1.twinx()
-    ax2.plot(
-        num_stratas,
-        diff_to_prev,
-        marker="s",
-        linestyle="-",
-        color="r",
-        label="Local Derivation",
-    )
-    ax2.set_ylabel("Local Derivation", color="r")
-    ax2.tick_params("y", colors="r")
-
 # Invert the x-axis if specified
 if REVERSE_X_AXIS:
     fig, ax1 = plt.subplots(figsize=(8, 6))
@@ -66,12 +39,12 @@ if REVERSE_X_AXIS:
         merge_distances,
         marker="o",
         linestyle="-",
-        color="b",
-        label="Merge Distances",
+        # color="b",
+        label="Merge distances",
     )
-    ax1.set_xlabel("Number of Strata")
-    ax1.set_ylabel("Merge Distances", color="b")
-    ax1.tick_params("y", colors="b")
+    ax1.set_xlabel("Number of strata")
+    ax1.set_ylabel("Merge distances")
+    ax1.tick_params("y")
     ax1.grid(True)
 
     # Create a second y-axis for diff_to_prev
@@ -82,11 +55,11 @@ if REVERSE_X_AXIS:
             diff_to_prev,
             marker="s",
             linestyle="-",
-            color="r",
-            label="Local Derivation",
+            color="black",
+            label="Local derivation",
         )
-        ax2.set_ylabel("Local Derivation", color="r")
-        ax2.tick_params("y", colors="r")
+        ax2.set_ylabel("Local derivation")
+        ax2.tick_params("y")
 
     # Invert the x-axis for ax1
     ax1.invert_xaxis()
@@ -104,6 +77,7 @@ if REVERSE_X_AXIS:
 
     # plt.title(title)
     plt.tight_layout()
+    plt.savefig("strata_merge_distances.pdf", format="pdf", bbox_inches="tight")
     plt.show()
 
 else:
