@@ -102,7 +102,7 @@ if REVERSE_X_AXIS:
 
     plt.xticks(list(reversed(num_stratas)), [str(i) for i in reversed(num_stratas)])
 
-    plt.title(title)
+    # plt.title(title)
     plt.tight_layout()
     plt.show()
 

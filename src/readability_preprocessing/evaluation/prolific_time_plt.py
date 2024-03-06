@@ -46,11 +46,15 @@ pilot_times = np.array(
 mean_time = time_taken.mean().total_seconds()
 std_time = time_taken.std().total_seconds()
 median_time = time_taken.median().total_seconds()
+min_time = time_taken.min().total_seconds()
+max_time = time_taken.max().total_seconds()
 
 # Print as "mm:ss"
 print(f"Mean time: {mean_time // 60:.0f}:{mean_time % 60:.0f}")
 print(f"Std time: {std_time // 60:.0f}:{std_time % 60:.0f}")
 print(f"Median time: {median_time // 60:.0f}:{median_time % 60:.0f}")
+print(f"Min time: {min_time // 60:.0f}:{min_time % 60:.0f}")
+print(f"Max time: {max_time // 60:.0f}:{max_time % 60:.0f}")
 
 # Print as seconds
 print(f"Mean time: {mean_time:.0f} seconds")
