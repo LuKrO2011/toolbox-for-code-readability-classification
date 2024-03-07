@@ -3,7 +3,7 @@ from pathlib import Path
 
 import numpy as np
 import scipy.stats as stats
-from datasets import Dataset
+from datasets import Dataset, load_dataset
 from matplotlib import pyplot
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
@@ -509,6 +509,33 @@ def load_stratas(input_path: Path) -> dict[str, Stratum]:
     return group_into_strats(snippet_datas)
 
 
+def load_dataset_scores_krod(
+    dataset_name: str = "LuKrO/code-readability-krod-survey-raw", rdh: str = "methods"
+) -> list[int]:
+    """
+    Load the scores of the dataset
+    :param dataset_name: The name of the dataset
+    :return: The scores
+    """
+    ds = load_dataset(dataset_name)
+    ds = ds["train"]
+    scores = [x["scores"] for x in ds if x["rdh"] == rdh]
+    return [sum(score) / len(score) for score in scores]
+
+
+def load_dataset_scores_merged(
+    dataset_name: str = "se2p/code-readability-merged",
+) -> list[int]:
+    """
+    Load the scores of the dataset
+    :param dataset_name: The name of the dataset
+    :return: The scores
+    """
+    ds = load_dataset(dataset_name)
+    ds = ds["train"]
+    return [x["score"] for x in ds]
+
+
 def plot_rdhs_of_stratum(stratas: dict[str, Stratum], stratum: str) -> None:
     """
     Plot the RDHs of the stratum
@@ -562,6 +589,20 @@ def combine_means_by_rdh(stratas: dict[str, Stratum]) -> dict[str, list[float]]:
                 [snippet.mean() for snippet in rdh.snippets.values()]
             )
     return ratings
+
+
+def stratas_to_scores(stratas: dict[str, Stratum]) -> list[float]:
+    """
+    Convert all strata ratings to a single list of scores
+    :param stratas: The stratas
+    :return: A list of scores
+    """
+    scores = []
+    for stratum in stratas.values():
+        for rdh in stratum.rdhs.values():
+            for snippet in rdh.snippets.values():
+                scores.append(snippet.mean())
+    return scores
 
 
 def calculate_overall_score(ratings: dict[str, list[int]]) -> float:
@@ -696,7 +737,7 @@ def ttest_ind(
             print()
 
 
-def mann_whitney_u(
+def mann_whitney_us(
     ratings: dict[str, list[int | float]], alpha: float = 0.05, compare_to: str = "none"
 ) -> None:
     """
@@ -709,12 +750,25 @@ def mann_whitney_u(
     none = ratings[compare_to]
     for key, value in ratings.items():
         if key != compare_to:
-            results = stats.mannwhitneyu(none, value)
-            rejected = results[1] < alpha
             print(f"none-{key}")
-            print(results)
-            print("Rejected:", rejected)
+            mann_whitney_u(none, value, alpha=alpha)
             print()
+
+
+def mann_whitney_u(
+    ratings1: list[float], ratings2: list[float], alpha: float = 0.05
+) -> None:
+    """
+    Perform a Mann-Whitney U test on the ratings.
+    :param ratings1: The first group of ratings
+    :param ratings2: The second group of ratings
+    :param alpha: The significance level
+    :return: The results of the test
+    """
+    results = stats.mannwhitneyu(ratings1, ratings2)
+    rejected = results[1] < alpha
+    print(results)
+    print("Rejected:", rejected)
 
 
 def get_combinations(n: int, start: int = 1) -> list[tuple[int]]:
@@ -752,7 +806,9 @@ def subgroup_chi2(
                 results = stats.chi2_contingency(table)
                 rejected = results[1] < alpha
                 if rejected:
-                    print(f"none-{key} {combo}")
+                    print(f"r: none-{key} {combo}: {results[1]}")
+                else:
+                    print(f"a: none-{key} {combo}: {results[1]}")
 
 
 def binary_chi2(
@@ -987,16 +1043,20 @@ def export_huggingface_dataset(stratas: dict[str, Stratum], output_path: Path) -
 set_custom_font()
 stratas = load_stratas(SURVEY_DATA_DIR)
 
-# Replace "none" with "just-pretty-print"
-for stratum in stratas.values():
-    for rdh in stratum.rdhs.values():
-        if "none" in rdh.snippets:
-            rdh.snippets["just-pretty-print"] = rdh.snippets.pop("none")
+# Perform subgroup_chi2
+ratings = combine_by_rdh(stratas)
+binary_chi2(ratings)
 
-    if "none" in stratum.rdhs:
-        stratum.rdhs["just-pretty-print"] = stratum.rdhs.pop("none")
+# # Replace "none" with "just-pretty-print"
+# for stratum in stratas.values():
+#     for rdh in stratum.rdhs.values():
+#         if "none" in rdh.snippets:
+#             rdh.snippets["just-pretty-print"] = rdh.snippets.pop("none")
+#
+#     if "none" in stratum.rdhs:
+#         stratum.rdhs["just-pretty-print"] = stratum.rdhs.pop("none")
 
-plot_rdhs(stratas)
+# plot_rdhs(stratas)
 # for stratum in stratas.keys():
 #     plot_rdhs_of_stratum(stratas, stratum)
 
@@ -1032,3 +1092,10 @@ plot_rdhs(stratas)
 #     print()
 
 # export_huggingface_dataset(stratas, DATASET_DIR)
+
+# merged_scores = load_dataset_scores_merged()
+# krod_scores_methods = load_dataset_scores_krod()
+# # results = stats.mannwhitneyu(merged_scores, krod_scores_methods)
+# # mann_whitney_u(merged_scores, krod_scores_methods)
+# print(np.mean(merged_scores))
+# print(np.mean(krod_scores_methods))
