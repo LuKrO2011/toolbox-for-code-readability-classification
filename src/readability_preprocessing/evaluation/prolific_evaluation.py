@@ -287,7 +287,7 @@ def data_and_cat_from_ratings(
     :return: A tuple containing the data and categories
     """
     if order is None:
-        order = ["original", "just-pretty-print"]
+        order = ["original", "just-pretty-print", "merged"]
 
     # Sort the ratings by name
     ratings = dict(
@@ -376,6 +376,19 @@ def calculate_mode(data: list[int]) -> int:
     return max(set(data), key=data.count)
 
 
+def data_and_cat_from_merged():
+    """
+    Get the data and categories from the merged dataset
+    :return: The data and category "merged"
+    """
+    merged = load_dataset_scores_merged("LuKrO/code-readability-merged-raw")
+    merged = [item for sublist in merged for item in sublist]
+    np.random.seed(42)
+    np.random.shuffle(merged)
+    merged = merged[:446]
+    return [merged], ["merged"]
+
+
 def create_violin_plot(
     ratings: dict[list[int]], title: str = "Violin Plot of Ratings"
 ) -> pyplot:
@@ -386,6 +399,11 @@ def create_violin_plot(
     :return: None
     """
     data, categories = data_and_cat_from_ratings(ratings)
+    data2, categories2 = data_and_cat_from_merged()
+
+    # Add at third position
+    data[2:2] = data2
+    categories[2:2] = categories2
 
     plt.subplots(figsize=(7, 7))
 
@@ -480,6 +498,9 @@ def create_normalized_bar_plot(
     :param title: The title of the box plot
     :return: None
     """
+    data2, categories2 = data_and_cat_from_merged()
+    ratings.update({categories2[0]: data2[0]})
+
     # Get the mean value of the ratings "normalize_by"
     mean_value = sum(ratings[normalize_by]) / len(ratings[normalize_by])
     normalized_ratings = normalize_ratings(ratings, sub=mean_value)
@@ -525,7 +546,7 @@ def load_dataset_scores_krod(
 
 def load_dataset_scores_merged(
     dataset_name: str = "se2p/code-readability-merged",
-) -> list[int]:
+) -> list[list[int]]:
     """
     Load the scores of the dataset
     :param dataset_name: The name of the dataset
@@ -616,6 +637,23 @@ def calculate_overall_score(ratings: dict[str, list[int]]) -> float:
     )
 
 
+def _rename_ratings(ratings: dict[str, list[int]]) -> dict[str, list[int]]:
+    """
+    Rename the keys of the ratings
+    :param ratings: The ratings to rename
+    :return: The renamed ratings
+    """
+    # Replacing keys
+    ratings["just-pretty-print"] = ratings.pop("none")
+    ratings["original"] = ratings.pop("methods")
+    ratings["comments-remove"] = ratings.pop("commentsRemove")
+    ratings["newline-instead-of-space"] = ratings.pop("newlineInsteadOfSpace")
+    ratings["newlines-few"] = ratings.pop("newlinesFew")
+    ratings["newlines-many"] = ratings.pop("newlinesMany")
+    ratings["spaces-many"] = ratings.pop("spacesMany")
+    return ratings
+
+
 def plot_rdhs(stratas: dict[str, Stratum]) -> None:
     """
     Plot the RDHs over all strata
@@ -623,12 +661,7 @@ def plot_rdhs(stratas: dict[str, Stratum]) -> None:
     :return: None
     """
     ratings = combine_by_rdh(stratas)
-
-    # Replace "none" with "just-pretty-print"
-    ratings["just-pretty-print"] = ratings.pop("none")
-
-    # Replace "methods" with "original"
-    ratings["original"] = ratings.pop("methods")
+    ratings = _rename_ratings(ratings)
 
     # Create a box plot for the ratings of each RDH
     title = "Violin Plot of Ratings for All Strata"
@@ -1044,19 +1077,10 @@ set_custom_font()
 stratas = load_stratas(SURVEY_DATA_DIR)
 
 # Perform subgroup_chi2
-ratings = combine_by_rdh(stratas)
-binary_chi2(ratings)
+# ratings = combine_by_rdh(stratas)
+# binary_chi2(ratings)
 
-# # Replace "none" with "just-pretty-print"
-# for stratum in stratas.values():
-#     for rdh in stratum.rdhs.values():
-#         if "none" in rdh.snippets:
-#             rdh.snippets["just-pretty-print"] = rdh.snippets.pop("none")
-#
-#     if "none" in stratum.rdhs:
-#         stratum.rdhs["just-pretty-print"] = stratum.rdhs.pop("none")
-
-# plot_rdhs(stratas)
+plot_rdhs(stratas)
 # for stratum in stratas.keys():
 #     plot_rdhs_of_stratum(stratas, stratum)
 
