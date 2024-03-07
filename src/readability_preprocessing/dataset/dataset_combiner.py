@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from datasets import Dataset, concatenate_datasets, load_from_disk
+import pandas as pd
+from datasets import Dataset, load_from_disk
 
 
 def _load_datasets(paths: list[str]) -> list[Dataset]:
@@ -68,7 +69,16 @@ def combine_datasets(
             _remove_ambiguous_samples(dataset, percent_to_remove)
             for dataset in datasets
         ]
-    combined_dataset = concatenate_datasets(datasets)
+
+    # Convert the datasets to pandas dataframes
+    dfs = [dataset.to_pandas() for dataset in datasets]
+
+    # Concatenate the dataframes
+    combined_df = pd.concat(dfs)
+
+    # Convert the dataframe to a dataset
+    combined_dataset = Dataset.from_pandas(combined_df)
+
     combined_dataset.save_to_disk(output_path)
 
 
@@ -90,4 +100,4 @@ if __name__ == "__main__":
         "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Datasets/Combined"
     )
 
-    combine_datasets([dorn_path, bw_path, scalabrio_path], combined_path)
+    combine_datasets([dorn_path, bw_path, scalabrio_path], combined_path, None)

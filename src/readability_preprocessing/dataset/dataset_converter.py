@@ -18,6 +18,36 @@ def _get_snippet_name(file_name: str, prefix: str) -> str:
     return f"{prefix}{file_name}"
 
 
+def _drop_nan_values(data_frame: pd.DataFrame) -> pd.DataFrame:
+    """
+    Drops the NaN values from the data frame. Kee
+    :param data_frame: The data frame.
+    :return: The data frame without NaN values.
+    """
+    return data_frame.dropna()
+
+
+def _to_dict(data_frame: pd.DataFrame, mean: bool = False) -> dict:
+    """
+    Converts the data frame to a dictionary.
+    If mean is True, the mean of the scores for each code snippet is calculated and
+    returned. Otherwise, the scores are returned as a list.
+    :param data_frame: The data frame.
+    :param mean: True if the mean of the scores should be calculated.
+    :return: The dictionary containing the scores.
+    """
+    if mean:
+        data_frame = data_frame.mean(axis=0)
+        data_dict = data_frame.to_dict()
+    else:
+        data_frame = data_frame.fillna(-1)
+        data_dict = data_frame.to_dict(orient="list")
+        for key, value in data_dict.items():
+            data_dict[key] = [v for v in value if v != -1]
+
+    return data_dict
+
+
 class CodeLoader(ABC):
     """
     Loads the code snippets from the files.
@@ -207,6 +237,9 @@ class CsvLoader(ABC):
     Loads the ratings data from a CSV file.
     """
 
+    # Whether to calculate the mean of the scores for each code snippet.
+    use_mean = False
+
     @abstractmethod
     def load(self, csv: str) -> dict:
         """
@@ -233,11 +266,8 @@ class ScalabrioCsvLoader(CsvLoader):
         # Drop the first column, which contains evaluator names
         data_frame = data_frame.drop(columns=data_frame.columns[0], axis=1)
 
-        # Calculate the mean of the scores for each code snippet
-        data_frame = data_frame.mean(axis=0)
-
-        # Turn into dictionary with file names as keys and mean scores as values
-        data_dict = data_frame.to_dict()
+        # Turn into dictionary with file names as keys and (mean) scores as values
+        data_dict = _to_dict(data_frame, mean=self.use_mean)
 
         # Log the number of loaded scores
         logging.info(f"Loaded {len(data_dict)} scores from {csv}")
@@ -265,11 +295,8 @@ class BWCsvLoader(CsvLoader):
         # Add a header for all columns (1 - x)
         data_frame.columns = [f"{i}" for i in range(1, len(data_frame.columns) + 1)]
 
-        # Calculate the mean of the scores for each code snippet
-        data_frame = data_frame.mean(axis=0)
-
-        # Turn into dictionary with file names as keys and mean scores as values
-        data_dict = data_frame.to_dict()
+        # Turn into dictionary with file names as keys and (mean) scores as values
+        data_dict = _to_dict(data_frame, mean=self.use_mean)
 
         # Log the number of loaded scores
         logging.info(f"Loaded {len(data_dict)} scores from {csv}")
@@ -303,11 +330,8 @@ class DornCsvLoader(CsvLoader):
             )
         ]
 
-        # Calculate the mean of the scores for each code snippet
-        data_frame = data_frame.mean(axis=0)
-
-        # Turn into dictionary with file names as keys and mean scores as values
-        data_dict = data_frame.to_dict()
+        # Turn into dictionary with file names as keys and (mean) scores as values
+        data_dict = _to_dict(data_frame, mean=self.use_mean)
 
         # Log the number of loaded scores
         logging.info(f"Loaded {len(data_dict)} scores from {csv}")
@@ -360,12 +384,12 @@ class CsvFolderToDataset:
         Loads the data from the CSV file and the code snippets from the files.
         :param csv: The path to the CSV file containing the scores.
         :param data_dir: The path to the directory containing the code snippets.
-        :return: A tuple containing the mean scores and the code snippets.
+        :return: A tuple containing the (mean) scores and the code snippets.
         """
-        mean_scores = self.csv_loader.load(csv)
+        scores = self.csv_loader.load(csv)
         code_snippets = self.code_loader.load(data_dir)
 
-        return mean_scores, code_snippets
+        return scores, code_snippets
 
 
 class TwoFoldersToDataset:
@@ -623,9 +647,26 @@ def convert_dataset_two_folders(
 
 
 if __name__ == "__main__":
+    # Scalabrio
+    # convert_dataset_csv(
+    #     csv=os.path.join(SCALABRIO_DATA_DIR, "scores.csv"),
+    #     snippets_dir=os.path.join(SCALABRIO_DATA_DIR, "Snippets"),
+    #     output_path=os.path.join(SCALABRIO_DATA_DIR, output_name),
+    #     dataset_type=DatasetType.SCALABRIO,
+    # )
+
+    # BW
+    # convert_dataset_csv(
+    #     csv=os.path.join(BW_DATA_DIR, "scores.csv"),
+    #     snippets_dir=os.path.join(BW_DATA_DIR, "Snippets"),
+    #     output_path=os.path.join(BW_DATA_DIR, output_name),
+    #     dataset_type=DatasetType.BW,
+    # )
+
+    # Dorn
     convert_dataset_csv(
-        csv=os.path.join(SCALABRIO_DATA_DIR, "scores.csv"),
-        snippets_dir=os.path.join(SCALABRIO_DATA_DIR, "Snippets"),
-        output_path=os.path.join(SCALABRIO_DATA_DIR, output_name),
-        dataset_type=DatasetType.SCALABRIO,
+        csv=os.path.join(DORN_DATA_DIR, "scores.csv"),
+        snippets_dir=os.path.join(DORN_DATA_DIR, "Snippets"),
+        output_path=os.path.join(DORN_DATA_DIR, output_name),
+        dataset_type=DatasetType.DORN,
     )
