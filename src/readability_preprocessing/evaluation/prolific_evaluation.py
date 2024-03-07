@@ -541,7 +541,7 @@ def load_dataset_scores_krod(
     ds = load_dataset(dataset_name)
     ds = ds["train"]
     scores = [x["scores"] for x in ds if x["rdh"] == rdh]
-    return [sum(score) / len(score) for score in scores]
+    return [item for sublist in scores for item in sublist]
 
 
 def load_dataset_scores_merged(
@@ -1074,13 +1074,13 @@ def export_huggingface_dataset(stratas: dict[str, Stratum], output_path: Path) -
 
 
 set_custom_font()
-stratas = load_stratas(SURVEY_DATA_DIR)
+# stratas = load_stratas(SURVEY_DATA_DIR)
 
 # Perform subgroup_chi2
 # ratings = combine_by_rdh(stratas)
 # binary_chi2(ratings)
 
-plot_rdhs(stratas)
+# plot_rdhs(stratas)
 # for stratum in stratas.keys():
 #     plot_rdhs_of_stratum(stratas, stratum)
 
@@ -1117,9 +1117,10 @@ plot_rdhs(stratas)
 
 # export_huggingface_dataset(stratas, DATASET_DIR)
 
-# merged_scores = load_dataset_scores_merged()
-# krod_scores_methods = load_dataset_scores_krod()
-# # results = stats.mannwhitneyu(merged_scores, krod_scores_methods)
-# # mann_whitney_u(merged_scores, krod_scores_methods)
-# print(np.mean(merged_scores))
-# print(np.mean(krod_scores_methods))
+merged_scores = load_dataset_scores_merged("LuKrO/code-readability-merged-raw")
+merged_scores = [item for sublist in merged_scores for item in sublist]
+krod_scores_methods = load_dataset_scores_krod()
+results = stats.mannwhitneyu(merged_scores, krod_scores_methods)
+mann_whitney_u(merged_scores, krod_scores_methods)
+print(np.mean(merged_scores))
+print(np.mean(krod_scores_methods))
