@@ -49,6 +49,18 @@ plt.plot(
     label="Trend Line",
 )
 
+# Add the special point
+merged_date = pd.to_datetime("2024-01-01")
+merged_value = 421
+plt.scatter(
+    merged_date,
+    merged_value,
+    color="green",
+    marker="*",
+    s=200,
+    label="All Readability Datasets Combined",
+)
+
 plt.title("Training Dataset Size vs. Publication Date")
 plt.xlabel("Publication Date")
 plt.ylabel("Training Dataset Size (datapoints)")
