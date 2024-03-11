@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.dates import DateFormatter
 
 from readability_preprocessing.evaluation.utils import DATASET_SIZES_CSV, load_csv_file
 
@@ -27,15 +28,23 @@ plt.scatter(
 )
 
 # Add a trend line
+ds_sizes_cleaned = ds_sizes.dropna(
+    subset=["Publication date", "Training dataset size (datapoints)"]
+)
+
 z = np.polyfit(
-    ds_sizes["Publication date"].astype("int64").astype(int),
-    np.log(ds_sizes["Training dataset size (datapoints)"]),
+    pd.to_numeric(ds_sizes_cleaned["Publication date"]),
+    np.log(ds_sizes_cleaned["Training dataset size (datapoints)"]),
     1,
 )
+
 p = np.poly1d(z)
+trend_line_dates = pd.date_range(
+    ds_sizes["Publication date"].min(), ds_sizes["Publication date"].max(), freq="M"
+)
 plt.plot(
-    ds_sizes["Publication date"],
-    np.exp(p(ds_sizes["Publication date"].astype("int64").astype(int))),
+    trend_line_dates,
+    np.exp(p(pd.to_numeric(trend_line_dates))),
     "r--",
     label="Trend Line",
 )
@@ -45,6 +54,7 @@ plt.xlabel("Publication Date")
 plt.ylabel("Training Dataset Size (datapoints)")
 plt.yscale("log")
 plt.xticks(rotation=45)
+plt.gca().xaxis.set_major_formatter(DateFormatter("%Y-%m-%d"))  # Format x-axis as dates
 
 plt.legend()
 plt.grid(True)
