@@ -24,6 +24,9 @@ SURVEY_DATA_DIR = PROLIFIC_DIR / "results"
 PLOT_DIR = PROLIFIC_DIR / "plots"
 DATASET_DIR = PROLIFIC_DIR / "dataset"
 
+PRESENTATION_DIR = CURR_DIR / "../../res/presentation"
+DATASET_SIZES_CSV = PRESENTATION_DIR / "dataset_sizes.csv"
+
 
 def load_repos(input_path: Path = DEFAULT_REPOS_INPUT, top_k: int = None) -> dict:
     """
