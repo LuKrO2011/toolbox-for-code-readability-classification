@@ -41,64 +41,67 @@ def balance_dataset(dataset: list[dict]) -> list[dict]:
     return balanced_dataset
 
 
-def filter_out_duplicates(dataset: dict[str, dict]) -> dict[str, dict]:
+def fileter_out_duplicates(
+    dataset: dict[str, dict], original_score: float = 3.68
+) -> dict[str, dict]:
     """
     Filters out duplicates from the dataset.
-    For each name without "_rdh" in the end, check if there is a name with "_rdh" in the
-    end. If there is, compare the code_snippets of the two samples.
-    If they are the same, remove both samples from the dataset.
+    All code_snippets are sorted by their content and then compared.
     :param dataset: The dataset to filter.
+    :param original_score: The score to keep if there are duplicates.
     :return: The filtered dataset.
     """
-    # Get all the names with and without "_rdh" in the end
-    names = list(dataset.keys())
-    names_without_rdh = [name for name in names if not name.endswith("_rdh")]
-    names_with_rdh = [name for name in names if name.endswith("_rdh")]
+    # Sort the dataset by code_snippet and by score (original_score first)
+    sorted_dataset = sorted(
+        dataset.items(),
+        key=lambda x: (x[1]["code_snippet"], x[1]["score"]),
+        reverse=True,
+    )
 
-    # Build pairs of names with and without "_rdh" in the end
-    pairs = []
-    for name in names_without_rdh:
-        if name + "_rdh" in names_with_rdh:
-            pairs.append((name, name + "_rdh"))
-
-    # Remove the pairs with the same code snippet
-    num_removed = 0
+    # Remove the duplicates. Always keep the first sample.
     filtered_dataset = {}
-    for name, sample in dataset.items():
-        is_rdh = name.endswith("_rdh")
-        pair_name = (name[:-4], name) if is_rdh else (name, name + "_rdh")
-
-        # If the sample is not in a pair, add it to the filtered dataset
-        if pair_name not in pairs:
+    num_removed_original = 0
+    num_removed_modified = 0
+    for i in range(len(sorted_dataset)):
+        name, sample = sorted_dataset[i]
+        if i == 0:
             filtered_dataset.update({name: sample})
-
-        # If the sample is in a pair, check if the code snippets are the same
         else:
-            pair_samples = [dataset[name] for name in pair_name]
-            if pair_samples[0]["code_snippet"] != pair_samples[1]["code_snippet"]:
-                filtered_dataset.update({name: sample})
+            prev_name, prev_sample = sorted_dataset[i - 1]
+            if sample["code_snippet"] == prev_sample["code_snippet"]:
+                if sample["score"] == original_score:
+                    num_removed_original += 1
+                else:
+                    num_removed_modified += 1
             else:
-                num_removed += 1
+                filtered_dataset.update({name: sample})
 
-    print(f"Removed {num_removed} duplicates")
+    # Print the number of removed duplicates
+    print(f"Removed {num_removed_original} duplicates with a score of {original_score}")
+    print(
+        f"Removed {num_removed_modified} duplicates with a score different from "
+        f"{original_score}"
+    )
 
     return filtered_dataset
 
 
 random.seed(42)
-ds = load_dataset("se2p/code-readability-krod")  # download_mode="force_redownload",
+ds = load_dataset(
+    "LuKrO/code-readability-krod-strong8"
+)  # download_mode="force_redownload",
 #                   verification_mode=VerificationMode.NO_CHECKS)
 ds = ds["train"]
 ds_as_list = ds.to_list()
 ds_dict = {x["name"]: x for x in ds_as_list}
-ds_without_duplicates = filter_out_duplicates(ds_dict)
+ds_without_duplicates = fileter_out_duplicates(ds_dict)
 ds_without_duplicates_as_list = list(ds_without_duplicates.values())
 balanced_ds = balance_dataset(ds_without_duplicates_as_list)
 
 # Store the dataset locally
 # ds = Dataset.from_list(balanced_ds)
-# ds.save_to_disk("LuKrO/code-readability-krod-balanced")
+# ds.save_to_disk("LuKrO/code-readability-krod-strong5-balanced")
 
 # Store the dataset in the HuggingFace Hub
 # ds = Dataset.from_list(balanced_ds)
-# ds.push_to_hub("LuKrO/code-readability-krod-balanced", private=True)
+# ds.push_to_hub("LuKrO/code-readability-krod-strong8-balanced", private=True)
