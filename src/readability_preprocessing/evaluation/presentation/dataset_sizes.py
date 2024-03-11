@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 from readability_preprocessing.evaluation.utils import DATASET_SIZES_CSV, load_csv_file
@@ -24,12 +25,26 @@ plt.scatter(
     ds_sizes["Training dataset size (datapoints)"],
     label="Data Points",
 )
+
+# Add a trend line
+z = np.polyfit(
+    ds_sizes["Publication date"].astype("int64").astype(int),
+    np.log(ds_sizes["Training dataset size (datapoints)"]),
+    1,
+)
+p = np.poly1d(z)
+plt.plot(
+    ds_sizes["Publication date"],
+    np.exp(p(ds_sizes["Publication date"].astype("int64").astype(int))),
+    "r--",
+    label="Trend Line",
+)
+
 plt.title("Training Dataset Size vs. Publication Date")
 plt.xlabel("Publication Date")
 plt.ylabel("Training Dataset Size (datapoints)")
-plt.yscale("log")  # Use log scale on y-axis
+plt.yscale("log")
 plt.xticks(rotation=45)
-
 
 plt.legend()
 plt.grid(True)
