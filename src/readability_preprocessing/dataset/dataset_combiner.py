@@ -1,7 +1,5 @@
-from pathlib import Path
-
 import pandas as pd
-from datasets import Dataset, load_from_disk
+from datasets import Dataset, load_dataset, load_from_disk
 
 
 def _load_datasets(paths: list[str]) -> list[Dataset]:
@@ -83,21 +81,33 @@ def combine_datasets(
 
 
 if __name__ == "__main__":
-    dataset_name = "dataset_with_names"
-    dorn_path = Path(
-        "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Datasets/"
-        "DatasetDornJava/dataset/" + dataset_name
-    )
-    bw_path = Path(
-        "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Datasets/DatasetBW/"
-        + dataset_name
-    )
-    scalabrio_path = Path(
-        "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Datasets/"
-        "Dataset/Dataset/" + dataset_name
-    )
-    combined_path = Path(
-        "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Datasets/Combined"
-    )
+    # dataset_name = "dataset_with_names"
+    # dorn_path = Path(
+    #     "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Datasets/"
+    #     "DatasetDornJava/dataset/" + dataset_name
+    # )
+    # bw_path = Path(
+    #     "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Datasets/DatasetBW/"
+    #     + dataset_name
+    # )
+    # scalabrio_path = Path(
+    #     "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Datasets/"
+    #     "Dataset/Dataset/" + dataset_name
+    # )
+    # combined_path = Path(
+    #     "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Datasets/Combined"
+    # )
+    #
+    # combine_datasets([dorn_path, bw_path, scalabrio_path], combined_path, None)
 
-    combine_datasets([dorn_path, bw_path, scalabrio_path], combined_path, None)
+    ds = load_dataset("LuKrO/code-readability-mmm")  # download_mode="force_redownload",
+    #                   verification_mode=VerificationMode.NO_CHECKS)
+    ds = ds["train"]
+    ds_as_list = ds.to_list()
+    unambiguous = _remove_ambiguous_samples(ds, 0.5).to_list()
+
+    # Store the dataset
+    # ds = Dataset.from_list(unambiguous)
+    # ds.save_to_disk("LuKrO/code-readability-mmm-unambiguous")
+    ds = Dataset.from_list(unambiguous)
+    ds.push_to_hub("LuKrO/code-readability-mmm-unambiguous", private=True)
