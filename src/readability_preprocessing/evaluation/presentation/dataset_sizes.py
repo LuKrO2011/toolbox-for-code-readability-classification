@@ -5,6 +5,8 @@ from matplotlib.dates import DateFormatter
 
 from readability_preprocessing.evaluation.utils import DATASET_SIZES_CSV, load_csv_file
 
+# TODO: Set font
+
 # Load CSV into a DataFrame
 ds_sizes = load_csv_file(DATASET_SIZES_CSV)
 
@@ -14,13 +16,13 @@ ds_sizes["Publication date"] = pd.to_datetime(
 )
 
 # Filter data for dates after 1992
-ds_sizes = ds_sizes[ds_sizes["Publication date"].dt.year >= 1992]
+ds_sizes = ds_sizes[ds_sizes["Publication date"].dt.year >= 2000]
 
 # Sort DataFrame by 'Publication date'
 ds_sizes = ds_sizes.sort_values(by="Publication date")
 
 # Plotting with log scale on y-axis
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(4, 3))
 plt.scatter(
     ds_sizes["Publication date"],
     ds_sizes["Training dataset size (datapoints)"],
@@ -49,7 +51,7 @@ plt.plot(
     label="Trend Line",
 )
 
-# Add the special point
+# Merged
 merged_date = pd.to_datetime("2024-01-01")
 merged_value = 421
 plt.scatter(
@@ -61,16 +63,38 @@ plt.scatter(
     label="All Readability Datasets Combined",
 )
 
-plt.title("Training Dataset Size vs. Publication Date")
-plt.xlabel("Publication Date")
-plt.ylabel("Training Dataset Size (datapoints)")
-plt.yscale("log")
-plt.xticks(rotation=45)
-plt.gca().xaxis.set_major_formatter(DateFormatter("%Y-%m-%d"))  # Format x-axis as dates
+# With comments
+merged_date = pd.to_datetime("2024-01-01")
+merged_value = 69276
+plt.scatter(
+    merged_date,
+    merged_value,
+    color="orange",
+    marker="*",
+    s=200,
+    label="All Readability Datasets Combined (2012)",
+)
 
-plt.legend()
-plt.grid(True)
+# Without comments
+# merged_date = pd.to_datetime("2024-01-01")
+# merged_value = 700000
+# plt.scatter(
+#     merged_date,
+#     merged_value,
+#     color="orange",
+#     marker="*",
+#     s=200,
+#     label="All Readability Datasets Combined (2012)",
+# )
+
+plt.xlabel("Publication Date")
+plt.ylabel("Dataset Size")
+plt.yscale("log")
+plt.gca().xaxis.set_major_formatter(DateFormatter("%Y-%m-%d"))  # Format x-axis as dates
+plt.xticks(["2000-01-01", "2012-01-01", "2024-01-01"])
+
 plt.tight_layout()
 
 # Show the plot
+plt.savefig("dataset_sizes.png", dpi=1000)
 plt.show()
