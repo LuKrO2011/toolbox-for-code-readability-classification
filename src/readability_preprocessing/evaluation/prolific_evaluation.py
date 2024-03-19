@@ -287,7 +287,7 @@ def data_and_cat_from_ratings(
     :return: A tuple containing the data and categories
     """
     if order is None:
-        order = ["original", "just-pretty-print", "merged"]
+        order = ["merged", "original", "just-pretty-print"]
 
     # Sort the ratings by name
     ratings = dict(
@@ -355,10 +355,15 @@ def create_bar_plot(
 
     # Create bar plot
     means = [np.mean(values) for values in data]
-    plt.bar(categories, means)
+    parts = plt.bar(categories, means)
     # plt.title(title)
     # plt.xlabel(PLOT_X_LABEL)
     plt.ylabel(PLOT_Y_LABEL)
+
+    # Set the color of the first category to orange
+    colors = ["tab:orange" if i == 0 else "tab:blue" for i in range(len(data))]
+    for i, bar in enumerate(parts):
+        bar.set_facecolor(colors[i])
 
     # Adjust category label display
     plt.xticks(rotation=90)
@@ -401,18 +406,23 @@ def create_violin_plot(
     data, categories = data_and_cat_from_ratings(ratings)
     data2, categories2 = data_and_cat_from_merged()
 
-    # Add at third position
-    data[2:2] = data2
-    categories[2:2] = categories2
+    # Add at first position
+    data.insert(0, data2[0])
+    categories.insert(0, categories2[0])
 
     plt.subplots(figsize=(7, 7))
 
     # Create violin plot
-    plt.violinplot(data, showmeans=True, showmedians=False)
+    parts = plt.violinplot(data, showmeans=True, showmedians=False, showextrema=False)
     plt.xticks(range(1, len(categories) + 1), categories)
     # plt.title(title)
     # plt.xlabel(PLOT_X_LABEL)
     plt.ylabel(PLOT_Y_LABEL)
+
+    # Change the color of the first category to orange
+    colors = ["tab:orange" if i == 0 else "tab:blue" for i in range(len(data))]
+    for i, pc in enumerate(parts["bodies"]):
+        pc.set_facecolor(colors[i])
 
     # Adjust category label display
     plt.xticks(rotation=90)
@@ -428,13 +438,13 @@ def create_violin_plot(
         mode_value = calculate_mode(data[i])
         plt.scatter(i + 1, mode_value, color="tab:blue", zorder=3, s=10)
 
-    # Add a horizontal line at the mean value of the first category
-    first_category_mean = round(sum(data[0]) / len(data[0]), 2)
+    # Add a horizontal line at the mean value of the second category
+    first_category_mean = round(sum(data[1]) / len(data[1]), 2)
     plt.axhline(
         y=first_category_mean,
         color="red",
         linestyle="--",
-        label=f"Mean of {categories[0]}",
+        label=f"Mean of {categories[1]}",
         alpha=0.5,
     )
 
@@ -1074,17 +1084,32 @@ def export_huggingface_dataset(stratas: dict[str, Stratum], output_path: Path) -
 
 
 set_custom_font()
-# stratas = load_stratas(SURVEY_DATA_DIR)
+stratas = load_stratas(SURVEY_DATA_DIR)
 
 # Perform subgroup_chi2
 # ratings = combine_by_rdh(stratas)
 # binary_chi2(ratings)
 
-# plot_rdhs(stratas)
+plot_rdhs(stratas)
 # for stratum in stratas.keys():
 #     plot_rdhs_of_stratum(stratas, stratum)
 
 # ratings = combine_by_rdh(stratas)
+# ratings = _rename_ratings(ratings)
+# data2, categories2 = data_and_cat_from_merged()
+# ratings.update({categories2[0]: data2[0]})
+# normalize_by = "original"
+# mean_value = sum(ratings[normalize_by]) / len(ratings[normalize_by])
+# normalized_ratings = normalize_ratings(ratings, sub=mean_value)
+# # for key, value in normalized_ratings.items():
+# # print(f"{key}: {sum(value) / len(value)}")
+#
+# for key, value in normalized_ratings.items():
+#     print(f"{key}")
+#
+# for key, value in normalized_ratings.items():
+#     print(f"{sum(value) / len(value)}")
+
 # print("Overall Score:", calculate_overall_score(ratings))
 # print()
 # anova(ratings)
@@ -1117,10 +1142,10 @@ set_custom_font()
 
 # export_huggingface_dataset(stratas, DATASET_DIR)
 
-merged_scores = load_dataset_scores_merged("LuKrO/code-readability-merged-raw")
-merged_scores = [item for sublist in merged_scores for item in sublist]
-krod_scores_methods = load_dataset_scores_krod()
-results = stats.mannwhitneyu(merged_scores, krod_scores_methods)
-mann_whitney_u(merged_scores, krod_scores_methods)
-print(np.mean(merged_scores))
-print(np.mean(krod_scores_methods))
+# merged_scores = load_dataset_scores_merged("LuKrO/code-readability-merged-raw")
+# merged_scores = [item for sublist in merged_scores for item in sublist]
+# krod_scores_methods = load_dataset_scores_krod()
+# results = stats.mannwhitneyu(merged_scores, krod_scores_methods)
+# mann_whitney_u(merged_scores, krod_scores_methods)
+# print(np.mean(merged_scores))
+# print(np.mean(krod_scores_methods))
