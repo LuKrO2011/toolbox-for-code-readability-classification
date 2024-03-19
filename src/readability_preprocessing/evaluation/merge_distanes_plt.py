@@ -29,38 +29,37 @@ num_stratas = [entry["new_num_stratas"] for entry in data]
 merge_distances = [entry["merge_distance"] for entry in data]
 diff_to_prev = [entry["diff_to_prev"] for entry in data]
 
+# make diff to prev absolute
+diff_to_prev = [abs(i) for i in diff_to_prev]
+
 # Invert the x-axis if specified
 if REVERSE_X_AXIS:
     fig, ax1 = plt.subplots(figsize=(6, 3))
 
-    # Plot merge distances on the first y-axis
     ax1.plot(
+        num_stratas,
+        diff_to_prev,
+        linestyle="-",
+        color="tab:grey",
+        label="Difference to previous",
+    )
+    ax1.set_ylabel("Difference to previous")
+    ax1.tick_params("y")
+    ax1.grid(True)
+
+    # Plot merge distances on the first y-axis
+    ax2 = ax1.twinx()
+    ax2.plot(
         num_stratas,
         merge_distances,
         marker="o",
         linestyle="-",
-        # color="b",
         label="Merge distances",
     )
 
-    ax1.set_xlabel("Number of strata")
-    ax1.set_ylabel("Merge distances")
-    ax1.tick_params("y")
-    ax1.grid(True)
-
-    # Create a second y-axis for diff_to_prev
-    if PLOT_DIFF_TO_PREV:
-        ax2 = ax1.twinx()
-        ax2.plot(
-            num_stratas,
-            diff_to_prev,
-            marker="s",
-            linestyle="-",
-            color="black",
-            label="Local derivation",
-        )
-        ax2.set_ylabel("Local derivation")
-        ax2.tick_params("y")
+    ax2.set_xlabel("Number of strata")
+    ax2.set_ylabel("Merge distances")
+    ax2.tick_params("y")
 
     # Invert the x-axis for ax1
     ax1.invert_xaxis()
@@ -70,12 +69,10 @@ if REVERSE_X_AXIS:
     highlight_color = "red"
     for point in highlight_points:
         index = num_stratas.index(point)
-        ax2.scatter(
+        ax1.scatter(
             point,
             diff_to_prev[index],
             color=highlight_color,
-            marker="s",
-            s=50,
             zorder=5,
         )
 
@@ -84,7 +81,7 @@ if REVERSE_X_AXIS:
 
     if PLOT_DIFF_TO_PREV:
         lines_2, labels_2 = ax2.get_legend_handles_labels()
-        ax1.legend(lines_1 + lines_2, labels_1 + labels_2, loc="center left")
+        ax1.legend(lines_1 + lines_2, labels_1 + labels_2)
     else:
         ax1.legend(lines_1, labels_1, loc="center left")
 
