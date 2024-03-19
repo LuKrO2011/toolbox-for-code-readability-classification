@@ -36,45 +36,44 @@ diff_to_prev = [abs(i) for i in diff_to_prev]
 if REVERSE_X_AXIS:
     fig, ax1 = plt.subplots(figsize=(6, 3))
 
-    ax1.plot(
-        num_stratas,
-        diff_to_prev,
-        linestyle="-",
-        color="tab:grey",
-        label="Difference to previous",
-    )
-    ax1.set_ylabel("Difference to previous")
-    ax1.tick_params("y")
-    ax1.grid(True)
-
     # Plot merge distances on the first y-axis
-    ax2 = ax1.twinx()
-    ax2.plot(
+    ax1.plot(
         num_stratas,
         merge_distances,
         marker="o",
         linestyle="-",
         label="Merge distances",
     )
+    ax1.set_xlabel("Number of strata")
+    ax1.set_ylabel("Merge distances")
+    ax1.tick_params("y")
+    ax1.grid(True)
 
-    ax2.set_xlabel("Number of strata")
-    ax2.set_ylabel("Merge distances")
+    ax2 = ax1.twinx()
+    ax2.plot(
+        num_stratas,
+        diff_to_prev,
+        linestyle="-",
+        color="tab:grey",
+        label="Difference to previous",
+    )
+    ax2.set_ylabel("Difference to previous")
     ax2.tick_params("y")
 
     # Invert the x-axis for ax1
     ax1.invert_xaxis()
 
-    # Highlight points at x=6 and x=4
+    # Highlight points at x=4
     highlight_points = [4]
     highlight_color = "red"
-    for point in highlight_points:
-        index = num_stratas.index(point)
-        ax1.scatter(
-            point,
-            diff_to_prev[index],
-            color=highlight_color,
-            zorder=5,
-        )
+    for i, x in enumerate(num_stratas):
+        if x in highlight_points:
+            ax2.scatter(
+                x,
+                diff_to_prev[i],
+                color=highlight_color,
+                zorder=5,
+            )
 
     # Combine legends
     lines_1, labels_1 = ax1.get_legend_handles_labels()
