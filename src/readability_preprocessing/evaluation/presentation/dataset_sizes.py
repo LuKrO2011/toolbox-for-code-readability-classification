@@ -5,8 +5,6 @@ from matplotlib.dates import DateFormatter
 
 from readability_preprocessing.evaluation.utils import DATASET_SIZES_CSV, load_csv_file
 
-# TODO: Set font
-
 # Load CSV into a DataFrame
 ds_sizes = load_csv_file(DATASET_SIZES_CSV)
 

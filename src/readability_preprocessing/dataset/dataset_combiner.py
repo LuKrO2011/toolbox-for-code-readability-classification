@@ -83,19 +83,19 @@ def combine_datasets(
 if __name__ == "__main__":
     # dataset_name = "dataset_with_names"
     # dorn_path = Path(
-    #     "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Datasets/"
+    #     "Somepath/Datasets/"
     #     "DatasetDornJava/dataset/" + dataset_name
     # )
     # bw_path = Path(
-    #     "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Datasets/DatasetBW/"
+    #     "Somepath/Datasets/DatasetBW/"
     #     + dataset_name
     # )
     # scalabrio_path = Path(
-    #     "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Datasets/"
+    #     "Somepath/Datasets/"
     #     "Dataset/Dataset/" + dataset_name
     # )
     # combined_path = Path(
-    #     "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Datasets/Combined"
+    #     "Somepath/Datasets/Combined"
     # )
     #
     # combine_datasets([dorn_path, bw_path, scalabrio_path], combined_path, None)

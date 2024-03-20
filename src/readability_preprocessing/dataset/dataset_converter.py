@@ -449,14 +449,9 @@ class TwoFoldersToDataset:
         return Dataset.from_list(data)
 
 
-SCALABRIO_DATA_DIR = (
-    "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Datasets/Dataset/Dataset"
-)
-BW_DATA_DIR = "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Datasets/DatasetBW/"
-DORN_DATA_DIR = (
-    "C:/Users/lukas/Meine Ablage/Uni/{SoSe23/Masterarbeit/Datasets/"
-    "DatasetDornJava/dataset"
-)
+SCALABRIO_DATA_DIR = "Somepath/Datasets/Dataset/Dataset"
+BW_DATA_DIR = "Somepath/Datasets/DatasetBW/"
+DORN_DATA_DIR = "Somepath/Datasets/DatasetDornJava/dataset"
 KROD_DATA_DIR = r"D:\PyCharm_Projects_D\styler2.0"
 output_name = "dataset_with_names"
 

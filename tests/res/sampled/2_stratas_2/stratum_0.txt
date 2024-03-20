@@ -1,2 +1,2 @@
-C:\Users\lukas\PycharmProjects\readability-preprocessing\tests\res\methods_original\AreaShop\AddCommand.java\execute.java
-C:\Users\lukas\PycharmProjects\readability-preprocessing\tests\res\methods_original\AreaShop\AddfriendCommand.java\execute.java
+Somepath\methods_original\AreaShop\AddCommand.java\execute.java
+Somepath\methods_original\AreaShop\AddfriendCommand.java\execute.java
