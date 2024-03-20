@@ -41,6 +41,7 @@ if REVERSE_X_AXIS:
         num_stratas,
         merge_distances,
         marker="o",
+        markersize=5,
         linestyle="-",
         label="Merge distances",
     )
@@ -53,6 +54,8 @@ if REVERSE_X_AXIS:
     ax2.plot(
         num_stratas,
         diff_to_prev,
+        marker="s",
+        markersize=5,
         linestyle="-",
         color="tab:grey",
         label="Difference to previous",
@@ -73,6 +76,8 @@ if REVERSE_X_AXIS:
                 diff_to_prev[i],
                 color=highlight_color,
                 zorder=5,
+                s=30,
+                marker="s",
             )
 
     # Combine legends
