@@ -22,6 +22,10 @@ This toolbox served various purposes in the context of readability classificatio
 All modifications other than comments removal are done using the https://github.com/LuKrO2011/readability-decreasing-heuristics[RDH/REDEC] tool.
 The https://github.com/LuKrO2011/readability-classifier[model] itself is not part of this repository either.
 
+You can find a visualization of the usage of the subcommands in the following diagram:
+image::script-overview.pdf[alt="Script Overview"]
+
+
 == Table of Contents
 
 * <<Installation>>
@@ -186,7 +190,7 @@ python src/readability_preprocessing/main.py EXTRACT_METHODS -i <input_path> -o 
 ----
 
 [[Extract_diff]]
-=== Extract Different Samples
+=== Extract Diff
 
 To extract the differences between original and modified code snippets, use the following command:
 
@@ -207,7 +211,7 @@ python src/readability_preprocessing/main.py EXTRACT_DIFF -i <input_path> -o <ou
 ----
 
 [[Convert_datasets]]
-=== Convert datasets
+=== Convert Dataset
 
 This tool supports converting datasets from csv and a dictionary of Java source code snippets to a https://huggingface.co/[Hugging Face] dataset.
 To do this, see <<Convert_datasets_csv>>.
@@ -238,7 +242,7 @@ python src/readability_preprocessing/main.py CONVERT_CSV -i <input_path> -c <csv
 ----
 
 [[Convert_datasets_two_folders]]
-==== Convert datasets from two folders
+==== Convert dataset from two folders
 
 To convert two folders containing Java source code files, one folder with readable and the other with non-readable Java source code files, to a HuggingFace dataset, use the following command:
 
@@ -263,7 +267,7 @@ python src/readability_preprocessing/main.py CONVERT_TWO_FOLDERS -r <readable_pa
 ----
 
 [[Combine_datasets]]
-=== Combine datasets
+=== Combine Dataset
 
 To combine multiple HuggingFace datasets into one, use the following command:
 
@@ -284,7 +288,7 @@ python src/readability_preprocessing/main.py COMBINE -i <input_path_1> <input_pa
 ----
 
 [[Download_datasets]]
-=== Download datasets
+=== Download dataset
 
 To download a dataset from the HuggingFace Hub, use the following command:
 
@@ -306,7 +310,7 @@ python src/readability_preprocessing/main.py DOWNLOAD -n <dataset_name> -o <outp
 ----
 
 [[Upload_datasets]]
-=== Upload datasets
+=== Upload dataset
 
 To upload a dataset to the HuggingFace Hub, use the following command:
 
