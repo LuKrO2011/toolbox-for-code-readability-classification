@@ -1,30 +1,50 @@
-= Toolbox: Predicting Source Code Readability
+= Toolbox: Code Readability Classification
 
-This is a toolbox that is used to help with predicting the readability of Java source code snippets.
-The model itself as well as necessary representation creation steps are not part of this repository.
+This toolbox served various purposes in the context of readability classification of Java source code snippets:
+
+1. Work on previous datasets:
+- Unification of readability classification datasets.
+- Combination of the datasets into the https://huggingface.co/datasets/se2p/code-readability-merged[merged] dataset.
+
+2. Creation of the mined-and-modified dataset:
+- Mining of repositories for the mined-and-modified dataset.
+- Extraction of methods from Java files.
+- Removal of comments from Java method code snippets.
+- Publishing of the https://huggingface.co/datasets/se2p/code-readability-krod[mined-and-modified] dataset.
+
+3. Sampling for a survey:
+- Execution of Stratified Sampling based on code features.
+- Extraction of the differences between original and modified code snippets.
+- Creation of questionnaires for the mined-and-modified dataset.
+
+4. Plotting of evaluation results
+
+All modifications other than comments removal are done using the https://github.com/LuKrO2011/readability-decreasing-heuristics[RDH/REDEC] tool.
+The https://github.com/LuKrO2011/readability-classifier[model] itself is not part of this repository either.
 
 == Table of Contents
 
 * <<Installation>>
 * <<Usage>>
-** <<Extract_Files>>
-** <<Extract_Methods>>
+** <<Stratified_Sampling>>
+** <<Extract_sampled>>
+** <<Extract_files>>
+** <<Extract_methods>>
 ** <<Convert_datasets>>
 *** <<Convert_datasets_csv>>
 *** <<Convert_datasets_two_folders>>
 ** <<Combine_datasets>>
 ** <<Download_datasets>>
 ** <<Upload_datasets>>
-** <<Sample>>
+** <<Craft_surveys>>
+** <<Extract_diff>>
+** <<Remove_comments>>
+** <<Others>>
+* <<Podman>>
 
 [[Installation]]
 == Installation
 
-You can either do a <<Local Installation>> or you can go with the <<Podman Installation>>.
-
-=== Local Installation
-
-[[Local_Installation]]
 To set up the project and its dependencies, follow these steps:
 
 Clone this repository to your local machine:
@@ -57,26 +77,66 @@ poetry shell
 ----
 
 For Developers: Activate the pre-commit hooks:
+
 ----
 pre-commit install
 ----
 
-If you want to use the <<Sample>> command, you additionally need to install https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html[Java 17].
+If you want to use the <<Stratified_Sampling>> command, you additionally need to install https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html[Java 17].
 
 Now you're ready to use the source code readability preprocessing tool.
-
-=== Podman Installation
-
-[[Podman_Installation]]
-In order to use podman, make sure you have https://podman.io/[Podman] installed.
-Then you can use the https://hub.docker.com/repository/docker/lukro2011/rp/general[Podman image] to run the tool in a container.
 
 [[Usage]]
 == Usage
 
 In this section you will find information on how to use the source code readability preprocessing tool.
+Use `-h` or `--help` to get help on the usage of the tool or a subcommand.
 
-[[Extract_Files]]
+
+[[Stratified_Sampling]]
+=== Stratified Sampling
+
+To perform Stratified Sampling based on code features, use the following command:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py SAMPLE --input INPUT [--save SAVE] [--num-stratas NUM_STRATAS] [--snippets-per-stratum SNIPPETS_PER_STRATUM]
+----
+
+* `--input` or `-i` is the path to the dictionary with the Java source code snippets or to a csv file containing the paths and features of the java files.
+* `--save` or `-s` is the path to the file where the sampled snippets and the features (as csv) will be saved.
+* `--num-stratas` or `-n` is the number of stratas to sample from.
+* `--snippets-per-stratum` or `-sps` is the number of snippets to sample from each stratum.
+
+Example:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py SAMPLE -i <input_path> -s <save_path>
+----
+
+[[Extract_sampled]]
+=== Extract Sampled
+
+To extract the sampled snippets from a dictionary with the Java source code snippets, use the following command:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py [-h] --input INPUT [INPUT ...] --sampling SAMPLING --output OUTPUT
+----
+
+* `--input` or `-i` is the path to the dictionary with the Java source code snippets.
+* `--sampling` or `-s` is the path to the file containing the sampling information of <<Stratified_Sampling>>.
+* `--output` or `-o` is the path to the directory where the extracted sampled snippets will be saved.
+
+Example:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py -i <input_path> -s <sampling_path> -o <output_path>
+----
+
+[[Extract_files]]
 === Extract Files
 
 To extract Java source code files from multiple directories, use the following command:
@@ -97,7 +157,7 @@ Example:
 python src/readability_preprocessing/main.py EXTRACT_FILES -i <input_path> -o <output_path>
 ----
 
-[[Extract_Methods]]
+[[Extract_methods]]
 === Extract Methods
 
 To extract methods from a dictionary of Java source code snippets, use the following command:
@@ -125,6 +185,27 @@ Example:
 python src/readability_preprocessing/main.py EXTRACT_METHODS -i <input_path> -o <output_path>
 ----
 
+[[Extract_diff]]
+=== Extract Different Samples
+
+To extract the differences between original and modified code snippets, use the following command:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py EXTRACT_DIFF [-h] --input INPUT [--output OUTPUT] [--methods-dir-name METHODS_DIR_NAME]
+----
+
+* `--input` or `-i` is the path to the folder containing the stratas (with rdhs and methods).
+* `--output` or `-o` is the path to the directory where the extracted differences will be saved.
+* `--methods-dir-name` or `-mdn` is the name of the directory containing the original methods.
+
+Example:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py EXTRACT_DIFF -i <input_path> -o <output_path>
+----
+
 [[Convert_datasets]]
 === Convert datasets
 
@@ -133,7 +214,6 @@ To do this, see <<Convert_datasets_csv>>.
 You can also convert two folders containing Java source code files, one folder with readable and the other with non-readable Java source code files, to a HuggingFace dataset.
 To do this, see <<Convert_datasets_two_folders>>.
 
-[[Convert_datasets_csv]]
 [[Convert_datasets_csv]]
 ==== Convert datasets csv
 
@@ -203,28 +283,6 @@ Example:
 python src/readability_preprocessing/main.py COMBINE -i <input_path_1> <input_path_2> -o <output_path>
 ----
 
-[[Sample]]
-=== Sample
-
-To sample from a dictionary of Java source code snippets, use the following command:
-
-[source,bash]
-----
-python src/readability_preprocessing/main.py SAMPLE --input INPUT [--save SAVE] [--num-stratas NUM_STRATAS] [--snippets-per-stratum SNIPPETS_PER_STRATUM]
-----
-
-* `--input` or `-i` is the path to the dictionary with the Java source code snippets or to a csv file containing the paths and features of the java files.
-* `--save` or `-s` is the path to the file where the sampled snippets and the features (as csv) will be saved.
-* `--num-stratas` or `-n` is the number of stratas to sample from.
-* `--snippets-per-stratum` or `-sps` is the number of snippets to sample from each stratum.
-
-Example:
-
-[source,bash]
-----
-python src/readability_preprocessing/main.py SAMPLE -i <input_path> -s <save_path>
-----
-
 [[Download_datasets]]
 === Download datasets
 
@@ -267,3 +325,85 @@ Example:
 ----
 python src/readability_preprocessing/main.py UPLOAD -i <input_path> -n <dataset_name> -tf <token_file_path>
 ----
+
+[[Craft_surveys]]
+=== Craft Surveys
+
+To craft questionnaires (= survey sheets) for a survey, use the following command:
+
+[source,bash]
+----
+usage: main.py CRAFT_SURVEYS [-h] --input INPUT --output OUTPUT
+                             [--snippets-per-sheet SNIPPETS_PER_SHEET]
+                             [--num-sheets NUM_SHEETS]
+                             [--sample-amount-path SAMPLE_AMOUNT_PATH]
+                             [--original-name ORIGINAL_NAME]
+                             [--nomod-name NOMOD_NAME]
+                             [--exclude-path EXCLUDE_PATH]
+----
+
+* `--input` or `-i`: Path to the directory containing the dataset or samples for which surveys will be crafted.
+* `-output` or `-o`: Path to the directory where the crafted surveys will be saved.
+* `--snippets-per-sheet`: Number of snippets to include per survey sheet.
+* `--num-sheets`: Number of survey sheets to generate.
+* `--sample-amount-path`: Path to a file containing the amount of samples for each group.
+* `--original-name`: Name of the group containing the original samples.
+* `--nomod-name`: Name of the group containing the just-pretty-print/not modified samples.
+* `--exclude-path`: Path to a file containing a list of file paths to exclude from the surveys.
+
+Example:
+
+----
+python src/readability_preprocessing/main.py CRAFT_SURVEYS -i <input_path> -o <output_path> --original-name "original" --nomod-name "just-pretty-print"
+----
+
+[[Remove_comments]]
+=== Remove Comments
+
+To remove comments from Java method code snippets, use the following command:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py REMOVE_COMMENTS [-h] --input INPUT --output OUTPUT [--probability PROBABILITY]
+----
+
+* `--input` or `-i` is the path to the dictionary with the Java method code snippets.
+* `--output` or `-o` is the path to the directory where the Java method code snippets without comments will be saved.
+* `--probability` or `-p` is the probability of removing comments from the Java method code snippets.
+
+Example:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py REMOVE_COMMENTS -i <input_path> -o <output_path>
+----
+
+[[Others]]
+=== Others
+
+There are various other scripts that can be executed by executing the file itself.
+
+[[Podman]]
+== Podman
+
+To build the podman container, run the following command:
+
+[source,bash]
+----
+podman build -t readability-preprocessing .
+----
+
+- t : name of the container
+- . : path to the Dockerfile
+
+To run the podman container, run the following command:
+
+[source,bash]
+----
+podman run -it --rm -v $(pwd):/app readability-preprocessing
+----
+
+- it : interactive mode
+- rm : remove container after exit
+- v $(pwd):/app : mount current directory to /app in container
+- readability-classifier : name of the container
