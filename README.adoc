@@ -21,6 +21,7 @@ This toolbox served various purposes in the context of readability classificatio
 
 All modifications other than comments removal are done using the https://github.com/LuKrO2011/readability-decreasing-heuristics[RDH/REDEC] tool.
 The https://github.com/LuKrO2011/readability-classifier[model] itself is not part of this repository either.
+For executing checkstyle we further used parts of https://github.com/sphrilix/styler2.0[Styler 2.0].
 
 You can find a visualization of the usage of the subcommands in the following diagram:
 image:script-overview.svg[alt="Script Overview"]
