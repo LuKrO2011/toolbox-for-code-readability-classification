@@ -149,12 +149,25 @@ def combine_demographics(demographics: list[Demographics]) -> Demographics:
     return Demographics(questions, solutions)
 
 
-def load_demographics(input_path: Path) -> Demographics:
+def load_solutions(input_path: Path) -> dict[str, dict[str, Solution]]:
     """
-    Load all demographic json files in the directory and subdirectories and return a
-    single demographic object
+    Load all demographic json files in the directory and subdirectories.
+    Convert the data into one demographics file.
+    Extract the solutions and return them as a dictionary.
     :param input_path: The path to the directory containing the JSON files
-    :return: A single demographic object
+    :return: A dictionary with the solutions
     """
+    # Load the demographics
     demographics = _load_demographics(input_path)
-    return combine_demographics(demographics)
+
+    # Combine the demographics
+    combined_demographics = combine_demographics(demographics)
+
+    # Create a dictionary with the solutions
+    solutions = {}
+    for solution in combined_demographics.solutions:
+        if solution.rater not in solutions:
+            solutions[solution.rater] = {}
+        solutions[solution.rater][solution.questionId] = solution
+
+    return solutions

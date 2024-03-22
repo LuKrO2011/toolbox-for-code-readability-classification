@@ -347,15 +347,15 @@ def extend_solutions(
             print(f"Submission not found for participant {solution.rater}")
     return Demographics(demographics.questions, extended_solutions)
 
+if __name__ == "__main__":
+    question_id = 16
+    demographics = load_demographics(SURVEY_DATA_DIR)
+    demographics = combine_demographics(demographics)
 
-question_id = 16
-demographics = load_demographics(SURVEY_DATA_DIR)
-demographics = combine_demographics(demographics)
+    # submissions = load_submissions(DEMOGRAPHIC_DATA_DIR)
+    # submissions = filter_submissions_by_status(submissions, ['TIMED-OUT', 'RETURNED'])
+    # extended_demographics = extend_solutions(demographics, submissions)
+    # extended_demographics.print_no_solutions(question_id)
 
-# submissions = load_submissions(DEMOGRAPHIC_DATA_DIR)
-# submissions = filter_submissions_by_status(submissions, ['TIMED-OUT', 'RETURNED'])
-# extended_demographics = extend_solutions(demographics, submissions)
-# extended_demographics.print_no_solutions(question_id)
-
-demographics.plot(question_id)
-demographics.print_no_solutions(question_id)
+    demographics.plot(question_id)
+    demographics.print_no_solutions(question_id)
