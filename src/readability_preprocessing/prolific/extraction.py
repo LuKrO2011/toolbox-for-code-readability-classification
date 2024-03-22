@@ -1,4 +1,4 @@
-from readability_preprocessing.extractors.diff_extractor import Snippet
+from readability_preprocessing.prolific.snippets import Snippet
 
 
 def question_time(snippets: list[Snippet], question_id: int) -> list[tuple[int, int]]:
@@ -12,9 +12,9 @@ def question_time(snippets: list[Snippet], question_id: int) -> list[tuple[int, 
     for snippet in snippets:
         for rate in snippet.rates:
             if rate.demographic_solutions is not None:
-                java_knowledge = rate.demographic_solutions[question_id].solution.selected[0]
+                question_group = rate.demographic_solutions[question_id].solution.selected[0]
                 time_required = rate.rater_external.time_taken
-                tuples.append((java_knowledge, time_required))
+                tuples.append((question_group, time_required))
 
     # Remove all tuples where time taken is not a number
     tuples = [t for t in tuples if t[1] is not None]
@@ -25,31 +25,62 @@ def question_time(snippets: list[Snippet], question_id: int) -> list[tuple[int, 
     return tuples
 
 
-def question_rating_std(snippets: list[Snippet], question_id: int) -> list[tuple[int, int]]:
+def question_rating_std(snippets: list[Snippet], question_id: int) -> dict[int, float]:
     """
-    Calculate the standard deviations of each rater from the mean of the rated snippet.
-    Then group the standard deviations by the answer to a demographic question.
+    1. Get the average rating for each snippet
+    2. Compute the absolute difference between the average rating and the rating of each rater
+    3. Sum up the differences for each rater
+    4. Sum up the differences for each question group (e.g. 1-5)
     :param snippets: The list of snippet data objects
     :param question_id: The question id
     :return: The list of tuples with the question answer and the standard deviation
     """
-    tuples = []
+    # Calculate the average rating for each snippet
+    average_ratings = {}
     for snippet in snippets:
-        rates = [rate.rate for rate in snippet.rates]
-        mean = sum(rates) / len(rates)
+        if snippet.path not in average_ratings:
+            average_ratings[snippet.path] = 0
         for rate in snippet.rates:
-            if rate.demographic_solutions is not None:
-                java_knowledge = rate.demographic_solutions[question_id].solution.selected[0]
-                deviation = rate.rate - mean
+            rate = rate.rate
+            average_ratings[snippet.path] += rate
+        average_ratings[snippet.path] /= len(snippet.rates)
 
-                # Only append if the deviation is larger than 1 or smaller than -1
-                if -1 < deviation < 1:
-                    tuples.append((java_knowledge, 1))
+    # Compute the absolute difference between the average rating and the rating of each rater
+    differences = {}
+    for snippet in snippets:
+        for rate in snippet.rates:
+            difference = abs(average_ratings[snippet.path] - rate.rate)
+            differences[rate.raterExternalId] = difference
 
-    # Remove all tuples where deviation is not a number
-    tuples = [t for t in tuples if t[1] is not None]
+    # Sum up the differences for each rater
+    rater_differences = {}
+    for rater, difference in differences.items():
+        if rater not in rater_differences:
+            rater_differences[rater] = 0
+        rater_differences[rater] += difference
 
-    # Remove all tuples where java knowledge is not a number
-    tuples = [t for t in tuples if t[0] is not None]
+    # Create a dict to match the raters to the question groups
+    rater_to_group = {}
+    for snippet in snippets:
+        for rate in snippet.rates:
+            rater_to_group[rate.raterExternalId] = rate.demographic_solutions[question_id].solution.selected[0]
 
-    return tuples
+    # Sum up the differences for each question group
+    group_differences = {}
+    for rater, difference in rater_differences.items():
+        group = rater_to_group[rater]
+        if group not in group_differences:
+            group_differences[group] = 0
+        group_differences[group] += difference
+
+    # Divide the sum of differences by the number of raters in each group
+    group_counts = {}
+    for rater, group in rater_to_group.items():
+        if group not in group_counts:
+            group_counts[group] = 0
+        group_counts[group] += 1
+
+    for group, difference in group_differences.items():
+        group_differences[group] /= group_counts[group]
+
+    return group_differences
