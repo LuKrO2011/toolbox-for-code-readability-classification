@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from readability_preprocessing.prolific.demographics import _load_demographics, load_solutions
+from readability_preprocessing.prolific.demographics import load_solutions
 from readability_preprocessing.prolific.paths import DEMOGRAPHIC_DATA_DIR, SURVEY_DATA_DIR
-from readability_preprocessing.prolific.snippets import load_snippets, Snippet
 from readability_preprocessing.prolific.raters import load_raters
+from readability_preprocessing.prolific.snippets import load_snippets, Snippet
 
 
 def load_combined(demographic_data_dir: Path = DEMOGRAPHIC_DATA_DIR, survey_results_dir: Path = SURVEY_DATA_DIR) -> \
@@ -35,7 +35,3 @@ def load_combined(demographic_data_dir: Path = DEMOGRAPHIC_DATA_DIR, survey_resu
                 print(f"Demographic not found: {rate.rater_external.participant_id}")
 
     return snippets
-
-
-combined = load_combined()
-print("Done")
