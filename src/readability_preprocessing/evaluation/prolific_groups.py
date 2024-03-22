@@ -3,7 +3,8 @@ from datetime import datetime
 from pathlib import Path
 
 from readability_preprocessing.evaluation.font_utils import set_custom_font
-from readability_preprocessing.evaluation.utils import DEMOGRAPHIC_DATA_DIR
+from readability_preprocessing.evaluation.prolific_evaluation import load_snippet_datas, SnippetData
+from readability_preprocessing.evaluation.utils import DEMOGRAPHIC_DATA_DIR, SURVEY_DATA_DIR
 
 
 class Submission:
@@ -116,6 +117,19 @@ def load_submissions(
     return submissions
 
 
+def load_results(input_path: Path = SURVEY_DATA_DIR) -> list[SnippetData]:
+    """
+    Load the snippets from the JSON files into a list of snippet data objects.
+    :param input_path: The path to the directory containing the JSON files
+    :return: The list of snippet data objects
+    """
+    snippet_datas = []
+    for survey_file in input_path.iterdir():
+        snippet_datas.extend(load_snippet_datas(survey_file))
+
+    return snippet_datas
+
+
 def filter_submissions_by_status(
     submissions: list[Submission], to_remove: list[str]
 ) -> list[Submission]:
@@ -180,16 +194,41 @@ def plot_critical_times(
     plt.show()
 
 
-submissions = load_submissions(DEMOGRAPHIC_DATA_DIR)
-# submissions = [submission for sublist in submissions.values()
-#                for submission in sublist]
-# submissions = filter_submissions_by_status(submissions, ['TIMED-OUT', 'RETURNED'])
-# print(len(submissions))
+def submissions_to_raters(submissions: dict[str, list[Submission]]) -> dict[str, Submission]:
+    """
+    Convert the submissions into raters.
+    :param submissions: The list of submissions
+    :return: The dictionary of raters
+    """
+    # Flatten the list of submissions
+    submissions = [submission for value in submissions.values() for submission in value]
 
-critical = get_time_less_than(submissions, time=180)
+    # Create a dictionary of raters
+    return {submission.participant_id: submission for submission in submissions}
 
-# plot the critical times in a bar plot
-plot_critical_times(
-    {key: len(value) for key, value in critical.items()},
-    title="Participants needing less than 180s per survey",
-)
+
+def load_snippets(demographic_data_dir: Path = DEMOGRAPHIC_DATA_DIR, survey_results_dir: Path = SURVEY_DATA_DIR) -> \
+    list[SnippetData]:
+    """
+    Load the snippets by combining the demographic data and survey results.
+    :param demographic_data_dir: The directory containing the demographic data
+    :param survey_results_dir: The directory containing the survey results
+    :return: The list of snippet data objects
+    """
+    submissions = load_submissions(demographic_data_dir)
+    raters = submissions_to_raters(submissions)
+    snippets = load_results(survey_results_dir)
+
+    # Match the snippets.rates.raterExternalId to the raters.participant_id
+    for snippet in snippets:
+        for rate in snippet.rates:
+            if rate.raterExternalId in raters:
+                rate.rater_external = raters[rate.raterExternalId]
+            else:
+                print(f"Submission not found: {rate.raterExternalId}")
+
+    return snippets
+
+
+snippets = load_snippets()
+print("Done")

@@ -1082,70 +1082,70 @@ def export_huggingface_dataset(stratas: dict[str, Stratum], output_path: Path) -
     dataset = Dataset.from_dict(dataset_dict)
     dataset.save_to_disk(output_path)
 
+if __name__ == "__main__":
+    set_custom_font()
+    stratas = load_stratas(SURVEY_DATA_DIR)
 
-set_custom_font()
-stratas = load_stratas(SURVEY_DATA_DIR)
+    # Perform subgroup_chi2
+    # ratings = combine_by_rdh(stratas)
+    # binary_chi2(ratings)
 
-# Perform subgroup_chi2
-# ratings = combine_by_rdh(stratas)
-# binary_chi2(ratings)
+    plot_rdhs(stratas)
+    # for stratum in stratas.keys():
+    #     plot_rdhs_of_stratum(stratas, stratum)
 
-plot_rdhs(stratas)
-# for stratum in stratas.keys():
-#     plot_rdhs_of_stratum(stratas, stratum)
+    # ratings = combine_by_rdh(stratas)
+    # ratings = _rename_ratings(ratings)
+    # data2, categories2 = data_and_cat_from_merged()
+    # ratings.update({categories2[0]: data2[0]})
+    # normalize_by = "original"
+    # mean_value = sum(ratings[normalize_by]) / len(ratings[normalize_by])
+    # normalized_ratings = normalize_ratings(ratings, sub=mean_value)
+    # # for key, value in normalized_ratings.items():
+    # # print(f"{key}: {sum(value) / len(value)}")
+    #
+    # for key, value in normalized_ratings.items():
+    #     print(f"{key}")
+    #
+    # for key, value in normalized_ratings.items():
+    #     print(f"{sum(value) / len(value)}")
 
-# ratings = combine_by_rdh(stratas)
-# ratings = _rename_ratings(ratings)
-# data2, categories2 = data_and_cat_from_merged()
-# ratings.update({categories2[0]: data2[0]})
-# normalize_by = "original"
-# mean_value = sum(ratings[normalize_by]) / len(ratings[normalize_by])
-# normalized_ratings = normalize_ratings(ratings, sub=mean_value)
-# # for key, value in normalized_ratings.items():
-# # print(f"{key}: {sum(value) / len(value)}")
-#
-# for key, value in normalized_ratings.items():
-#     print(f"{key}")
-#
-# for key, value in normalized_ratings.items():
-#     print(f"{sum(value) / len(value)}")
+    # print("Overall Score:", calculate_overall_score(ratings))
+    # print()
+    # anova(ratings)
+    # print()
+    # binary_chi2(ratings, alpha=0.2)
+    # print()
+    # check_normality(ratings)
+    # print()
+    # check_homogeneity_of_variance(ratings)
 
-# print("Overall Score:", calculate_overall_score(ratings))
-# print()
-# anova(ratings)
-# print()
-# binary_chi2(ratings, alpha=0.2)
-# print()
-# check_normality(ratings)
-# print()
-# check_homogeneity_of_variance(ratings)
+    # Plot the distribution of the ratings for each RDH
+    # merged = []
+    # for value in ratings.values():
+    #     merged.extend(value)
+    # plot_distribution(merged, title='Distribution of Ratings for All RDHs')
 
-# Plot the distribution of the ratings for each RDH
-# merged = []
-# for value in ratings.values():
-#     merged.extend(value)
-# plot_distribution(merged, title='Distribution of Ratings for All RDHs')
-
-# print_no_samples(stratas)
+    # print_no_samples(stratas)
 
 
-# mean_ratings = combine_means_by_rdh(stratas)
-# mann_whitney_u(mean_ratings)
-# print()
+    # mean_ratings = combine_means_by_rdh(stratas)
+    # mann_whitney_u(mean_ratings)
+    # print()
 
-# print_answers_by_pid(stratas, "6101dfd623c9f6373a3aa21a")
+    # print_answers_by_pid(stratas, "6101dfd623c9f6373a3aa21a")
 
-# sus = filter_answers_by_deviation(stratas, 25)
-# for pid in sus:
-#     print_answers_by_pid(stratas, pid)
-#     print()
+    # sus = filter_answers_by_deviation(stratas, 25)
+    # for pid in sus:
+    #     print_answers_by_pid(stratas, pid)
+    #     print()
 
-# export_huggingface_dataset(stratas, DATASET_DIR)
+    # export_huggingface_dataset(stratas, DATASET_DIR)
 
-# merged_scores = load_dataset_scores_merged("LuKrO/code-readability-merged-raw")
-# merged_scores = [item for sublist in merged_scores for item in sublist]
-# krod_scores_methods = load_dataset_scores_krod()
-# results = stats.mannwhitneyu(merged_scores, krod_scores_methods)
-# mann_whitney_u(merged_scores, krod_scores_methods)
-# print(np.mean(merged_scores))
-# print(np.mean(krod_scores_methods))
+    # merged_scores = load_dataset_scores_merged("LuKrO/code-readability-merged-raw")
+    # merged_scores = [item for sublist in merged_scores for item in sublist]
+    # krod_scores_methods = load_dataset_scores_krod()
+    # results = stats.mannwhitneyu(merged_scores, krod_scores_methods)
+    # mann_whitney_u(merged_scores, krod_scores_methods)
+    # print(np.mean(merged_scores))
+    # print(np.mean(krod_scores_methods))
