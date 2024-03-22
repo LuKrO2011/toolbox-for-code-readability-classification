@@ -15,4 +15,11 @@ def question_time(snippets: list[Snippet], question_id: int) -> list[tuple[int, 
                 java_knowledge = rate.demographic_solutions[question_id].solution.selected[0]
                 time_required = rate.rater_external.time_taken
                 tuples.append((java_knowledge, time_required))
+
+    # Remove all tuples where time taken is not a number
+    tuples = [t for t in tuples if t[1] is not None]
+
+    # Remove all tuples where java knowledge is not a number
+    tuples = [t for t in tuples if t[0] is not None]
+
     return tuples
