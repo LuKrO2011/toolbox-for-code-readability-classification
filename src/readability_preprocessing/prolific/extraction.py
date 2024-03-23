@@ -84,3 +84,23 @@ def question_rating_std(snippets: list[Snippet], question_id: int) -> dict[int, 
         group_differences[group] /= group_counts[group]
 
     return group_differences
+
+
+def extract_ratings(snippets: list[Snippet]) -> list[list[int]]:
+    """
+    Extract the ratings of all snippets and all raters.
+    :param snippets: The list of snippet data objects
+    :return: The list of ratings
+    """
+    ratings = []
+    for snippet in snippets:
+        snippet_ratings = []
+        for rate in snippet.rates:
+            snippet_ratings.append(rate.rate)
+        ratings.append(snippet_ratings)
+
+    # Adjust the ratings to have the same length
+    min_length = min([len(r) for r in ratings])
+    ratings = [r[:min_length] for r in ratings]
+
+    return ratings
