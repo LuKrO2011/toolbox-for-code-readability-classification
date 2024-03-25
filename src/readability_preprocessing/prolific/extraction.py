@@ -12,7 +12,9 @@ def question_time(snippets: list[Snippet], question_id: int) -> list[tuple[int, 
     for snippet in snippets:
         for rate in snippet.rates:
             if rate.demographic_solutions is not None:
-                question_group = rate.demographic_solutions[question_id].solution.selected[0]
+                question_group = rate.demographic_solutions[
+                    question_id
+                ].solution.selected[0]
                 time_required = rate.rater_external.time_taken
                 tuples.append((question_group, time_required))
 
@@ -20,22 +22,15 @@ def question_time(snippets: list[Snippet], question_id: int) -> list[tuple[int, 
     tuples = [t for t in tuples if t[1] is not None]
 
     # Remove all tuples where java knowledge is not a number
-    tuples = [t for t in tuples if t[0] is not None]
-
-    return tuples
+    return [t for t in tuples if t[0] is not None]
 
 
-def question_rating_std(snippets: list[Snippet], question_id: int) -> dict[int, float]:
+def _calculate_average_ratings(snippets: list[Snippet]) -> dict[int, float]:
     """
-    1. Get the average rating for each snippet
-    2. Compute the absolute difference between the average rating and the rating of each rater
-    3. Sum up the differences for each rater
-    4. Sum up the differences for each question group (e.g. 1-5)
-    :param snippets: The list of snippet data objects
-    :param question_id: The question id
-    :return: The list of tuples with the question answer and the standard deviation
+    Calculate the average rating for each snippet.
+    @param snippets: The list of snippet data objects
+    @return: The average ratings
     """
-    # Calculate the average rating for each snippet
     average_ratings = {}
     for snippet in snippets:
         if snippet.path not in average_ratings:
@@ -44,13 +39,59 @@ def question_rating_std(snippets: list[Snippet], question_id: int) -> dict[int, 
             rate = rate.rate
             average_ratings[snippet.path] += rate
         average_ratings[snippet.path] /= len(snippet.rates)
+    return average_ratings
 
-    # Compute the absolute difference between the average rating and the rating of each rater
+
+def _compute_differences(
+    snippets: list[Snippet], average_ratings: dict[int, float]
+) -> dict[int, list[float]]:
+    """
+    Compute the absolute difference between the average rating and the rating of each
+    rater, grouped by rater.
+    @param snippets: The list of snippet data objects
+    @param average_ratings: The average ratings
+    @return: The differences
+    """
     differences = {}
     for snippet in snippets:
         for rate in snippet.rates:
             difference = abs(average_ratings[snippet.path] - rate.rate)
             differences[rate.raterExternalId] = difference
+    return differences
+
+
+def _raters_to_groups(snippets: list[Snippet], question_id: int) -> dict[int, int]:
+    """
+    Create a dict to match the raters to the question groups.
+    :param snippets: The list of snippet data objects
+    :param question_id: The question id
+    :return: The dict with the raters and the question groups
+    """
+    rater_to_group = {}
+    for snippet in snippets:
+        for rate in snippet.rates:
+            rater_to_group[rate.raterExternalId] = rate.demographic_solutions[
+                question_id
+            ].solution.selected[0]
+
+    return rater_to_group
+
+
+def question_rating_std_sum(
+    snippets: list[Snippet], question_id: int
+) -> dict[int, float]:
+    """
+    1. Get the average rating for each snippet
+    2. Compute the absolute difference between the average rating and the rating of each
+     rater
+    3. Sum up the differences for each rater
+    4. Sum up the differences for each question group (e.g. 1-5)
+    :param snippets: The list of snippet data objects
+    :param question_id: The question id
+    :return: The list of tuples with the question answer and the standard deviation
+    """
+    average_ratings = _calculate_average_ratings(snippets)
+    differences = _compute_differences(snippets, average_ratings)
 
     # Sum up the differences for each rater
     rater_differences = {}
@@ -59,11 +100,7 @@ def question_rating_std(snippets: list[Snippet], question_id: int) -> dict[int, 
             rater_differences[rater] = 0
         rater_differences[rater] += difference
 
-    # Create a dict to match the raters to the question groups
-    rater_to_group = {}
-    for snippet in snippets:
-        for rate in snippet.rates:
-            rater_to_group[rate.raterExternalId] = rate.demographic_solutions[question_id].solution.selected[0]
+    rater_to_group = _raters_to_groups(snippets, question_id)
 
     # Sum up the differences for each question group
     group_differences = {}
@@ -75,13 +112,49 @@ def question_rating_std(snippets: list[Snippet], question_id: int) -> dict[int, 
 
     # Divide the sum of differences by the number of raters in each group
     group_counts = {}
-    for rater, group in rater_to_group.items():
+    for _, group in rater_to_group.items():
         if group not in group_counts:
             group_counts[group] = 0
         group_counts[group] += 1
 
-    for group, difference in group_differences.items():
+    for group, _ in group_differences.items():
         group_differences[group] /= group_counts[group]
+
+    return group_differences
+
+
+def question_rating_std_grouped(
+    snippets: list[Snippet], question_id: int
+) -> dict[int, list[float]]:
+    """
+    1. Get the average rating for each snippet
+    2. Compute the absolute difference between the average rating and the rating of each
+     rater
+    3. Group the differences by rater
+    4. Group the differences by question group
+    :param snippets: The list of snippet data objects
+    :param question_id: The question id
+    :return: The list of tuples with the question answer and all standard deviation
+    """
+    average_ratings = _calculate_average_ratings(snippets)
+    differences = _compute_differences(snippets, average_ratings)
+
+    # Group the differences by rater
+    rater_differences = {}
+    for rater, difference in differences.items():
+        if rater not in rater_differences:
+            rater_differences[rater] = []
+        rater_differences[rater].append(difference)
+
+    rater_to_group = _raters_to_groups(snippets, question_id)
+
+    # Group the differences by question group
+    group_differences = {}
+    for rater, differences in rater_differences.items():
+        group = rater_to_group[rater]
+        if group not in group_differences:
+            group_differences[group] = []
+        group_differences[group].extend(differences)
 
     return group_differences
 
@@ -101,6 +174,4 @@ def extract_ratings(snippets: list[Snippet]) -> list[list[int]]:
 
     # Adjust the ratings to have the same length
     min_length = min([len(r) for r in ratings])
-    ratings = [r[:min_length] for r in ratings]
-
-    return ratings
+    return [r[:min_length] for r in ratings]
