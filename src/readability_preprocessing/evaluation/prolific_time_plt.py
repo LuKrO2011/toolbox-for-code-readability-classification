@@ -93,10 +93,7 @@ plt.legend(handles=[median_legend])
 # Update y-axis labels to be in minutes and seconds in 5-minute intervals
 plt.yticks(
     [i * 300 for i in range(int(max(time_in_seconds) // 300) + 1)],
-    [
-        f"{i // 60:.0f}:{i % 60:.0f}"
-        for i in range(0, int(max(time_in_seconds)) + 1, 300)
-    ],
+    [f"{i // 60:.0f}" for i in range(0, int(max(time_in_seconds)) + 1, 300)],
 )
 
 plt.savefig("survey_times.pdf", format="pdf", bbox_inches="tight")

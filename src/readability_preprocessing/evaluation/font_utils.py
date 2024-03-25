@@ -11,7 +11,7 @@ FONTS_DIR = CURR_DIR / "../../res/fonts"
 
 def set_custom_font(
     font_path: Path = FONTS_DIR / "libertinus",
-    font_name: str = "Libertinus Sans",
+    font_name: str = "Libertinus Serif",
     font_size: int = 12,
     list_available: bool = False,
 ):

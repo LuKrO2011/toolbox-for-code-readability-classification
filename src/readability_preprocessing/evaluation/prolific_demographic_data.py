@@ -171,7 +171,7 @@ class Demographics:
         percentages = [size / total_responses * 100 for size in sizes]
 
         # Create a bar chart
-        fig, ax = plt.subplots(figsize=(8, 2))
+        fig, ax = plt.subplots(figsize=(8, 3))
         bars = ax.bar(labels, percentages)
 
         # Add percentages to the bars
@@ -346,6 +346,7 @@ def extend_solutions(
         else:
             print(f"Submission not found for participant {solution.rater}")
     return Demographics(demographics.questions, extended_solutions)
+
 
 if __name__ == "__main__":
     question_id = 16

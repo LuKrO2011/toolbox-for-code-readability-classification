@@ -3,8 +3,14 @@ from datetime import datetime
 from pathlib import Path
 
 from readability_preprocessing.evaluation.font_utils import set_custom_font
-from readability_preprocessing.evaluation.prolific_evaluation import load_snippet_datas, SnippetData
-from readability_preprocessing.evaluation.utils import DEMOGRAPHIC_DATA_DIR, SURVEY_DATA_DIR
+from readability_preprocessing.evaluation.prolific_evaluation import (
+    SnippetData,
+    load_snippet_datas,
+)
+from readability_preprocessing.evaluation.utils import (
+    DEMOGRAPHIC_DATA_DIR,
+    SURVEY_DATA_DIR,
+)
 
 
 class Submission:
@@ -145,7 +151,7 @@ def filter_submissions_by_status(
 
 
 def get_time_less_than(
-    submissions: dict[str, list[Submission]], time: int = 221
+    submissions: dict[str, list[Submission]], time: int = 180
 ) -> dict[str, list[Submission]]:
     """
     Get the submissions that took less than a certain time.
@@ -179,6 +185,7 @@ def plot_critical_times(
     set_custom_font()
 
     plt.subplots(figsize=(5, 3))
+    critical_times.items()
     plt.xlabel("Questionnaire")
     plt.ylabel("Number of participants")
     # plt.title(title)
@@ -194,7 +201,9 @@ def plot_critical_times(
     plt.show()
 
 
-def submissions_to_raters(submissions: dict[str, list[Submission]]) -> dict[str, Submission]:
+def submissions_to_raters(
+    submissions: dict[str, list[Submission]]
+) -> dict[str, Submission]:
     """
     Convert the submissions into raters.
     :param submissions: The list of submissions
@@ -207,8 +216,10 @@ def submissions_to_raters(submissions: dict[str, list[Submission]]) -> dict[str,
     return {submission.participant_id: submission for submission in submissions}
 
 
-def load_snippets(demographic_data_dir: Path = DEMOGRAPHIC_DATA_DIR, survey_results_dir: Path = SURVEY_DATA_DIR) -> \
-    list[SnippetData]:
+def load_snippets(
+    demographic_data_dir: Path = DEMOGRAPHIC_DATA_DIR,
+    survey_results_dir: Path = SURVEY_DATA_DIR,
+) -> list[SnippetData]:
     """
     Load the snippets by combining the demographic data and survey results.
     :param demographic_data_dir: The directory containing the demographic data
@@ -231,4 +242,8 @@ def load_snippets(demographic_data_dir: Path = DEMOGRAPHIC_DATA_DIR, survey_resu
 
 
 snippets = load_snippets()
-print("Done")
+
+# Plot critical times
+critical_times = get_time_less_than(load_submissions(DEMOGRAPHIC_DATA_DIR))
+critical_times_count = {key: len(value) for key, value in critical_times.items()}
+plot_critical_times(critical_times_count)
