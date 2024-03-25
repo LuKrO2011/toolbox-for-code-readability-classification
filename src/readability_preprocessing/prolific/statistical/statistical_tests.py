@@ -1,5 +1,6 @@
 from itertools import combinations
 
+import numpy as np
 import scipy.stats as stats
 
 
@@ -67,33 +68,45 @@ def anova(ratings: dict[str | int, list[int | float]]) -> tuple[float, float]:
     return statistic, p_value
 
 
-def perform_tost(group1: list[int | float], group2: list[int | float]) -> bool:
+def perform_tost(
+    group1: list[int | float], group2: list[int | float], margin: float
+) -> tuple[bool, bool]:
     """
-    Perform two one-sided t-tests for equivalence testing.
+    Perform equivalence testing on two groups.
     :param group1: The first group
     :param group2: The second group
-    :return: True if the groups are equivalent, False otherwise
+    :param margin: The equivalence margin
+    :return: Whether the groups are equivalent and whether the difference is significant
     """
-    t1 = stats.ttest_ind(group1, group2, alternative="greater")
-    t2 = stats.ttest_ind(group1, group2, alternative="less")
+    # Calculate the mean difference
+    mean_diff = np.mean(group1) - np.mean(group2)
 
-    # Check if the groups are equivalent
-    return t1[1] < 0.05 and t2[1] < 0.05
+    # Perform the two one-sided t-tests
+    results1 = stats.weighte(group1, group2, alternative="greater")
+    results2 = stats.ttest_ind(group1, group2, alternative="less")
+
+    # Check if the mean difference is within the margin
+    equivalent = -margin < mean_diff < margin
+
+    # Check if both tests are significant
+    significant = results1[1] < 0.05 and results2[1] < 0.05
+
+    return equivalent, significant
 
 
-def equivalence(ratings: dict[str | int, list[int | float]]) -> list[bool]:
+def equivalence(
+    ratings: dict[str | int, list[int | float]], margin: float = 0.2
+) -> None:
     """
     Perform equivalence testing on the ratings.
     :param ratings: The ratings
-    :return: The results of the test
+    :param margin: The equivalence margin
+    :return: None
     """
-    # Perform equivalence testing for each pair of groups
-    equivalence_results = []
     for group1, group2 in combinations(ratings.keys(), 2):
-        equivalence_results.append(perform_tost(ratings[group1], ratings[group2]))
+        equal, significant = perform_tost(ratings[group1], ratings[group2], margin)
 
         print(group1, group2)
-        print("Equivalence:", equivalence_results[-1])
+        print("Equivalent:", equal)
+        print("Significant:", significant)
         print()
-
-    return equivalence_results
