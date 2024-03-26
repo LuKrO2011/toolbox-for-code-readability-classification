@@ -387,6 +387,7 @@ python src/readability_preprocessing/main.py REMOVE_COMMENTS -i <input_path> -o 
 === Others
 
 There are various other scripts that can be executed by executing the file itself.
+For usage and extension of these scripts we recommend to use the functions in the `prolific` package over the scripts of the `evaluation` package. Later are kept to reproduce the results of the master thesis.
 
 [[Podman]]
 == Podman
