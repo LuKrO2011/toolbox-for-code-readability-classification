@@ -15,6 +15,9 @@ from readability_preprocessing.evaluation.utils import (
     SURVEY_DATA_DIR,
     load_json_file,
 )
+from readability_preprocessing.prolific.statistical.statistical_tests import (
+    perform_tost,
+)
 
 DEMOGRAPHICS_FILE_NAME = "demographics.json"
 PLOT_X_LABEL = "Applied Readability Decreasing Modifications"
@@ -1082,6 +1085,7 @@ def export_huggingface_dataset(stratas: dict[str, Stratum], output_path: Path) -
     dataset = Dataset.from_dict(dataset_dict)
     dataset.save_to_disk(output_path)
 
+
 if __name__ == "__main__":
     set_custom_font()
     stratas = load_stratas(SURVEY_DATA_DIR)
@@ -1090,12 +1094,17 @@ if __name__ == "__main__":
     # ratings = combine_by_rdh(stratas)
     # binary_chi2(ratings)
 
-    plot_rdhs(stratas)
+    # plot_rdhs(stratas)
     # for stratum in stratas.keys():
     #     plot_rdhs_of_stratum(stratas, stratum)
 
-    # ratings = combine_by_rdh(stratas)
-    # ratings = _rename_ratings(ratings)
+    ratings = combine_by_rdh(stratas)
+    none = ratings["none"]
+    methods = ratings["methods"]
+    result = perform_tost(none, methods, margin=0.15)
+    print(result)
+    print("Reject H0:", result < 0.05)
+
     # data2, categories2 = data_and_cat_from_merged()
     # ratings.update({categories2[0]: data2[0]})
     # normalize_by = "original"
@@ -1127,7 +1136,6 @@ if __name__ == "__main__":
     # plot_distribution(merged, title='Distribution of Ratings for All RDHs')
 
     # print_no_samples(stratas)
-
 
     # mean_ratings = combine_means_by_rdh(stratas)
     # mann_whitney_u(mean_ratings)

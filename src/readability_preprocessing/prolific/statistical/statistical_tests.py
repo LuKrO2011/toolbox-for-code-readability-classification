@@ -1,7 +1,8 @@
 from itertools import combinations
 
-import numpy as np
 import scipy.stats as stats
+from statsmodels.stats.oneway import equivalence_oneway
+from statsmodels.stats.weightstats import ttost_ind
 
 
 def mann_whitney_u(
@@ -18,6 +19,7 @@ def mann_whitney_u(
     rejected = results[1] < alpha
     print(results)
     print("Rejected:", rejected)
+    print()
 
 
 def mann_whitney_us(
@@ -49,64 +51,78 @@ def anova(ratings: dict[str | int, list[int | float]]) -> tuple[float, float]:
 
     # Display the results
     print("One-Way ANOVA Results:")
-    print("F-statistic:", statistic)
+    # print("F-statistic:", statistic)
     print("P-value:", p_value)
 
     # Check for statistical significance
     alpha = 0.05
-    if p_value < alpha:
-        print(
-            "Reject the null hypothesis; there are significant differences "
-            "between group means."
-        )
-    else:
-        print(
-            "Fail to reject the null hypothesis; there are no significant differences "
-            "between group means."
-        )
+    print("Rejected:", p_value < alpha)
+    print()
 
     return statistic, p_value
 
 
 def perform_tost(
-    group1: list[int | float], group2: list[int | float], margin: float
-) -> tuple[bool, bool]:
+    group1: list[int | float], group2: list[int | float], margin: float = 0.05
+) -> float:
     """
     Perform equivalence testing on two groups.
     :param group1: The first group
     :param group2: The second group
     :param margin: The equivalence margin
-    :return: Whether the groups are equivalent and whether the difference is significant
+    :return: The p-value
     """
-    # Calculate the mean difference
-    mean_diff = np.mean(group1) - np.mean(group2)
+    p_value, _, _ = ttost_ind(group1, group2, -margin, margin, usevar="unequal")
 
-    # Perform the two one-sided t-tests
-    results1 = stats.weighte(group1, group2, alternative="greater")
-    results2 = stats.ttest_ind(group1, group2, alternative="less")
-
-    # Check if the mean difference is within the margin
-    equivalent = -margin < mean_diff < margin
-
-    # Check if both tests are significant
-    significant = results1[1] < 0.05 and results2[1] < 0.05
-
-    return equivalent, significant
+    return p_value
 
 
-def equivalence(
-    ratings: dict[str | int, list[int | float]], margin: float = 0.2
+def equivalence_pairwise(
+    ratings: dict[str | int, list[int | float]],
+    margin: float = 0.5,
+    alpha: float = 0.05,
 ) -> None:
     """
-    Perform equivalence testing on the ratings.
+    Perform equivalence testing on the ratings using a one-way ANOVA. We want to
+    show that the groups are equivalent. The null hypothesis is that the means are not
+    equivalent.
     :param ratings: The ratings
     :param margin: The equivalence margin
+    :param alpha: The significance level
     :return: None
     """
     for group1, group2 in combinations(ratings.keys(), 2):
-        equal, significant = perform_tost(ratings[group1], ratings[group2], margin)
+        results = perform_tost(ratings[group1], ratings[group2], margin)
 
         print(group1, group2)
-        print("Equivalent:", equal)
-        print("Significant:", significant)
+        print("Rejected:", results < alpha)
         print()
+
+
+def equivalence(
+    ratings: dict[str | int, list[int | float]],
+    margin: float = 0.05,
+    alpha: float = 0.05,
+) -> None:
+    """
+    Perform equivalence testing on the ratings using a one-way ANOVA. We want to
+    show that the groups are equivalent. The null hypothesis is that the means are not
+    equivalent.
+    :param ratings: The ratings
+    :param margin: The equivalence margin
+    :param alpha: The significance level
+    :return: None
+    """
+    groups = list(ratings.values())
+    result = equivalence_oneway(
+        data=groups,
+        equiv_margin=margin,
+    )
+
+    p_value = result.pvalue
+
+    print("One-Way ANOVA Equivalence Results:")
+    print("Margin:", margin)
+    print("P-value:", p_value)
+    print("Rejected:", p_value < alpha)
+    print()
