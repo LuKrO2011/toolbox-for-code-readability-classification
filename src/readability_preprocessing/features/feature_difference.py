@@ -111,6 +111,21 @@ def calculate_internal_stats(
     ).T
 
 
+def _calculate_cohen_d(
+    stats1_mean: ndarray, stats2_mean: ndarray, stats1_std: ndarray, stats2_std: ndarray
+) -> ndarray:
+    """
+    Calculate Cohen's d effect size.
+    :param stats1_mean: The mean of the first set of features.
+    :param stats2_mean: The mean of the second set of features.
+    :param stats1_std: The standard deviation of the first set of features.
+    :param stats2_std: The standard deviation of the second set of features.
+    """
+    divisor = np.sqrt((stats1_std**2 + stats2_std**2) / 2)
+    divisor[divisor == 0] = 1
+    return np.abs(stats1_mean - stats2_mean) / divisor
+
+
 def calculate_compare_stats(
     internal_stats1: ndarray, internal_stats2: ndarray
 ) -> ndarray:
@@ -122,18 +137,22 @@ def calculate_compare_stats(
     :return: The differences between the internal statistics of the two sets of
     features.
     """
+    stats1_mean = internal_stats1[:, 1].astype(float)
+    stats2_mean = internal_stats2[:, 1].astype(float)
+    stats1_abs = internal_stats1[:, 2].astype(float)
+    stats2_abs = internal_stats2[:, 2].astype(float)
+    stats1_std_rel = internal_stats1[:, 3].astype(float)
+    stats2_std_rel = internal_stats2[:, 3].astype(float)
+    stats1_std_abs = internal_stats1[:, 4].astype(float)
+    stats2_std_abs = internal_stats2[:, 4].astype(float)
+
     # Calculate the differences between the two sets of features
-    mean_rel_diff = np.abs(
-        internal_stats2[:, 1].astype(float) - internal_stats1[:, 1].astype(float)
-    )
-    mean_abs_diff = np.abs(
-        internal_stats2[:, 2].astype(float) - internal_stats1[:, 2].astype(float)
-    )
-    std_rel_diff = np.abs(
-        internal_stats2[:, 3].astype(float) - internal_stats1[:, 3].astype(float)
-    )
-    std_abs_diff = np.abs(
-        internal_stats2[:, 4].astype(float) - internal_stats1[:, 4].astype(float)
+    mean_rel_diff = np.abs(stats2_mean - stats1_mean)
+    mean_abs_diff = np.abs(stats2_abs - stats1_abs)
+    std_rel_diff = np.abs(stats2_std_rel - stats1_std_rel)
+    std_abs_diff = np.abs(stats2_std_abs - stats1_std_abs)
+    cohen_d = _calculate_cohen_d(
+        stats1_mean, stats2_mean, stats1_std_abs, stats2_std_abs
     )
 
     # Compile the differences into a structured array
@@ -144,6 +163,7 @@ def calculate_compare_stats(
             mean_abs_diff,
             std_rel_diff,
             std_abs_diff,
+            cohen_d,
             internal_stats1[:, 1].astype(float),  # Mean 1
             internal_stats1[:, 3].astype(float),  # Std Rel 1
             internal_stats1[:, 4].astype(float),  # Std Abs 1
@@ -184,12 +204,13 @@ class SortCriterion(str, Enum):
     ABS_DIFF = "abs_diff"
     STD_REL_DIFF = "std_rel_diff"
     STD_ABS_DIFF = "std_abs_diff"
+    COHEN_D = "cohen_d"
 
 
 def get_top_features(
     features: ndarray,
     top_n: int = 5,
-    criterion: SortCriterion = SortCriterion.MEAN_DIFF,
+    criterion: SortCriterion = SortCriterion.COHEN_D,
 ) -> ndarray:
     """
     Get the top features with the highest differences.
@@ -204,6 +225,7 @@ def get_top_features(
         SortCriterion.ABS_DIFF: 2,
         SortCriterion.STD_REL_DIFF: 3,
         SortCriterion.STD_ABS_DIFF: 4,
+        SortCriterion.COHEN_D: 5,
     }
 
     if criterion not in criterion_index_mapping:
@@ -315,6 +337,7 @@ def get_header() -> ndarray:
             "Absolute Difference",
             "Std Rel Difference",
             "Std Abs Difference",
+            "Cohen's d",
             "Mean 1",
             "Std Rel 1",
             "Std Abs 1",
@@ -368,10 +391,10 @@ def main(path1: str, path2: str) -> None:
         abs_features2, rel_features2, feature_names
     )
     stats = calculate_compare_stats(internal_stats1, internal_stats2)
-    stats_with_header = add_header(stats)
 
     # Save the statistics to a CSV file
-    save_feature_differences(stats_with_header)
+    # stats_with_header = add_header(stats)
+    # save_feature_differences(stats_with_header)
 
     # Get top features and print them
     top_features = get_top_features(stats)
