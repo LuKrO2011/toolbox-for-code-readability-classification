@@ -21,6 +21,7 @@ matplotlib = "^3.8.2"
 squarify = "^0.4.3"
 pywaffle = "^1.1.0"
 krippendorff = "^0.6.1"
+seaborn = "^0.13.2"
 
 
 [tool.poetry.group.dev.dependencies]

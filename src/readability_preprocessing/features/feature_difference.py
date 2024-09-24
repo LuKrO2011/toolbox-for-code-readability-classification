@@ -1,4 +1,7 @@
 import numpy as np
+import pandas as pd
+import seaborn as sns
+from matplotlib import pyplot as plt
 
 from readability_preprocessing.utils.csv import load_features_from_csv
 
@@ -147,3 +150,49 @@ zero_difference_indices = np.where(feature_differences < epsilon)
 zero_difference_features = [feature_names[idx] for idx in zero_difference_indices[0]]
 print("\nFeatures with a difference of 0:")
 print(zero_difference_features)
+
+# Prepare the data for violin plots
+top_5_features = [feature[0] for feature in top_5_features]
+top_5_features_data = {
+    "Feature": [],
+    "Value": [],
+    "Set": [],
+}
+
+# Collect data only if the feature exists in both datasets
+for feature in top_5_features:
+    for entry in list(features1.values()):
+        if feature not in entry:
+            break
+        else:
+            top_5_features_data["Feature"].append(feature)
+            top_5_features_data["Value"].append(entry[feature])
+            top_5_features_data["Set"].append("Set 1")
+
+    for entry in list(features2.values()):
+        if feature not in entry:
+            break
+        else:
+            top_5_features_data["Feature"].append(feature)
+            top_5_features_data["Value"].append(entry[feature])
+            top_5_features_data["Set"].append("Set 2")
+
+# Create a DataFrame for the violin plots
+top_5_features_df = pd.DataFrame(top_5_features_data)
+
+# Create a violin plot for the top 5 features
+sns.set_theme(style="whitegrid")
+plt.figure(figsize=(12, 8))
+sns.violinplot(
+    x="Feature",
+    y="Value",
+    hue="Set",
+    data=top_5_features_df,
+    split=True,
+    inner="quart",
+    linewidth=1,
+)
+plt.title("Violin Plots of the Top 5 Features with the Highest Differences")
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
