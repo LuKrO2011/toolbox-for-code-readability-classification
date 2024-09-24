@@ -85,8 +85,10 @@ features = np.array(
         feature_names,
         feature_differences,
         absolute_differences,
+        average_features1,
         std_internal_relative1,
         std_internal_absolute1,
+        average_features2,
         std_internal_relative2,
         std_internal_absolute2,
         external_std_relative,
@@ -100,8 +102,8 @@ np.savetxt(
     features,
     delimiter=",",
     header="Feature Name, Mean Difference, Absolute Difference, "
-    "Internal Std Relative 1, Internal Std Absolute 1, "
-    "Internal Std Relative 2, Internal Std Absolute 2, "
+    "Mean 1, Internal Std Relative 1, Internal Std Absolute 1, "
+    "Mean 2, Internal Std Relative 2, Internal Std Absolute 2, "
     "External Std Relative, External Std Absolute",
     fmt="%s",
 )
