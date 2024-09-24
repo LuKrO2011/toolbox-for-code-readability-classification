@@ -73,9 +73,38 @@ external_std_absolute = np.sqrt(
     (std_internal_absolute1**2 + std_internal_absolute2**2) / 2
 )
 
+# Calculate the differences between the two feature sets
+feature_differences = abs(average_features1 - average_features2)
+
 # Compare the two feature sets: Get the column names with the highest
 feature_names = list(list(features1.values())[0].keys())
-feature_differences = abs(average_features1 - average_features2)
+
+# Create a np array with the feature names and all stats
+features = np.array(
+    [
+        feature_names,
+        feature_differences,
+        absolute_differences,
+        std_internal_relative1,
+        std_internal_absolute1,
+        std_internal_relative2,
+        std_internal_absolute2,
+        external_std_relative,
+        external_std_absolute,
+    ]
+).T
+
+# Store the features in a csv file with header
+np.savetxt(
+    "feature_differences.csv",
+    features,
+    delimiter=",",
+    header="Feature Name, Mean Difference, Absolute Difference, "
+    "Internal Std Relative 1, Internal Std Absolute 1, "
+    "Internal Std Relative 2, Internal Std Absolute 2, "
+    "External Std Relative, External Std Absolute",
+    fmt="%s",
+)
 
 # Get indices for top 5 features with the highest differences
 sorted_indices = np.argsort(feature_differences)
