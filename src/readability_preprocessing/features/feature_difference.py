@@ -31,6 +31,27 @@ normalized_features2 = without_nans2 / (np.linalg.norm(without_nans2, axis=0) + 
 average_features1 = normalized_features1.mean(axis=0)
 average_features2 = normalized_features2.mean(axis=0)
 
+REPLACE_NANS_WITH_AVERAGE = True
+if REPLACE_NANS_WITH_AVERAGE:
+    # Replace NaNs of features_array1 and features_array2 with average
+    for i in range(features_array1.shape[1]):  # Iterate over each feature (column)
+        nan_mask1 = np.isnan(features_array1[:, i])
+        nan_mask2 = np.isnan(features_array2[:, i])
+        features_array1[nan_mask1, i] = average_features1[i]
+        features_array2[nan_mask2, i] = average_features2[i]
+
+    # Recalculate the normalized features
+    normalized_features1 = features_array1 / (
+        np.linalg.norm(features_array1, axis=0) + epsilon
+    )
+    normalized_features2 = features_array2 / (
+        np.linalg.norm(features_array2, axis=0) + epsilon
+    )
+
+    # Recalculate the average (mean of features across rows)
+    average_features1 = normalized_features1.mean(axis=0)
+    average_features2 = normalized_features2.mean(axis=0)
+
 # Calculate the sum of the features
 sum_features1 = without_nans1.sum(axis=0)
 sum_features2 = without_nans2.sum(axis=0)
