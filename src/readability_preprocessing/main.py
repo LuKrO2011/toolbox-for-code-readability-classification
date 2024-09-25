@@ -81,6 +81,7 @@ class Tasks(Enum):
     Enum for the different tasks of the readability preprocessing toolbox.
     """
 
+    FEATURES = "FEATURES"
     SAMPLE = "SAMPLE"
     EXTRACT_SAMPLED = "EXTRACT_SAMPLED"
     EXTRACT_FILES = "EXTRACT_FILES"
@@ -109,6 +110,23 @@ def _set_up_arg_parser() -> ArgumentParser:
     """
     arg_parser = ArgumentParser()
     sub_parser = arg_parser.add_subparsers(dest="command", required=True)
+
+    # Parser for the feature calculation task
+    feature_parser = sub_parser.add_parser(str(Tasks.FEATURES))
+    feature_parser.add_argument(
+        "--input",
+        "-i",
+        required=True,
+        type=Path,
+        help="Path to the folder containing the java files.",
+    )
+    feature_parser.add_argument(
+        "--output",
+        "-o",
+        required=True,
+        type=Path,
+        help="Path to the folder where the feature csv should be stored.",
+    )
 
     # Parser for the sampling task
     sample_parser = sub_parser.add_parser(str(Tasks.SAMPLE))
@@ -509,6 +527,24 @@ def _set_up_arg_parser() -> ArgumentParser:
     return arg_parser
 
 
+def _run_feature_extraction(parsed_args: Any) -> None:
+    """
+    Calculate the features for the Java code snippets in the input directory.
+    :param parsed_args: Parsed arguments.
+    :return: None
+    """
+    # Get the parsed arguments
+    input_dir = parsed_args.input
+    output_dir = parsed_args.output
+
+    # Log the arguments
+    logging.info(f"Input directory: {input_dir}")
+    logging.info(f"Output directory: {output_dir}")
+
+    # Calculate the features
+    calculate_features(input_dir=input_dir, output_dir=output_dir)
+
+
 def _run_stratified_sampling(args: Any) -> None:
     """
     Perform stratified sampling on a list of Java code snippets.
@@ -859,6 +895,8 @@ def main(args: list[str]) -> int:
 
     # Execute the task
     match task:
+        case Tasks.FEATURES:
+            _run_feature_extraction(parsed_args)
         case Tasks.SAMPLE:
             _run_stratified_sampling(parsed_args)
         case Tasks.EXTRACT_SAMPLED:

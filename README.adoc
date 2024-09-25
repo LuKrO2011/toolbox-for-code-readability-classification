@@ -97,6 +97,24 @@ Now you're ready to use the source code readability preprocessing tool.
 In this section you will find information on how to use the source code readability preprocessing tool.
 Use `-h` or `--help` to get help on the usage of the tool or a subcommand.
 
+[[Feature_Extraction]]
+=== Feature Extraction
+
+To extract features from Java source code snippets, use the following command:
+
+[source,bash]
+----
+python src/readability_preprocessing/main.py FEATURES [-h] --input INPUT --output OUTPUT
+----
+
+* `--input` or `-i` is the path to the dictionary with the Java source code snippets.
+* `--output` or `-o` is the path to the file where the `features.csv` will be saved.
+
+Example:
+----
+python src/readability_preprocessing/main.py FEATURES -i <input_path> -o <output_path>
+----
+
 
 [[Stratified_Sampling]]
 === Stratified Sampling

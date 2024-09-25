@@ -13,6 +13,7 @@ from src.readability_preprocessing.main import (
     _run_extract_files,
     _run_extract_methods,
     _run_extract_sampled,
+    _run_feature_extraction,
     _run_remove_comments,
     _run_stratified_sampling,
     _run_upload,
@@ -35,6 +36,21 @@ from tests.readability_preprocessing.utils.utils import (
 
 
 class TestRunMain(DirTest):
+    def test_run_feature_extractor(self):
+        class MockParsedArgs:
+            def __init__(self, output: str = self.output_dir):
+                self.input = METHODS_ORIGINAL_ADD_COMMAND_DIR
+                self.output = output
+
+        parsed_args = MockParsedArgs()
+
+        # Feature extraction within the test
+        _run_feature_extraction(parsed_args)
+
+        # Assert that the feature extraction has been performed successfully
+        assert len(os.listdir(self.output_dir)) == 1
+        assert "features.csv" in os.listdir(self.output_dir)
+
     def test_run_stratified_sampling(self):
         class MockParsedArgs:
             def __init__(self, output: str = self.output_dir):
