@@ -1,24 +1,39 @@
 import os
+
 from datasets import load_dataset
 
+from readability_preprocessing.dataset.dataset_combiner import _remove_ambiguous_samples
+
 # Load the dataset from Hugging Face
-dataset = load_dataset("se2p/code-readability-krod")
+ds = load_dataset("se2p/code-readability-merged")
 
 # Define the output folder
-output_folder = "/Users/lukas/Documents/Code for Study/Krod Well Readable"
+output_folder = "/Users/lukas/Documents/Code_for_study/merged_well"
 os.makedirs(output_folder, exist_ok=True)
 
-# Filter the dataset and save each code snippet with the matching score of 3.68
-for record in dataset['train']:
-    if record['score'] == 3.68:
-        code_snippet = record['code_snippet']
-        file_name = record['name']
+# Remove ambiguous samples from the dataset
+ds = ds["train"]
+ds_as_list = ds.to_list()
+filtered_ds = _remove_ambiguous_samples(ds, 0.5).to_list()
 
-        # Define the output path with the corresponding name
-        output_path = os.path.join(output_folder, f"{file_name}.java")
+# Filter the dataset and get the 50% of the samples
+# with the highest readability score from the filtered_ds
+filtered_ds.sort(key=lambda x: x["score"], reverse=True)
+filtered_ds = filtered_ds[: int(len(filtered_ds) / 2)]
+# filtered_ds = sorted(filtered_ds, key=lambda x: x["score"])
+# filtered_ds = filtered_ds[: int(len(filtered_ds) / 2)]
 
-        # Write the code snippet to the file
-        with open(output_path, 'w') as file:
-            file.write(code_snippet)
+for i, record in enumerate(filtered_ds):
+    # if record['score'] == 3.68:
+    code_snippet = record["code_snippet"]
+    # file_name = record['name']
+    file_name = f"{str(i)}.java"
 
-print(f"Code snippets with score 3.68 have been saved to '{output_folder}'")
+    # Define the output path with the corresponding name
+    output_path = os.path.join(output_folder, f"{file_name}.java")
+
+    # Write the code snippet to the file
+    with open(output_path, "w") as file:
+        file.write(code_snippet)
+
+print(f"Code snippets saved to {output_folder}")
