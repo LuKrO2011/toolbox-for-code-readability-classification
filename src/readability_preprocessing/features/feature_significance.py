@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from matplotlib import pyplot as plt
 from scipy import stats
 from scipy.stats import zscore
@@ -107,39 +106,43 @@ def plot_results(results: pd.DataFrame):
 
     # Pivot table for heatmap
     heatmap_data = results.pivot_table(
-        index="Feature", columns=["Dataset1", "Dataset2"], values="p-value"
+        index="Feature",
+        columns=["Dataset1", "Dataset2"],
+        values="p-value",
+        fill_value=1,
     )
 
     # Print the heatmap data to verify its correctness
     print("Heatmap Data (before plotting):")
     print(heatmap_data)
 
-    plt.figure(figsize=(12, 8))
-    sns.heatmap(
-        heatmap_data,
-        annot=True,
-        cmap="coolwarm",
-        fmt=".2g",
-        cbar_kws={"label": "p-value"},
-        vmin=0,  # Set the minimum value for the color scale
-        vmax=1,  # Set the maximum value for the color scale
+    # Create the heatmap using Matplotlib
+    plt.figure(figsize=(14, 20))
+
+    # Convert the heatmap data to a numpy array for plotting
+    heatmap_array = heatmap_data.to_numpy()
+
+    # Create a color map
+    cax = plt.imshow(heatmap_array, cmap="coolwarm", aspect="auto", vmin=0, vmax=1)
+
+    # Set ticks and labels
+    plt.xticks(
+        ticks=np.arange(heatmap_array.shape[1]),
+        labels=[f"{col[0]}-{col[1]}" for col in heatmap_data.columns],
     )
+    plt.yticks(ticks=np.arange(heatmap_array.shape[0]), labels=heatmap_data.index)
+
+    plt.colorbar(cax, label="p-value")
     plt.title("Statistical Significance Test P-values Heatmap")
     plt.xlabel("Dataset Comparison")
     plt.ylabel("Features")
-    plt.subplots_adjust(bottom=0.35, left=0.25)
-    plt.show()
 
-    # Optional: Boxplot of p-values
-    # plt.figure(figsize=(12, 8))
-    # sns.boxplot(data=results, x="Feature", y="p-value", hue="Dataset1")
-    # plt.xticks(rotation=45)
-    # plt.title("P-values by Feature")
-    # plt.ylabel("P-value")
-    # plt.xlabel("Feature")
-    # plt.ylim(0, 1)  # Set y-axis limits
-    # plt.legend(title="Dataset")
-    # plt.show()
+    # Optional: Limit to specific rows to reduce clutter
+    plt.imshow(heatmap_array, cmap="coolwarm", aspect="auto", vmin=0, vmax=1)
+
+    plt.tight_layout()
+    plt.subplots_adjust(left=0.25)
+    plt.show()
 
 
 if __name__ == "__main__":
@@ -149,8 +152,8 @@ if __name__ == "__main__":
     dataset_paths = {
         "merged_well": "/Users/lukas/Documents/Features/features_merged_well.csv",
         "merged_badly": "/Users/lukas/Documents/Features/features_merged_badly.csv",
-        "krod_well": "/Users/lukas/Documents/Features/features_krod_well.csv",
-        "krod_badly": "/Users/lukas/Documents/Features/features_krod_badly.csv",
+        "m&m_well": "/Users/lukas/Documents/Features/features_krod_well.csv",
+        "m&m_badly": "/Users/lukas/Documents/Features/features_krod_badly.csv",
     }
 
     # Load and preprocess data
@@ -161,6 +164,27 @@ if __name__ == "__main__":
 
     # Display results
     print(test_results)
+
+    # Define the data to plot (merged_well, merged_badly), (krod_well, krod_badly),
+    # (merged_well, krod_well), (merged_badly, krod_badly)
+    test_results = test_results[
+        (
+            (test_results["Dataset1"] == "merged_well")
+            & (test_results["Dataset2"] == "merged_badly")
+        )
+        | (
+            (test_results["Dataset1"] == "m&m_well")
+            & (test_results["Dataset2"] == "m&m_badly")
+        )
+        | (
+            (test_results["Dataset1"] == "merged_well")
+            & (test_results["Dataset2"] == "m&m_well")
+        )
+        | (
+            (test_results["Dataset1"] == "merged_badly")
+            & (test_results["Dataset2"] == "m&m_badly")
+        )
+    ]
 
     # Plot the results
     plot_results(test_results)
