@@ -99,10 +99,20 @@ def plot_results(results: pd.DataFrame):
     :param results: A DataFrame containing result statistics
     for each dataset comparison.
     """
+    # Check the content of results DataFrame
+    print("Results DataFrame:")
+    print(results.head())
+    print("Summary statistics:")
+    print(results.describe())
+
     # Pivot table for heatmap
     heatmap_data = results.pivot_table(
         index="Feature", columns=["Dataset1", "Dataset2"], values="p-value"
     )
+
+    # Print the heatmap data to verify its correctness
+    print("Heatmap Data (before plotting):")
+    print(heatmap_data)
 
     plt.figure(figsize=(12, 8))
     sns.heatmap(
@@ -111,19 +121,25 @@ def plot_results(results: pd.DataFrame):
         cmap="coolwarm",
         fmt=".2g",
         cbar_kws={"label": "p-value"},
+        vmin=0,  # Set the minimum value for the color scale
+        vmax=1,  # Set the maximum value for the color scale
     )
     plt.title("Statistical Significance Test P-values Heatmap")
     plt.xlabel("Dataset Comparison")
     plt.ylabel("Features")
+    plt.subplots_adjust(bottom=0.25)
+    # Rotate the bottom labels to avoid overlap
+    plt.xticks(rotation=45)
     plt.show()
 
     # Optional: Boxplot of p-values
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(12, 8))
     sns.boxplot(data=results, x="Feature", y="p-value", hue="Dataset1")
     plt.xticks(rotation=45)
     plt.title("P-values by Feature")
     plt.ylabel("P-value")
     plt.xlabel("Feature")
+    plt.ylim(0, 1)  # Set y-axis limits
     plt.legend(title="Dataset")
     plt.show()
 
