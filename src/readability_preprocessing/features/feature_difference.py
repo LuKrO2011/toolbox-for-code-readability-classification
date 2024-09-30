@@ -225,12 +225,12 @@ def prepare_violin_data(
         for value in feature1:
             top_features_data["Feature"].append(feature_name)
             top_features_data["Value"].append(value)
-            top_features_data["Set"].append("Set 1")
+            top_features_data["Set"].append("Merged")
 
         for value in feature2:
             top_features_data["Feature"].append(feature_name)
             top_features_data["Value"].append(value)
-            top_features_data["Set"].append("Set 2")
+            top_features_data["Set"].append("Mined&Modified")
 
     return pd.DataFrame(top_features_data)
 
@@ -298,8 +298,18 @@ def main(path1: str, path2: str) -> None:
 
 
 if __name__ == "__main__":
-    path1 = "../../tests/res/csv/features.csv"
-    path2 = "../../tests/res/csv/features2.csv"
-    # path1 = "/Users/lukas/Documents/Code for Study/krod_badly_readable.csv"
-    # path2 = "/Users/lukas/Documents/Code for Study/krod_well_readable.csv"
-    main(path1, path2)
+    paths = {
+        "merged_well": "/Users/lukas/Documents/Features/features_merged_well.csv",
+        "merged_badly": "/Users/lukas/Documents/Features/features_merged_badly.csv",
+        "krod_well": "/Users/lukas/Documents/Features/features_krod_well.csv",
+        "krod_badly": "/Users/lukas/Documents/Features/features_krod_badly.csv",
+    }
+
+    to_compare = [
+        ("merged_well", "krod_well"),
+        ("merged_badly", "krod_badly"),
+    ]
+
+    for pair in to_compare:
+        print(f"\nComparing {pair[0]} and {pair[1]}")
+        main(paths[pair[0]], paths[pair[1]])
