@@ -9,7 +9,7 @@ from readability_preprocessing.features.feature_difference import (
     remove_filename_column,
 )
 
-APPLY_STANDARD_SCALER = False
+APPLY_STANDARD_SCALER = True
 
 
 def compute_kl_divergence_kde(features1, features2, bandwidth=1.0):
@@ -70,11 +70,25 @@ def main(path1: str, path2: str) -> None:
         features2 = scaler.transform(features2)
 
     # Compute KL Divergence directly on the 110-dimensional feature vectors
-    kl_divergence = compute_kl_divergence_kde(features1, features2)
+    kl_divergence = compute_kl_divergence_kde(features1, features2, bandwidth=0.1)
     print(f"KL Divergence between the two datasets: {kl_divergence}")
 
 
 if __name__ == "__main__":
-    path1 = "../../../tests/res/csv/features.csv"
-    path2 = "../../../tests/res/csv/features2.csv"
-    main(path1, path2)
+    paths = {
+        "merged_well": "/Users/lukas/Documents/Features/features_merged_well.csv",
+        "merged_badly": "/Users/lukas/Documents/Features/features_merged_badly.csv",
+        "krod_well": "/Users/lukas/Documents/Features/features_krod_well.csv",
+        "krod_badly": "/Users/lukas/Documents/Features/features_krod_badly.csv",
+    }
+
+    to_compare = [
+        ("merged_well", "merged_badly"),
+        ("krod_well", "krod_badly"),
+        ("merged_well", "krod_well"),
+        ("merged_badly", "krod_badly"),
+    ]
+
+    for pair in to_compare:
+        print(f"\nComparing {pair[0]} and {pair[1]}")
+        main(paths[pair[0]], paths[pair[1]])
