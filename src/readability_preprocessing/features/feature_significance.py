@@ -43,7 +43,7 @@ def load_and_preprocess_data(paths: dict[str, str]) -> dict[str, pd.DataFrame]:
 
 
 def perform_statistical_tests(
-    datasets: dict[str, pd.DataFrame], normalize: bool = True
+    datasets: dict[str, pd.DataFrame], normalize: bool = False
 ) -> pd.DataFrame:
     """
     Perform statistical significance tests (t-tests) on the datasets.
