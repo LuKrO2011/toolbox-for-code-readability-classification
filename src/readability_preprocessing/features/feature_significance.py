@@ -127,21 +127,19 @@ def plot_results(results: pd.DataFrame):
     plt.title("Statistical Significance Test P-values Heatmap")
     plt.xlabel("Dataset Comparison")
     plt.ylabel("Features")
-    plt.subplots_adjust(bottom=0.25)
-    # Rotate the bottom labels to avoid overlap
-    plt.xticks(rotation=45)
+    plt.subplots_adjust(bottom=0.35, left=0.25)
     plt.show()
 
     # Optional: Boxplot of p-values
-    plt.figure(figsize=(12, 8))
-    sns.boxplot(data=results, x="Feature", y="p-value", hue="Dataset1")
-    plt.xticks(rotation=45)
-    plt.title("P-values by Feature")
-    plt.ylabel("P-value")
-    plt.xlabel("Feature")
-    plt.ylim(0, 1)  # Set y-axis limits
-    plt.legend(title="Dataset")
-    plt.show()
+    # plt.figure(figsize=(12, 8))
+    # sns.boxplot(data=results, x="Feature", y="p-value", hue="Dataset1")
+    # plt.xticks(rotation=45)
+    # plt.title("P-values by Feature")
+    # plt.ylabel("P-value")
+    # plt.xlabel("Feature")
+    # plt.ylim(0, 1)  # Set y-axis limits
+    # plt.legend(title="Dataset")
+    # plt.show()
 
 
 if __name__ == "__main__":
