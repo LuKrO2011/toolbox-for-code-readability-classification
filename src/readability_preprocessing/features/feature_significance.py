@@ -117,9 +117,22 @@ def plot_results(results: pd.DataFrame):
     print(heatmap_data)
 
     # Create the heatmap using Matplotlib
-    plt.figure(figsize=(14, 20))
+    plt.figure(figsize=(17, 20))
 
     # Convert the heatmap data to a numpy array for plotting
+    heatmap_array = heatmap_data.to_numpy()
+
+    # Order the columns: merged(all)-m&m(all), merged_well-merged_badly,
+    # m&m_well-m&m_badly, ...
+    order = [
+        "merged_all",
+        "m&m_all",
+        "merged_well",
+        "merged_badly",
+        "m&m_well",
+        "m&m_badly",
+    ]
+    heatmap_data = heatmap_data.reindex(columns=order, level=0)
     heatmap_array = heatmap_data.to_numpy()
 
     # Create a color map
@@ -159,6 +172,14 @@ if __name__ == "__main__":
     # Load and preprocess data
     preprocessed_data = load_and_preprocess_data(dataset_paths)
 
+    # Add merged(all) and m&m(all) datasets
+    preprocessed_data["merged_all"] = pd.concat(
+        [preprocessed_data["merged_well"], preprocessed_data["merged_badly"]]
+    )
+    preprocessed_data["m&m_all"] = pd.concat(
+        [preprocessed_data["m&m_well"], preprocessed_data["m&m_badly"]]
+    )
+
     # Perform statistical tests
     test_results = perform_statistical_tests(preprocessed_data)
 
@@ -183,6 +204,10 @@ if __name__ == "__main__":
         | (
             (test_results["Dataset1"] == "merged_badly")
             & (test_results["Dataset2"] == "m&m_badly")
+        )
+        | (
+            (test_results["Dataset1"] == "merged_all")
+            & (test_results["Dataset2"] == "m&m_all")
         )
     ]
 
