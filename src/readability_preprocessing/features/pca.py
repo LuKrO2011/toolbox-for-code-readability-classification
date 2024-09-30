@@ -41,11 +41,19 @@ def plot_pca_results(
     """
     plt.figure(figsize=(10, 8))
 
+    tuples = zip(list_of_datasets, dataset_names, colors, strict=False)
+
+    # Sort like this: 1. krod_badly, 2. krod_well, 3. merged_badly, 4. merged_well
+    sorted_tuples = sorted(tuples, key=lambda x: x[1])
+
     # Plot each dataset with a different color
-    for dataset, name, color in zip(
-        list_of_datasets, dataset_names, colors, strict=False
-    ):
-        plt.scatter(dataset[:, 0], dataset[:, 1], label=name, color=color)
+    for dataset, name, color in sorted_tuples:
+        if name in ["krod_badly", "krod_well"]:
+            plt.scatter(
+                dataset[:, 0], dataset[:, 1], label=name, color=color, alpha=0.05
+            )
+        else:
+            plt.scatter(dataset[:, 0], dataset[:, 1], label=name, color=color)
 
     # Add labels and a legend
     plt.xlabel("PCA Component 1")
@@ -85,7 +93,7 @@ def main(datasets: dict[str, tuple[str, str]]) -> None:
 
     # Make all datasets have the same number of samples
     # smallest_size = min(len(f) for f in features_list)
-    features_list = [f.sample(n=SIZE) for f in features_list]
+    # features_list = [f.sample(n=SIZE) for f in features_list]
 
     # Concatenate all feature datasets to apply PCA on them together
     combined_features = pd.concat(features_list)
@@ -126,13 +134,13 @@ def main(datasets: dict[str, tuple[str, str]]) -> None:
         [merged_well, merged_badly], ["merged_well", "merged_badly"], ["blue", "red"]
     )
     plot_pca_results(
-        [krod_well, krod_badly], ["krod_well", "krod_badly"], ["green", "purple"]
+        [krod_well, krod_badly], ["krod_well", "krod_badly"], ["green", "orange"]
     )
     plot_pca_results(
         [merged_well, krod_well], ["merged_well", "krod_well"], ["blue", "green"]
     )
     plot_pca_results(
-        [merged_badly, krod_badly], ["merged_badly", "krod_badly"], ["red", "purple"]
+        [merged_badly, krod_badly], ["merged_badly", "krod_badly"], ["red", "orange"]
     )
 
 
@@ -156,7 +164,7 @@ if __name__ == "__main__":
         ),
         "krod_badly": (
             "/Users/lukas/Documents/Features/features_krod_badly.csv",
-            "purple",
+            "orange",
         ),
     }
 
