@@ -9,6 +9,25 @@
     "sub_statistics": []
   },
   {
+    "stratum": "stratum0",
+    "total": 1,
+    "not_different_abs": 1,
+    "different_abs": 0,
+    "not_different_rel": 1.0,
+    "different_rel": 0.0,
+    "sub_statistics": [
+      {
+        "stratum": "commentsRemove",
+        "total": 1,
+        "not_different_abs": 1,
+        "different_abs": 0,
+        "not_different_rel": 1.0,
+        "different_rel": 0.0,
+        "sub_statistics": []
+      }
+    ]
+  },
+  {
     "stratum": "stratum1",
     "total": 1,
     "not_different_abs": 0,
@@ -61,25 +80,6 @@
         "different_abs": 1,
         "not_different_rel": 0.0,
         "different_rel": 1.0,
-        "sub_statistics": []
-      }
-    ]
-  },
-  {
-    "stratum": "stratum0",
-    "total": 1,
-    "not_different_abs": 1,
-    "different_abs": 0,
-    "not_different_rel": 1.0,
-    "different_rel": 0.0,
-    "sub_statistics": [
-      {
-        "stratum": "commentsRemove",
-        "total": 1,
-        "not_different_abs": 1,
-        "different_abs": 0,
-        "not_different_rel": 1.0,
-        "different_rel": 0.0,
         "sub_statistics": []
       }
     ]
