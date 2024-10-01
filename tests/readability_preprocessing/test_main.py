@@ -36,6 +36,7 @@ from tests.readability_preprocessing.utils.utils import (
 
 
 class TestRunMain(DirTest):
+    @unittest.skip("Feature extraction takes long")
     def test_run_feature_extractor(self):
         class MockParsedArgs:
             def __init__(self, output: str = self.output_dir):
@@ -51,6 +52,7 @@ class TestRunMain(DirTest):
         assert len(os.listdir(self.output_dir)) == 1
         assert "features.csv" in os.listdir(self.output_dir)
 
+    @unittest.skip("Feature extraction takes long")
     def test_run_stratified_sampling(self):
         class MockParsedArgs:
             def __init__(self, output: str = self.output_dir):

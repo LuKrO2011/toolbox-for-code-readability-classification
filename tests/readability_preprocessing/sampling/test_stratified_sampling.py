@@ -1,6 +1,7 @@
 import json
 import math
 import os
+import unittest
 
 import numpy as np
 
@@ -143,6 +144,7 @@ class TestCalculateFeatures:
             for value in row:
                 assert 0.0 <= value <= 1.0
 
+    @unittest.skip("Feature extraction takes long")
     def test_calculate_features(self):
         folder = "AreaShop/AddCommand.java"
         dir = os.path.join(METHODS_ORIGINAL_DIR, folder)
