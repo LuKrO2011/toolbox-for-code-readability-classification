@@ -444,6 +444,9 @@ def compare_to_folder(
     rdh_different = _group_by_rdh(s_different, rdh_names)
     statistics = _add_rdh_sub_statistics(statistics, rdh_different, rdh_not_different)
 
+    # Sort the statistics by the stratum name
+    statistics = dict(sorted(statistics.items()))
+
     # Log the statistics
     logging.info("The following statistics were calculated:")
     for statistic in statistics.values():
