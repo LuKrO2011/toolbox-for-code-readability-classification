@@ -8,7 +8,10 @@ from pathlib import Path
 from typing import Any
 
 from readability_preprocessing.extractors.diff_extractor import compare_to_folder
-from readability_preprocessing.extractors.sampled_extractor import extract_sampled
+from readability_preprocessing.extractors.sampled_extractor import (
+    extract_features_from_sampled,
+    extract_sampled,
+)
 from readability_preprocessing.rdh.comments_remover import remove_comments
 from readability_preprocessing.sampling.survey_crafting import SurveyCrafter
 from src.readability_preprocessing.dataset.dataset_combiner import combine_datasets
@@ -84,6 +87,7 @@ class Tasks(Enum):
     FEATURES = "FEATURES"
     SAMPLE = "SAMPLE"
     EXTRACT_SAMPLED = "EXTRACT_SAMPLED"
+    EXTRACT_FEATURES = "EXTRACT_FEATURES"
     EXTRACT_FILES = "EXTRACT_FILES"
     EXTRACT_METHODS = "EXTRACT_METHODS"
     EXTRACT_DIFF = "EXTRACT_DIFF"
@@ -186,6 +190,30 @@ def _set_up_arg_parser() -> ArgumentParser:
         required=True,
         type=str,
         help="Path to the folder where the sampled, extracted methods are stored.",
+    )
+
+    # Parser for extracting features
+    extract_methods_parser = sub_parser.add_parser(str(Tasks.EXTRACT_FEATURES))
+    extract_methods_parser.add_argument(
+        "--input",
+        "-i",
+        required=True,
+        type=Path,
+        help="Path to the csv with all features.",
+    )
+    extract_sampled_parser.add_argument(
+        "--sampling",
+        "-s",
+        required=True,
+        type=str,
+        help="Path to the folder containing the sampling information (stratas).",
+    )
+    extract_methods_parser.add_argument(
+        "--output",
+        "-o",
+        required=True,
+        type=Path,
+        help="Path to the folder where the extracted features should be stored.",
     )
 
     # Parser for extracting files
@@ -605,6 +633,33 @@ def _run_extract_sampled(parsed_args: Any) -> None:
     )
 
 
+def _run_extract_features(parsed_args: Any) -> None:
+    """
+    Extracts the features from a csv file containing all features
+    depending on the sampling.
+    :param parsed_args: Parsed arguments.
+    :return: None
+    """
+    # Get the parsed arguments
+    input_csv = Path(parsed_args.input)
+    sampling_dir = Path(parsed_args.sampling)
+    output_dir = Path(parsed_args.output)
+
+    # Log the arguments
+    logging.info(f"Input csv: {input_csv}")
+    logging.info(f"Sampling directory: {sampling_dir}")
+    logging.info(f"Output directory: {output_dir}")
+
+    # Create the output directory, if it does not exist
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+
+    # Extract the features
+    extract_features_from_sampled(
+        csv_path=input_csv, output_dir=output_dir, sampling_dir=sampling_dir
+    )
+
+
 def _run_extract_files(parsed_args: Any) -> None:
     """
     Extracts successfully processed files from the input directory.
@@ -901,6 +956,8 @@ def main(args: list[str]) -> int:
             _run_stratified_sampling(parsed_args)
         case Tasks.EXTRACT_SAMPLED:
             _run_extract_sampled(parsed_args)
+        case Tasks.EXTRACT_FEATURES:
+            _run_extract_features(parsed_args)
         case Tasks.EXTRACT_FILES:
             _run_extract_files(parsed_args)
         case Tasks.EXTRACT_METHODS:

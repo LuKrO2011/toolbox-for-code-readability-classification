@@ -10,6 +10,7 @@ from src.readability_preprocessing.main import (
     _run_craft_surveys,
     _run_download,
     _run_extract_diff,
+    _run_extract_features,
     _run_extract_files,
     _run_extract_methods,
     _run_extract_sampled,
@@ -20,6 +21,7 @@ from src.readability_preprocessing.main import (
 )
 from tests.readability_preprocessing.utils.utils import (
     CHECKSTYLED_DIR,
+    CSV_DIR,
     ENCODED_BW_DIR,
     EXTRACTED_2_DIR,
     EXTRACTED_DIR,
@@ -83,6 +85,25 @@ class TestRunMain(DirTest):
 
         # Assert that the sampled files have been extracted successfully
         assert len(os.listdir(self.output_dir)) != 0
+
+    def test_run_extract_features(self):
+        class MockParsedArgs:
+            def __init__(self, output: str = self.output_dir):
+                self.input = CSV_DIR / "features.csv"
+                self.sampling = SAMPLED_DIR_2_2
+                self.output = output
+
+        parsed_args = MockParsedArgs()
+
+        # Extracting features within the test
+        _run_extract_features(parsed_args)
+
+        # Assert that the features have been extracted successfully
+        assert len(os.listdir(self.output_dir)) == 2
+        assert set(os.listdir(self.output_dir)) == {
+            "features_stratum_0.csv",
+            "features_stratum_1.csv",
+        }
 
     def test_run_extract_files(self):
         class MockParsedArgs:
