@@ -123,6 +123,15 @@ def _get_new_file_name(file_path: str, input_dir: Path) -> str:
     return relative_file_path.as_posix().replace("/", "_")
 
 
+def _to_universal_path(path: str | Path) -> Path:
+    """
+    Converts the path to a universal path.
+    :param path: The path.
+    :return: The universal path.
+    """
+    return Path(path.replace("\\", "/"))
+
+
 def _get_common_path(strata_contents: list[list[str]]) -> str:
     """
     Calculates the common path from all strata contents.
@@ -131,6 +140,9 @@ def _get_common_path(strata_contents: list[list[str]]) -> str:
     """
     # Flatten the strata contents
     strata_contents = [file for stratum in strata_contents for file in stratum]
+
+    # Replace backslashes with forward slashes
+    strata_contents = [_to_universal_path(file) for file in strata_contents]
 
     # Get the common path
     return os.path.commonpath(strata_contents)
@@ -165,7 +177,7 @@ def _to_relative_path(absolute_path: str, relative_to_dir: str) -> str:
     :param relative_to_dir: The folder name to make the path relative to.
     :return: The relative path.
     """
-    absolute_path = Path(absolute_path)
+    absolute_path = _to_universal_path(absolute_path)
 
     # Remove everything after the first occurrence of the relative_to_dir
     relative_to_path = absolute_path.parts[
@@ -197,3 +209,87 @@ def _is_path_in(path: str, path_to_check: str) -> bool:
     :return: True if the path is in the path to check, False otherwise.
     """
     return path in path_to_check
+
+
+# TODO: Simplify/Refactor the following two functions
+
+
+def _copy_features_to_output(
+    csv_path: Path,
+    output_dir: Path,
+    strata_names: list[Path],
+    strata_contents: list[list[str]],
+) -> None:
+    """
+    Copies the features to csv files in the output directory.
+    :param csv_path: Path to the csv files containing the features.
+    :param output_dir: The directory to extract the features to.
+    :param strata_names: The names of the strata.
+    :param strata_contents: The contents of the strata.
+    :return: None.
+    """
+    with open(csv_path) as csv_file:
+        lines = csv_file.readlines()
+        header = lines[0]
+        lines = lines[1:]
+        paths = [_to_universal_path(line.split(",")[0]) for line in lines]
+        common_path = os.path.commonpath(paths)
+        relative_dir = Path(common_path).parts[-1]
+        paths = [_to_relative_path(str(path), relative_dir) for path in paths]
+
+        # Replace the paths in the lines
+        # First remove the old paths
+        lines = [",".join(line.split(",")[1:]) for line in lines]
+        # Then add the new paths
+        lines = [f"{path},{line}" for path, line in zip(paths, lines, strict=False)]
+
+    for stratum_name, stratum_content in zip(
+        strata_names, strata_contents, strict=False
+    ):
+        new_file_name = f"{csv_path.stem}_{stratum_name.stem}.csv"
+        output_file_path = os.path.join(output_dir, new_file_name)
+
+        with open(output_file_path, "w") as output_file:
+            output_file.write(header)
+
+            for line in lines:
+                line_path = line.split(",")[0]
+                if _check_path_in(line_path, stratum_content):
+                    output_file.write(line)
+
+
+def extract_features_from_sampled(
+    csv_path: Path, output_dir: Path, sampling_dir: Path
+) -> None:
+    """
+    Extracts the features of the sampled strata from the input csv file
+    to the output directory.
+    The sampling is specified by the files in the sampling directory.
+    :param csv_path: Path to the csv file containing the features.
+    :param output_dir: The directory to extract the features to.
+    :param sampling_dir: The directory containing the sampling files.
+    :return: None.
+    """
+    # Create output directory
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Load the sampling files
+    strata_names = [file for file in sampling_dir.iterdir() if file.is_file()]
+    logging.info(f"Number of strata: {len(strata_names)}")
+
+    # Load the contents of the sampling files
+    strata_contents = [file.read_text().splitlines() for file in strata_names]
+
+    # Log the first line of each stratum
+    for idx, stratum_contents in enumerate(strata_contents):
+        logging.info(f"{idx}: first stratum entry: {stratum_contents[0]}")
+
+    # Convert the absolute paths to relative paths
+    strata_contents = _to_relative_paths(strata_contents)
+
+    # Log the first line of each stratum
+    for idx, stratum_contents in enumerate(strata_contents):
+        logging.info(f"{idx}: first stratum entry relative: {stratum_contents[0]}")
+
+    # Copy the files to the output directory
+    _copy_features_to_output(csv_path, output_dir, strata_names, strata_contents)
