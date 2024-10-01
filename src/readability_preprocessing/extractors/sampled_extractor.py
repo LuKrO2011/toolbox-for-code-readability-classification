@@ -211,9 +211,6 @@ def _is_path_in(path: str, path_to_check: str) -> bool:
     return path in path_to_check
 
 
-# TODO: Simplify/Refactor the following two functions
-
-
 def _copy_features_to_output(
     csv_path: Path,
     output_dir: Path,
@@ -228,34 +225,97 @@ def _copy_features_to_output(
     :param strata_contents: The contents of the strata.
     :return: None.
     """
-    with open(csv_path) as csv_file:
-        lines = csv_file.readlines()
-        header = lines[0]
-        lines = lines[1:]
-        paths = [_to_universal_path(line.split(",")[0]) for line in lines]
-        common_path = os.path.commonpath(paths)
-        relative_dir = Path(common_path).parts[-1]
-        paths = [_to_relative_path(str(path), relative_dir) for path in paths]
+    header, lines = _read_and_process_csv(csv_path)
+    paths, relative_dir = _process_paths(lines)
 
-        # Replace the paths in the lines
-        # First remove the old paths
-        lines = [",".join(line.split(",")[1:]) for line in lines]
-        # Then add the new paths
-        lines = [f"{path},{line}" for path, line in zip(paths, lines, strict=False)]
+    # Update lines with new paths
+    updated_lines = _update_lines_with_paths(paths, lines, relative_dir)
 
+    # Write to output files for each stratum
     for stratum_name, stratum_content in zip(
         strata_names, strata_contents, strict=False
     ):
-        new_file_name = f"{csv_path.stem}_{stratum_name.stem}.csv"
-        output_file_path = os.path.join(output_dir, new_file_name)
+        _write_stratum_to_file(
+            output_dir,
+            csv_path.stem,
+            stratum_name,
+            header,
+            updated_lines,
+            stratum_content,
+        )
 
-        with open(output_file_path, "w") as output_file:
-            output_file.write(header)
 
-            for line in lines:
-                line_path = line.split(",")[0]
-                if _check_path_in(line_path, stratum_content):
-                    output_file.write(line)
+def _read_and_process_csv(csv_path: Path) -> tuple[str, list[str]]:
+    """
+    Reads the csv file and processes it to extract the header and lines.
+    :param csv_path: Path to the csv file.
+    :return: The header and the lines
+    """
+    with open(csv_path) as csv_file:
+        lines = csv_file.readlines()
+    header = lines[0]
+    return header, lines[1:]
+
+
+def _process_paths(lines: list[str]) -> tuple[list[Path], str]:
+    """
+    Processes the paths from the csv lines and finds the common relative directory.
+    :param lines: The csv lines.
+    :return: The paths and the common relative directory.
+    """
+    paths = [_to_universal_path(line.split(",")[0]) for line in lines]
+    common_path = os.path.commonpath(paths)
+    relative_dir = Path(common_path).parts[-1]
+    return paths, relative_dir
+
+
+def _update_lines_with_paths(
+    paths: list[Path], lines: list[str], relative_dir: str
+) -> list[str]:
+    """
+    Updates the csv lines with new relative paths.
+    :param paths: The paths to update.
+    :param lines: The csv lines.
+    :param relative_dir: The common relative directory.
+    :return: The updated lines.
+    """
+    relative_paths = [_to_relative_path(str(path), relative_dir) for path in paths]
+
+    # Remove the old paths from lines
+    cleaned_lines = [",".join(line.split(",")[1:]) for line in lines]
+
+    # Add the new paths to lines
+    return [
+        f"{path},{line}"
+        for path, line in zip(relative_paths, cleaned_lines, strict=False)
+    ]
+
+
+def _write_stratum_to_file(
+    output_dir: Path,
+    base_name: str,
+    stratum_name: Path,
+    header: str,
+    lines: list[str],
+    stratum_content: list[str],
+) -> None:
+    """
+    Writes the lines relevant to the current stratum to a new csv file.
+    :param output_dir: The output directory.
+    :param base_name: The base name of the output file.
+    :param stratum_name: The name of the stratum.
+    :param header: The header of the csv file.
+    :param lines: The lines to write.
+    :param stratum_content: The content of the stratum.
+    """
+    new_file_name = f"{base_name}_{stratum_name.stem}.csv"
+    output_file_path = os.path.join(output_dir, new_file_name)
+    with open(output_file_path, "w") as output_file:
+        output_file.write(header)
+        for line in lines:
+            line_path = line.split(",")[0]
+            if _check_path_in(line_path, stratum_content):
+                output_file.write(line)
 
 
 def extract_features_from_sampled(
