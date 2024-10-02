@@ -15,6 +15,7 @@ from readability_preprocessing.features.feature_difference import (
 APPLY_STANDARD_SCALER = True
 Z_SCORE_THRESHOLD = 3  # Threshold for z-score to detect outliers
 SIZE = 105  # Number of samples to keep in each dataset
+REMOVE_GET_METHODS = False
 
 
 def remove_outliers(features: pd.DataFrame) -> pd.DataFrame:
@@ -70,6 +71,24 @@ def plot_pca_results(
     plt.show()
 
 
+def _remove_get_set_methods(features: pd.DataFrame) -> pd.DataFrame:
+    """
+    Remove features that have get/set in the method name.
+    The method name is the last part of the first column of the features.
+    :param features: A DataFrame of features.
+    :return: A DataFrame with features that do not have get/set in the method name.
+    """
+    # Get the method names from the first column
+    method_names = features.iloc[:, 0].str.split("/").str[-1]
+
+    # Convert the method names to lower case
+    method_names = method_names.str.lower()
+
+    # Filter out the method names that contain get or set
+    mask = ~method_names.str.contains("get|set")
+    return features[mask]
+
+
 def main(datasets: dict[str, tuple[str, str]]) -> None:
     """
     Main function to visualize the differences between multiple sets of features.
@@ -87,6 +106,10 @@ def main(datasets: dict[str, tuple[str, str]]) -> None:
     dataset_names = list(datasets.keys())
     for path in paths:
         features = pd.read_csv(path)
+
+        if REMOVE_GET_METHODS:
+            features = _remove_get_set_methods(features)
+
         features = remove_filename_column(features)
         features = handle_nans(features)
         features_list.append(features)
