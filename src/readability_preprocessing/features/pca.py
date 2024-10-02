@@ -1,8 +1,7 @@
-from itertools import cycle
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import plotly.express as px
 from scipy.stats import zscore
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
@@ -29,6 +28,24 @@ def remove_outliers(features: pd.DataFrame) -> pd.DataFrame:
 
     # Filter the data: keep only those rows where all z-scores are below the threshold
     return features[(z_scores < Z_SCORE_THRESHOLD).all(axis=1)]
+
+
+def _remove_get_set_methods(features: pd.DataFrame) -> pd.DataFrame:
+    """
+    Remove features that have get/set in the method name.
+    The method name is the last part of the first column of the features.
+    :param features: A DataFrame of features.
+    :return: A DataFrame with features that do not have get/set in the method name.
+    """
+    # Get the method names from the first column
+    method_names = features.iloc[:, 0].str.split("/").str[-1]
+
+    # Convert the method names to lower case
+    method_names = method_names.str.lower()
+
+    # Filter out the method names that contain get or set
+    mask = ~method_names.str.contains("get|set")
+    return features[mask]
 
 
 def plot_pca_results(
@@ -71,22 +88,33 @@ def plot_pca_results(
     plt.show()
 
 
-def _remove_get_set_methods(features: pd.DataFrame) -> pd.DataFrame:
+def plot_pca_interactive(pca_df, dataset_name):
     """
-    Remove features that have get/set in the method name.
-    The method name is the last part of the first column of the features.
-    :param features: A DataFrame of features.
-    :return: A DataFrame with features that do not have get/set in the method name.
+    Create an interactive PCA plot using Plotly with method names as hover data.
+
+    :param pca_df: DataFrame containing PCA results and method names.
+    :param dataset_name: The name of the dataset to include in the plot title.
     """
-    # Get the method names from the first column
-    method_names = features.iloc[:, 0].str.split("/").str[-1]
+    fig = px.scatter(
+        pca_df,
+        x="PCA1",
+        y="PCA2",
+        hover_data=["method_names"],  # Show method names on hover
+        title=f"PCA of Features - {dataset_name}",
+        color="dataset",  # Color by dataset
+        labels={"PCA1": "PCA Component 1", "PCA2": "PCA Component 2"},
+        opacity=0.7,
+    )
 
-    # Convert the method names to lower case
-    method_names = method_names.str.lower()
+    # Customize axis limits and plot layout if needed
+    fig.update_layout(
+        xaxis=[-7.5, 12.5],
+        yaxis=[-7, 9],
+        width=900,
+        height=700,
+    )
 
-    # Filter out the method names that contain get or set
-    mask = ~method_names.str.contains("get|set")
-    return features[mask]
+    fig.show()
 
 
 def main(datasets: dict[str, tuple[str, str]]) -> None:
@@ -98,21 +126,29 @@ def main(datasets: dict[str, tuple[str, str]]) -> None:
     if not datasets:
         raise ValueError("The input dictionary of datasets cannot be empty.")
 
-    paths = [path for path, _ in datasets.values()]
-    colors = cycle([color for _, color in datasets.values()])
-
-    # Load and preprocess all features
-    features_list = []
     dataset_names = list(datasets.keys())
-    for path in paths:
+
+    features_list = []
+    method_names_list = []
+    dataset_labels = []
+
+    for dataset_name, (path, _) in datasets.items():
         features = pd.read_csv(path)
 
         if REMOVE_GET_METHODS:
-            features = _remove_get_set_methods(features)
+            features, method_names = _remove_get_set_methods(features)
+        else:
+            method_names = (
+                features.iloc[:, 0].str.split("/").str[-1]
+            )  # Extract method names
 
+        method_names_list.append(method_names)
         features = remove_filename_column(features)
         features = handle_nans(features)
         features_list.append(features)
+        dataset_labels.extend(
+            [dataset_name] * len(features)
+        )  # Label each row by dataset name
 
     # Make all datasets have the same number of samples
     # smallest_size = min(len(f) for f in features_list)
@@ -120,50 +156,50 @@ def main(datasets: dict[str, tuple[str, str]]) -> None:
 
     # Concatenate all feature datasets to apply PCA on them together
     combined_features = pd.concat(features_list)
+    combined_method_names = pd.concat(method_names_list).reset_index(drop=True)
+    combined_labels = pd.Series(dataset_labels, name="dataset")
 
+    # Apply StandardScaler to center and scale the data
     if APPLY_STANDARD_SCALER:
-        # Apply StandardScaler to center and scale the data
         scaler = StandardScaler()
         combined_features = scaler.fit_transform(combined_features)
 
-    # Apply PCA to reduce dimensions
+    # Apply PCA
     pca = PCA(n_components=2)
     pca_result = pca.fit_transform(combined_features)
 
     # Remove outliers
     pca_result = remove_outliers(pca_result)
 
-    # Split the PCA result back to the original datasets
-    pca_splits = []
-    start = 0
-    for features in features_list:
-        end = start + len(features)
-        pca_splits.append(pca_result[start:end])
-        start = end
+    # Create a DataFrame with PCA results, method names, and dataset labels
+    pca_df = pd.DataFrame(pca_result, columns=["PCA1", "PCA2"])
+    pca_df["method_names"] = combined_method_names
+    pca_df["dataset"] = combined_labels.reset_index(drop=True)
 
-    # Plot each dataset with a different color
-    plot_pca_results(
-        pca_splits, dataset_names, [next(colors) for _ in range(len(datasets))]
-    )
+    # Plot the interactive PCA result
+    plot_pca_interactive(pca_df, "Combined")
 
-    # Also plot (merged_well, merged_badly), (krod_well, krod_badly),
-    # (merged_well, krod_well), (merged_badly, krod_badly)
-    merged_well = pca_splits[0]
-    merged_badly = pca_splits[1]
-    krod_well = pca_splits[2]
-    krod_badly = pca_splits[3]
+    # Now you can explore specific dataset combinations interactively
+    for dataset_name in dataset_names:
+        filtered_pca_df = pca_df[pca_df["dataset"] == dataset_name]
+        plot_pca_interactive(filtered_pca_df, dataset_name)
 
-    plot_pca_results(
-        [merged_well, merged_badly], ["merged_well", "merged_badly"], ["blue", "red"]
+    # Also, plot combinations as specified
+    plot_pca_interactive(
+        pca_df[pca_df["dataset"].isin(["merged_well", "merged_badly"])],
+        "merged_well vs merged_badly",
     )
-    plot_pca_results(
-        [krod_well, krod_badly], ["krod_well", "krod_badly"], ["green", "orange"]
+    plot_pca_interactive(
+        pca_df[pca_df["dataset"].isin(["krod_well", "krod_badly"])],
+        "krod_well vs krod_badly",
     )
-    plot_pca_results(
-        [merged_well, krod_well], ["merged_well", "krod_well"], ["blue", "green"]
+    plot_pca_interactive(
+        pca_df[pca_df["dataset"].isin(["merged_well", "krod_well"])],
+        "merged_well vs krod_well",
     )
-    plot_pca_results(
-        [merged_badly, krod_badly], ["merged_badly", "krod_badly"], ["red", "orange"]
+    plot_pca_interactive(
+        pca_df[pca_df["dataset"].isin(["merged_badly", "krod_badly"])],
+        "merged_badly vs krod_badly",
     )
 
 
