@@ -11,10 +11,10 @@ from readability_preprocessing.features.feature_difference import (
     remove_filename_column,
 )
 
-APPLY_STANDARD_SCALER = True
+APPLY_STANDARD_SCALER = False
 Z_SCORE_THRESHOLD = 3  # Threshold for z-score to detect outliers
 SIZE = 105  # Number of samples to keep in each dataset
-REMOVE_GET_METHODS = False
+REMOVE_GET_METHODS = True
 
 
 def remove_outliers(features: pd.DataFrame) -> pd.DataFrame:
@@ -30,12 +30,14 @@ def remove_outliers(features: pd.DataFrame) -> pd.DataFrame:
     return features[(z_scores < Z_SCORE_THRESHOLD).all(axis=1)]
 
 
-def _remove_get_set_methods(features: pd.DataFrame) -> pd.DataFrame:
+def _remove_get_set_methods(features: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
     """
-    Remove features that have get/set in the method name.
-    The method name is the last part of the first column of the features.
+    Remove features that have get/set in the method name and return the filtered
+    DataFrame along with the method names.
+
     :param features: A DataFrame of features.
-    :return: A DataFrame with features that do not have get/set in the method name.
+    :return: A tuple containing a DataFrame with features that do not have get/set
+             in the method name and the corresponding method names.
     """
     # Get the method names from the first column
     method_names = features.iloc[:, 0].str.split("/").str[-1]
@@ -45,7 +47,9 @@ def _remove_get_set_methods(features: pd.DataFrame) -> pd.DataFrame:
 
     # Filter out the method names that contain get or set
     mask = ~method_names.str.contains("get|set")
-    return features[mask]
+
+    # Return the filtered features and method names
+    return features[mask], method_names[mask]
 
 
 def plot_pca_results(
@@ -108,8 +112,6 @@ def plot_pca_interactive(pca_df, dataset_name):
 
     # Customize axis limits and plot layout if needed
     fig.update_layout(
-        xaxis=[-7.5, 12.5],
-        yaxis=[-7, 9],
         width=900,
         height=700,
     )
@@ -125,8 +127,6 @@ def main(datasets: dict[str, tuple[str, str]]) -> None:
     """
     if not datasets:
         raise ValueError("The input dictionary of datasets cannot be empty.")
-
-    dataset_names = list(datasets.keys())
 
     features_list = []
     method_names_list = []
@@ -179,28 +179,28 @@ def main(datasets: dict[str, tuple[str, str]]) -> None:
     # Plot the interactive PCA result
     plot_pca_interactive(pca_df, "Combined")
 
-    # Now you can explore specific dataset combinations interactively
-    for dataset_name in dataset_names:
-        filtered_pca_df = pca_df[pca_df["dataset"] == dataset_name]
-        plot_pca_interactive(filtered_pca_df, dataset_name)
-
-    # Also, plot combinations as specified
-    plot_pca_interactive(
-        pca_df[pca_df["dataset"].isin(["merged_well", "merged_badly"])],
-        "merged_well vs merged_badly",
-    )
-    plot_pca_interactive(
-        pca_df[pca_df["dataset"].isin(["krod_well", "krod_badly"])],
-        "krod_well vs krod_badly",
-    )
-    plot_pca_interactive(
-        pca_df[pca_df["dataset"].isin(["merged_well", "krod_well"])],
-        "merged_well vs krod_well",
-    )
-    plot_pca_interactive(
-        pca_df[pca_df["dataset"].isin(["merged_badly", "krod_badly"])],
-        "merged_badly vs krod_badly",
-    )
+    # # Now you can explore specific dataset combinations interactively
+    # for dataset_name in dataset_names:
+    #     filtered_pca_df = pca_df[pca_df["dataset"] == dataset_name]
+    #     plot_pca_interactive(filtered_pca_df, dataset_name)
+    #
+    # # Also, plot combinations as specified
+    # plot_pca_interactive(
+    #     pca_df[pca_df["dataset"].isin(["merged_well", "merged_badly"])],
+    #     "merged_well vs merged_badly",
+    # )
+    # plot_pca_interactive(
+    #     pca_df[pca_df["dataset"].isin(["krod_well", "krod_badly"])],
+    #     "krod_well vs krod_badly",
+    # )
+    # plot_pca_interactive(
+    #     pca_df[pca_df["dataset"].isin(["merged_well", "krod_well"])],
+    #     "merged_well vs krod_well",
+    # )
+    # plot_pca_interactive(
+    #     pca_df[pca_df["dataset"].isin(["merged_badly", "krod_badly"])],
+    #     "merged_badly vs krod_badly",
+    # )
 
 
 if __name__ == "__main__":
