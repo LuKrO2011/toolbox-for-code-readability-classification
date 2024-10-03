@@ -6,10 +6,7 @@ from scipy.stats import zscore
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
-from readability_preprocessing.features.feature_difference import (
-    handle_nans,
-    remove_filename_column,
-)
+from readability_preprocessing.features.feature_difference import remove_filename_column
 
 APPLY_STANDARD_SCALER = False
 Z_SCORE_THRESHOLD = 3  # Threshold for z-score to detect outliers
@@ -52,39 +49,27 @@ def _remove_get_set_methods(features: pd.DataFrame) -> tuple[pd.DataFrame, pd.Se
     return features[mask], method_names[mask]
 
 
-def plot_pca_results(
-    list_of_datasets: list[pd.DataFrame], dataset_names: list[str], colors: list[str]
-) -> None:
+def plot_pca_results(pca_df: pd.DataFrame) -> None:
     """
-    Plot the PCA results of multiple datasets.
-    :param list_of_datasets: A list of DataFrames of features.
-    :param dataset_names: A list of names of the datasets.
-    :param colors: A list of colors to use for plotting.
+    Create a PCA plot using Matplotlib without hovering effects.
+
+    :param pca_df: DataFrame containing PCA results and method names.
+    :return: None
     """
     plt.figure(figsize=(10, 8))
 
-    tuples = zip(list_of_datasets, dataset_names, colors, strict=False)
-
-    # Sort like this: 1. krod_badly, 2. krod_well, 3. merged_badly, 4. merged_well
-    sorted_tuples = sorted(tuples, key=lambda x: x[1])
-
-    # Plot each dataset with a different color
-    for dataset, name, color in sorted_tuples:
-        if name in ["krod_badly", "krod_well"]:
-            plt.scatter(
-                dataset[:, 0], dataset[:, 1], label=name, color=color, alpha=0.05
-            )
-        else:
-            plt.scatter(dataset[:, 0], dataset[:, 1], label=name, color=color)
+    # Group the data by dataset and plot each group with a different color
+    for dataset, group in pca_df.groupby("dataset"):
+        plt.scatter(group["PCA1"], group["PCA2"], label=dataset, alpha=0.6)
 
     # Add labels and a legend
     plt.xlabel("PCA Component 1")
     plt.ylabel("PCA Component 2")
     plt.title("PCA of Features")
 
-    # Set the x-axis from -7.5 to 12.5 and the y-axis from -7 to 9
-    plt.xlim(-7.5, 12.5)
-    plt.ylim(-7, 9)
+    # # Set the x-axis and y-axis limits
+    # plt.xlim(-7.5, 12.5)
+    # plt.ylim(-7, 9)
 
     plt.legend()
 
@@ -92,19 +77,19 @@ def plot_pca_results(
     plt.show()
 
 
-def plot_pca_interactive(pca_df, dataset_name):
+def plot_pca_interactive(pca_df: pd.DataFrame) -> None:
     """
     Create an interactive PCA plot using Plotly with method names as hover data.
 
     :param pca_df: DataFrame containing PCA results and method names.
-    :param dataset_name: The name of the dataset to include in the plot title.
+    :return: None
     """
     fig = px.scatter(
         pca_df,
         x="PCA1",
         y="PCA2",
         hover_data=["method_names"],  # Show method names on hover
-        title=f"PCA of Features - {dataset_name}",
+        title="PCA of Features",
         color="dataset",  # Color by dataset
         labels={"PCA1": "PCA Component 1", "PCA2": "PCA Component 2"},
         opacity=0.7,
@@ -112,11 +97,40 @@ def plot_pca_interactive(pca_df, dataset_name):
 
     # Customize axis limits and plot layout if needed
     fig.update_layout(
+        xaxis_range=[-10, 100],
+        yaxis_range=[-40, 80],
         width=900,
         height=700,
     )
 
     fig.show()
+
+
+def _remove_nan_rows(features: pd.DataFrame) -> pd.DataFrame:
+    """
+    Remove rows with NaN values from the dataset.
+    :param features: A DataFrame of features.
+    :return: A DataFrame with NaN rows removed.
+    """
+    return features.dropna()
+
+
+def _remove_nan_columns(features: pd.DataFrame) -> pd.DataFrame:
+    """
+    Remove columns with NaN values from the dataset.
+    :param features: A DataFrame of features.
+    :return: A DataFrame with NaN columns removed.
+    """
+    return features.dropna(axis=1)
+
+
+def _replace_nans_with_0(features: pd.DataFrame) -> pd.DataFrame:
+    """
+    Replace NaN values with 0 in the dataset.
+    :param features: A DataFrame of features.
+    :return: A DataFrame with NaN values replaced with 0.
+    """
+    return features.fillna(0)
 
 
 def main(datasets: dict[str, tuple[str, str]]) -> None:
@@ -144,11 +158,9 @@ def main(datasets: dict[str, tuple[str, str]]) -> None:
 
         method_names_list.append(method_names)
         features = remove_filename_column(features)
-        features = handle_nans(features)
+        # features = _replace_nans_with_0(features)
         features_list.append(features)
-        dataset_labels.extend(
-            [dataset_name] * len(features)
-        )  # Label each row by dataset name
+        dataset_labels.extend([dataset_name] * len(features))
 
     # Make all datasets have the same number of samples
     # smallest_size = min(len(f) for f in features_list)
@@ -156,6 +168,7 @@ def main(datasets: dict[str, tuple[str, str]]) -> None:
 
     # Concatenate all feature datasets to apply PCA on them together
     combined_features = pd.concat(features_list)
+    combined_features = _remove_nan_columns(combined_features)
     combined_method_names = pd.concat(method_names_list).reset_index(drop=True)
     combined_labels = pd.Series(dataset_labels, name="dataset")
 
@@ -176,31 +189,11 @@ def main(datasets: dict[str, tuple[str, str]]) -> None:
     pca_df["method_names"] = combined_method_names
     pca_df["dataset"] = combined_labels.reset_index(drop=True)
 
-    # Plot the interactive PCA result
-    plot_pca_interactive(pca_df, "Combined")
+    # Plot the results not interactively
+    plot_pca_results(pca_df)
 
-    # # Now you can explore specific dataset combinations interactively
-    # for dataset_name in dataset_names:
-    #     filtered_pca_df = pca_df[pca_df["dataset"] == dataset_name]
-    #     plot_pca_interactive(filtered_pca_df, dataset_name)
-    #
-    # # Also, plot combinations as specified
-    # plot_pca_interactive(
-    #     pca_df[pca_df["dataset"].isin(["merged_well", "merged_badly"])],
-    #     "merged_well vs merged_badly",
-    # )
-    # plot_pca_interactive(
-    #     pca_df[pca_df["dataset"].isin(["krod_well", "krod_badly"])],
-    #     "krod_well vs krod_badly",
-    # )
-    # plot_pca_interactive(
-    #     pca_df[pca_df["dataset"].isin(["merged_well", "krod_well"])],
-    #     "merged_well vs krod_well",
-    # )
-    # plot_pca_interactive(
-    #     pca_df[pca_df["dataset"].isin(["merged_badly", "krod_badly"])],
-    #     "merged_badly vs krod_badly",
-    # )
+    # Plot the interactive PCA result
+    # plot_pca_interactive(pca_df, "Combined")
 
 
 if __name__ == "__main__":
