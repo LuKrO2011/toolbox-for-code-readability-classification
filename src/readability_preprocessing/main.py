@@ -201,7 +201,7 @@ def _set_up_arg_parser() -> ArgumentParser:
         type=Path,
         help="Path to the csv with all features.",
     )
-    extract_sampled_parser.add_argument(
+    extract_methods_parser.add_argument(
         "--sampling",
         "-s",
         required=True,
