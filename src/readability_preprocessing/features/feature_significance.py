@@ -2,15 +2,16 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from scipy import stats
-from scipy.stats import zscore
 
 from readability_preprocessing.features.feature_difference import (
     handle_nans,
     remove_filename_column,
 )
 
+REMOVE_NAN_COLUMNS = True
 
-def ttest_ind(a: np.ndarray, b: np.ndarray) -> tuple[float, float]:
+
+def ttest_ind(a: list[float], b: list[float]) -> tuple[float, float]:
     """
     Perform a t-test for the means of two independent samples of scores.
     :param a: The first set of scores.
@@ -34,20 +35,31 @@ def load_and_preprocess_data(paths: dict[str, str]) -> dict[str, pd.DataFrame]:
         try:
             dataset = pd.read_csv(path)
             dataset = remove_filename_column(dataset)
-            dataset = handle_nans(dataset)
+            if not REMOVE_NAN_COLUMNS:
+                dataset = handle_nans(dataset)
             dataframes[name] = dataset
         except Exception as e:
             print(f"Error loading {name}: {e}")
+
+    if REMOVE_NAN_COLUMNS:
+        nan_columns = []
+
+        # Gather all columns that contain NaN values across all datasets
+        for dataset in dataframes.values():
+            nan_columns.extend(dataset.columns[dataset.isna().any()].tolist())
+        nan_columns = list(set(nan_columns))
+
+        # Drop the columns and reassign the result to the dataset
+        for key, dataset in dataframes.items():
+            dataframes[key] = dataset.drop(nan_columns, axis=1)
+
     return dataframes
 
 
-def perform_statistical_tests(
-    datasets: dict[str, pd.DataFrame], normalize: bool = False
-) -> pd.DataFrame:
+def perform_statistical_tests(datasets: dict[str, pd.DataFrame]) -> pd.DataFrame:
     """
     Perform statistical significance tests (t-tests) on the datasets.
     :param datasets: A dictionary of dataset names and their DataFrames.
-    :param normalize: Flag to enable Z-score normalization.
     :return: A DataFrame containing p-values and additional statistics
     for each dataset comparison.
     """
@@ -66,13 +78,8 @@ def perform_statistical_tests(
 
             if not common_columns.empty:
                 for column in common_columns:
-                    col1 = datasets[name1][column]
-                    col2 = datasets[name2][column]
-
-                    # Normalize if the flag is set
-                    if normalize:
-                        col1 = zscore(col1)
-                        col2 = zscore(col2)
+                    col1 = datasets[name1][column].tolist()
+                    col2 = datasets[name2][column].tolist()
 
                     # Perform the t-test
                     t_statistic, p_value = ttest_ind(col1, col2)
@@ -146,7 +153,7 @@ def plot_results(results: pd.DataFrame):
     plt.yticks(ticks=np.arange(heatmap_array.shape[0]), labels=heatmap_data.index)
 
     plt.colorbar(cax, label="p-value")
-    plt.title("Statistical Significance Test P-values Heatmap")
+    plt.title("Blau = verschieden, Rot = gleich")
     plt.xlabel("Dataset Comparison")
     plt.ylabel("Features")
 

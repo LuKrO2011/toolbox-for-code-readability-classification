@@ -108,6 +108,7 @@ if __name__ == "__main__":
         for dataset in datasets.values():
             nan_columns += dataset.columns[dataset.isna().any()].tolist()
         nan_columns = list(set(nan_columns))
+        print(f"Columns with NaN values: {len(nan_columns)}")
 
     for pair in to_compare:
         print(f"\nComparing {pair[0]} and {pair[1]}")

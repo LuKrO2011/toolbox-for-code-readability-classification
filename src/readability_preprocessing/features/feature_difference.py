@@ -10,6 +10,7 @@ from tabulate import tabulate
 # Define constants
 EPSILON = 1e-6
 REPLACE_NANS_WITH_AVERAGE = True
+REMOVE_NAN_COLUMNS = True
 
 
 def remove_filename_column(features: pd.DataFrame) -> pd.DataFrame:
@@ -257,26 +258,32 @@ def create_violin_plot(dataframe: pd.DataFrame) -> None:
     plt.show()
 
 
-def main(path1: str, path2: str) -> None:
+def main(path1: str, path2: str, nan_columns: list) -> None:
     """
     Main function to calculate the differences between two sets of features.
     :param path1: The path to the first set of features.
     :param path2: The path to the second set of features.
+    :param nan_columns: List of column names where at least one value is NaN.
     :return: None
     """
     # Load and preprocess features
     features1 = pd.read_csv(path1)
     features2 = pd.read_csv(path2)
 
-    abs_features1 = handle_nans(features1)
-    abs_features2 = handle_nans(features2)
+    # Remove columns from both datasets where at least one value is NaN
+    if REMOVE_NAN_COLUMNS:
+        features1 = features1.drop(columns=nan_columns)
+        features2 = features2.drop(columns=nan_columns)
+    else:
+        features1 = handle_nans(features1)
+        features2 = handle_nans(features2)
 
-    rel_features1 = normalize(abs_features1)
-    rel_features2 = normalize(abs_features2)
+    rel_features1 = normalize(features1)
+    rel_features2 = normalize(features2)
 
     # Calculate statistics
-    internal_stats1 = calculate_internal_stats(abs_features1)
-    internal_stats2 = calculate_internal_stats(abs_features2)
+    internal_stats1 = calculate_internal_stats(features1)
+    internal_stats2 = calculate_internal_stats(features2)
     stats = calculate_compare_stats(internal_stats1, internal_stats2)
 
     # Save the statistics to a CSV file
@@ -310,6 +317,19 @@ if __name__ == "__main__":
         ("merged_badly", "krod_badly"),
     ]
 
+    # Load all datasets and get all column names where at least one value is nan
+    nan_columns = []
+    if REMOVE_NAN_COLUMNS:
+        datasets = {}
+        for key, path in paths.items():
+            datasets[key] = pd.read_csv(path)
+
+        nan_columns = []
+        for dataset in datasets.values():
+            nan_columns += dataset.columns[dataset.isna().any()].tolist()
+        nan_columns = list(set(nan_columns))
+        print(f"Columns with NaN values: {len(nan_columns)}")
+
     for pair in to_compare:
         print(f"\nComparing {pair[0]} and {pair[1]}")
-        main(paths[pair[0]], paths[pair[1]])
+        main(paths[pair[0]], paths[pair[1]], nan_columns)
