@@ -11,7 +11,7 @@ from readability_preprocessing.features.feature_difference import remove_filenam
 APPLY_STANDARD_SCALER = False
 Z_SCORE_THRESHOLD = 3  # Threshold for z-score to detect outliers
 SIZE = 105  # Number of samples to keep in each dataset
-REMOVE_GET_METHODS = True
+REMOVE_GET_METHODS = False
 
 
 def remove_outliers(features: pd.DataFrame) -> pd.DataFrame:
@@ -92,13 +92,13 @@ def plot_pca_interactive(pca_df: pd.DataFrame) -> None:
         title="PCA of Features",
         color="dataset",  # Color by dataset
         labels={"PCA1": "PCA Component 1", "PCA2": "PCA Component 2"},
-        opacity=0.7,
+        # opacity=0.7,
     )
 
     # Customize axis limits and plot layout if needed
     fig.update_layout(
-        xaxis_range=[-10, 100],
-        yaxis_range=[-40, 80],
+        xaxis_range=[-200, 600],
+        yaxis_range=[-150, 200],
         width=900,
         height=700,
     )
@@ -182,7 +182,7 @@ def main(datasets: dict[str, tuple[str, str]]) -> None:
     pca_result = pca.fit_transform(combined_features)
 
     # Remove outliers
-    pca_result = remove_outliers(pca_result)
+    # pca_result = remove_outliers(pca_result)
 
     # Create a DataFrame with PCA results, method names, and dataset labels
     pca_df = pd.DataFrame(pca_result, columns=["PCA1", "PCA2"])
@@ -190,10 +190,10 @@ def main(datasets: dict[str, tuple[str, str]]) -> None:
     pca_df["dataset"] = combined_labels.reset_index(drop=True)
 
     # Plot the results not interactively
-    plot_pca_results(pca_df)
+    # plot_pca_results(pca_df)
 
     # Plot the interactive PCA result
-    # plot_pca_interactive(pca_df, "Combined")
+    plot_pca_interactive(pca_df)
 
 
 if __name__ == "__main__":
@@ -202,6 +202,46 @@ if __name__ == "__main__":
 
     # Dictionary of dataset names and their file paths
     datasets = {
+        # "krod_well": (
+        #     "/Users/lukas/Documents/Features/features_krod_well.csv",
+        #     "green",
+        # ),
+        # "krod_badly": (
+        #     "/Users/lukas/Documents/Features/features_krod_badly.csv",
+        #     "orange",
+        # ),
+        "krod_well_stratum_0": (
+            "/Users/lukas/Desktop/features/features_krod_well/features_stratum0.csv",
+            "green",
+        ),
+        "krod_well_stratum_1": (
+            "/Users/lukas/Desktop/features/features_krod_well/features_stratum1.csv",
+            "green",
+        ),
+        "krod_well_stratum_2": (
+            "/Users/lukas/Desktop/features/features_krod_well/features_stratum2.csv",
+            "orange",
+        ),
+        "krod_well_stratum_3": (
+            "/Users/lukas/Desktop/features/features_krod_well/features_stratum3.csv",
+            "orange",
+        ),
+        "krod_badly_stratum_0": (
+            "/Users/lukas/Desktop/features/features_krod_badly/features_stratum0.csv",
+            "red",
+        ),
+        "krod_badly_stratum_1": (
+            "/Users/lukas/Desktop/features/features_krod_badly/features_stratum2.csv",
+            "red",
+        ),
+        "krod_badly_stratum_2": (
+            "/Users/lukas/Desktop/features/features_krod_badly/features_stratum1.csv",
+            "blue",
+        ),
+        "krod_badly_stratum_3": (
+            "/Users/lukas/Desktop/features/features_krod_badly/features_stratum3.csv",
+            "blue",
+        ),
         "merged_well": (
             "/Users/lukas/Documents/Features/features_merged_well.csv",
             "blue",
@@ -209,14 +249,6 @@ if __name__ == "__main__":
         "merged_badly": (
             "/Users/lukas/Documents/Features/features_merged_badly.csv",
             "red",
-        ),
-        "krod_well": (
-            "/Users/lukas/Documents/Features/features_krod_well.csv",
-            "green",
-        ),
-        "krod_badly": (
-            "/Users/lukas/Documents/Features/features_krod_badly.csv",
-            "orange",
         ),
     }
 
