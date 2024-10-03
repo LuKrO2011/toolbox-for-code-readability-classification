@@ -10,6 +10,7 @@ from readability_preprocessing.features.feature_difference import (
 )
 
 APPLY_STANDARD_SCALER = True
+REMOVE_NAN_COLUMNS = True
 
 
 def compute_kl_divergence_kde(features1, features2, bandwidth=1.0):
@@ -48,20 +49,27 @@ def compute_kl_divergence_kde(features1, features2, bandwidth=1.0):
     return entropy(prob1, prob2)
 
 
-def main(path1: str, path2: str) -> None:
+def main(path1: str, path2: str, nan_columns: list):
     """
     Main function to calculate and visualize the KL divergence
     between two sets of features.
     :param path1: The path to the first set of features.
     :param path2: The path to the second set of features.
+    :param nan_columns: List of column names where at least one value is NaN.
     """
     # Load and preprocess features
     features1 = pd.read_csv(path1)
     features2 = pd.read_csv(path2)
     features1 = remove_filename_column(features1)
     features2 = remove_filename_column(features2)
-    features1 = handle_nans(features1)
-    features2 = handle_nans(features2)
+
+    if REMOVE_NAN_COLUMNS:
+        # Remove columns from both datasets where at least one value is NaN
+        features1 = features1.drop(columns=nan_columns)
+        features2 = features2.drop(columns=nan_columns)
+    else:
+        features1 = handle_nans(features1)
+        features2 = handle_nans(features2)
 
     if APPLY_STANDARD_SCALER:
         # Apply StandardScaler to center and scale the data
@@ -89,6 +97,18 @@ if __name__ == "__main__":
         ("merged_badly", "krod_badly"),
     ]
 
+    # Load all datasets and get all column names where at least one value is nan
+    nan_columns = []
+    if REMOVE_NAN_COLUMNS:
+        datasets = {}
+        for key, path in paths.items():
+            datasets[key] = pd.read_csv(path)
+
+        nan_columns = []
+        for dataset in datasets.values():
+            nan_columns += dataset.columns[dataset.isna().any()].tolist()
+        nan_columns = list(set(nan_columns))
+
     for pair in to_compare:
         print(f"\nComparing {pair[0]} and {pair[1]}")
-        main(paths[pair[0]], paths[pair[1]])
+        main(paths[pair[0]], paths[pair[1]], nan_columns)
