@@ -87,7 +87,11 @@ if __name__ == "__main__":
         "merged_well": "/Users/lukas/Documents/Features/features_merged_well.csv",
         "merged_badly": "/Users/lukas/Documents/Features/features_merged_badly.csv",
         "krod_well": "/Users/lukas/Documents/Features/features_krod_well.csv",
+        # "krod_well": "/Users/lukas/Desktop/features"
+        #              "/features_krod_well/features_stratum3.csv",
         "krod_badly": "/Users/lukas/Documents/Features/features_krod_badly.csv",
+        # "krod_badly": "/Users/lukas/Desktop/features"
+        #               "/features_krod_badly/features_stratum3.csv",
     }
 
     to_compare = [
